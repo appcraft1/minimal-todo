@@ -229,14 +229,101 @@
 
           <!-- Specific Date Inset Drawer -->
           <div class="specific-date-box" id="specific-date-box" style="display:none;">
+            <!-- Quick Date Chips -->
             <div class="quick-date-chips">
               <button type="button" class="btn-date-chip active" id="chip-date-today" onclick="App.setTargetDateOffset(0, this)">Hari Ini</button>
               <button type="button" class="btn-date-chip" id="chip-date-tomorrow" onclick="App.setTargetDateOffset(1, this)">Besok</button>
               <button type="button" class="btn-date-chip" id="chip-date-dayafter" onclick="App.setTargetDateOffset(2, this)">Lusa</button>
+              <button type="button" class="btn-date-chip" id="chip-date-nextweek" onclick="App.setTargetDateOffset(7, this)">+7 Hari</button>
             </div>
-            <div class="custom-date-picker-wrap">
-              <span class="custom-date-label">Pilih di Kalender:</span>
-              <input type="date" id="habit-input-specific-date" class="bespoke-date-input" onchange="App.onSpecificDateChange(this.value)">
+
+            <!-- Bento Mini Calendar Box (Desain Sendiri, Zero Browser Input) -->
+            <div class="bento-mini-calendar">
+              <div class="mini-cal-header">
+                <button type="button" class="mini-cal-nav-btn" onclick="App.changeFormCalendarMonth(-1)" title="Bulan Sebelumnya">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <span class="mini-cal-month-title" id="form-cal-month-label">Oktober 2026</span>
+                <button type="button" class="mini-cal-nav-btn" onclick="App.changeFormCalendarMonth(1)" title="Bulan Berikutnya">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+              </div>
+
+              <!-- Day Name Headers -->
+              <div class="mini-cal-weekdays">
+                <span>Min</span><span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span>
+              </div>
+
+              <!-- Interactive Day Cells Grid -->
+              <div class="mini-cal-days-grid" id="form-cal-days-grid">
+                <!-- Diisi otomatis oleh JavaScript -->
+              </div>
+
+              <!-- Selected Date Confirmation Pill -->
+              <div class="mini-cal-selected-preview">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FDE047" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="3"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span id="form-cal-selected-label">Target: Hari Ini</span>
+              </div>
+            </div>
+
+            <input type="hidden" id="habit-input-specific-date" value="">
+          </div>
+        </div>
+
+        <!-- SECTION 3B: PENGINGAT & NOTIFIKASI JAM (KUSTOMISASI USER) -->
+        <div class="bento-form-card">
+          <div class="bento-card-header">
+            <div class="bento-card-title-group">
+              <span class="bento-card-title">Pengingat & Notifikasi</span>
+              <span class="bento-card-subtitle-small">Bunyi & getar di HP Anda</span>
+            </div>
+            <label class="bento-toggle-switch" title="Aktifkan Notifikasi">
+              <input type="checkbox" id="habit-reminder-toggle" onchange="App.toggleReminderSection(this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="reminder-time-drawer" id="reminder-time-drawer" style="display:none;">
+            <!-- Presets Waktu Populer -->
+            <div class="reminder-preset-chips">
+              <button type="button" class="btn-time-chip" onclick="App.setReminderTime('07:00')">🌅 07:00</button>
+              <button type="button" class="btn-time-chip" onclick="App.setReminderTime('12:30')">☀️ 12:30</button>
+              <button type="button" class="btn-time-chip" onclick="App.setReminderTime('17:00')">🌇 17:00</button>
+              <button type="button" class="btn-time-chip active" onclick="App.setReminderTime('20:30')">🌙 20:30</button>
+            </div>
+
+            <!-- Custom Bento Time Spinner Capsule -->
+            <div class="custom-time-capsule">
+              <span class="custom-time-label">Atur Jam Sendiri:</span>
+              <div class="time-spinner-controls">
+                <!-- Kolom Jam -->
+                <div class="time-spinner-col">
+                  <button type="button" class="btn-spin-arrow" onclick="App.adjustReminderHour(1)" title="Tambah 1 Jam">▲</button>
+                  <input type="text" id="reminder-hour-input" class="time-digit-input" value="20" maxlength="2" onchange="App.onManualHourChange(this.value)">
+                  <button type="button" class="btn-spin-arrow" onclick="App.adjustReminderHour(-1)" title="Kurang 1 Jam">▼</button>
+                  <span class="time-unit-caption">JAM</span>
+                </div>
+                
+                <span class="time-colon-separator">:</span>
+
+                <!-- Kolom Menit -->
+                <div class="time-spinner-col">
+                  <button type="button" class="btn-spin-arrow" onclick="App.adjustReminderMinute(5)" title="Tambah 5 Menit">▲</button>
+                  <input type="text" id="reminder-minute-input" class="time-digit-input" value="30" maxlength="2" onchange="App.onManualMinuteChange(this.value)">
+                  <button type="button" class="btn-spin-arrow" onclick="App.adjustReminderMinute(-5)" title="Kurang 5 Menit">▼</button>
+                  <span class="time-unit-caption">MENIT</span>
+                </div>
+              </div>
+            </div>
+
+            <input type="hidden" id="habit-reminder-time" value="20:30">
+
+            <div class="reminder-test-row">
+              <span class="reminder-summary-pill" id="reminder-summary-pill">🔔 Aktif: Jam 20:30</span>
+              <button type="button" class="btn-test-notif" onclick="App.testNotificationSound()" title="Coba notifikasi dan getar sekarang">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                <span>Tes Notifikasi</span>
+              </button>
             </div>
           </div>
         </div>

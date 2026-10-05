@@ -113,6 +113,8 @@ const App = {
   gasEndpoint: "",
   activeTimers: {},
   calendarViewDate: new Date(),
+  formCalendarDate: new Date(),
+  reminderInterval: null,
   audioCtx: null,
   longPressTimer: null,
   longPressTriggered: false,
@@ -127,6 +129,7 @@ const App = {
     this.renderBentoCards();
     this.updateProgressRing();
     this.initConfetti();
+    this.initReminderEngine();
   },
 
   formatDateKey(date) {
@@ -367,6 +370,7 @@ const App = {
 
           <div class="card-footer">
             ${scheduleBadge}
+            ${habit.reminderEnabled && habit.reminderTime ? `<span class="card-reminder-tag">🔔 ${habit.reminderTime}</span>` : ''}
             <span class="card-type-tag">${habit.cardType}</span>
           </div>
         </div>
@@ -489,8 +493,22 @@ const App = {
     this.selectScheduleType(habit.scheduleType || "daily");
     if (habit.scheduleType === "specific" && habit.targetDate) {
       document.getElementById("habit-input-specific-date").value = habit.targetDate;
+      const parts = habit.targetDate.split("-").map(Number);
+      if (parts.length === 3) {
+        this.formCalendarDate = new Date(parts[0], parts[1] - 1, parts[2]);
+      }
       this.onSpecificDateChange(habit.targetDate);
+    } else {
+      this.formCalendarDate = new Date();
     }
+    this.renderFormMiniCalendar();
+
+    // Reminder & Notification
+    const isRemind = !!habit.reminderEnabled;
+    const reminderToggle = document.getElementById("habit-reminder-toggle");
+    if (reminderToggle) reminderToggle.checked = isRemind;
+    this.toggleReminderSection(isRemind);
+    this.setReminderTime(habit.reminderTime || "20:30");
 
     this.selectCardType(habit.cardType);
 
@@ -897,10 +915,17 @@ const App = {
     document.getElementById("form-create-habit").reset();
     
     this.selectScheduleType("daily");
+    this.formCalendarDate = new Date();
     this.setTargetDateOffset(0, document.getElementById("chip-date-today"));
     this.selectCardType("checklist");
     this.selectTimerDuration(25);
     
+    // Reset Reminder Toggle
+    const reminderToggle = document.getElementById("habit-reminder-toggle");
+    if (reminderToggle) reminderToggle.checked = false;
+    this.toggleReminderSection(false);
+    this.setReminderTime("20:30");
+
     this.filterIconCategory("all", document.querySelector('.icon-cat-btn[data-cat="all"]'));
     this.selectIconKey("sun");
     this.updateColorLabel("#FDE047");
@@ -923,8 +948,9 @@ const App = {
       const dateInput = document.getElementById("habit-input-specific-date");
       if (dateInput && !dateInput.value) {
         dateInput.value = this.getTodayKey();
-        this.onSpecificDateChange(dateInput.value);
       }
+      this.onSpecificDateChange(dateInput.value);
+      this.renderFormMiniCalendar();
     }
   },
 
@@ -936,20 +962,260 @@ const App = {
     const key = this.formatDateKey(d);
     const dateInput = document.getElementById("habit-input-specific-date");
     if (dateInput) dateInput.value = key;
+    this.formCalendarDate = new Date(d);
+    this.renderFormMiniCalendar();
   },
 
   onSpecificDateChange(val) {
     const today = this.getTodayKey();
     const dTom = new Date(); dTom.setDate(dTom.getDate() + 1); const tomKey = this.formatDateKey(dTom);
     const dDay = new Date(); dDay.setDate(dDay.getDate() + 2); const dayKey = this.formatDateKey(dDay);
+    const dNw = new Date(); dNw.setDate(dNw.getDate() + 7); const nwKey = this.formatDateKey(dNw);
 
     const chipToday = document.getElementById("chip-date-today");
     const chipTom = document.getElementById("chip-date-tomorrow");
     const chipDayAfter = document.getElementById("chip-date-dayafter");
+    const chipNextWeek = document.getElementById("chip-date-nextweek");
 
     if (chipToday) chipToday.classList.toggle("active", val === today);
     if (chipTom) chipTom.classList.toggle("active", val === tomKey);
     if (chipDayAfter) chipDayAfter.classList.toggle("active", val === dayKey);
+    if (chipNextWeek) chipNextWeek.classList.toggle("active", val === nwKey);
+  },
+
+  // ==========================================================
+  // BENTO MINI CALENDAR (ZERO BROWSER DATEPICKER)
+  // ==========================================================
+  renderFormMiniCalendar() {
+    const container = document.getElementById("form-cal-days-grid");
+    const monthLabel = document.getElementById("form-cal-month-label");
+    const selectedLabel = document.getElementById("form-cal-selected-label");
+    const hiddenInput = document.getElementById("habit-input-specific-date");
+    if (!container || !monthLabel) return;
+
+    const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    const daysIndo = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+    const y = this.formCalendarDate.getFullYear();
+    const m = this.formCalendarDate.getMonth();
+    monthLabel.textContent = `${months[m]} ${y}`;
+
+    let selectedKey = hiddenInput && hiddenInput.value ? hiddenInput.value : this.getTodayKey();
+
+    // Update label konfirmasi tanggal
+    if (selectedLabel) {
+      const parts = selectedKey.split("-").map(Number);
+      if (parts.length === 3) {
+        const dObj = new Date(parts[0], parts[1] - 1, parts[2]);
+        selectedLabel.textContent = `Target: ${daysIndo[dObj.getDay()]}, ${parts[2]} ${months[parts[1] - 1]} ${parts[0]}`;
+      }
+    }
+
+    const firstDayIndex = new Date(y, m, 1).getDay(); // 0 is Sunday
+    const totalDays = new Date(y, m + 1, 0).getDate();
+    const today = new Date();
+
+    let html = "";
+
+    // Padding hari kosong awal bulan
+    for (let i = 0; i < firstDayIndex; i++) {
+      html += `<div class="mini-cal-day-cell empty"></div>`;
+    }
+
+    // Hari 1..totalDays
+    for (let day = 1; day <= totalDays; day++) {
+      const cellDate = new Date(y, m, day);
+      const cellKey = this.formatDateKey(cellDate);
+      const isToday = (today.getFullYear() === y && today.getMonth() === m && today.getDate() === day);
+      const isSelected = (cellKey === selectedKey);
+
+      let classes = ["mini-cal-day-cell"];
+      if (isToday) classes.push("is-today");
+      if (isSelected) classes.push("selected");
+
+      html += `
+        <button type="button" class="${classes.join(' ')}" onclick="App.selectFormCalendarDate(${y}, ${m}, ${day})">
+          ${day}
+        </button>
+      `;
+    }
+
+    container.innerHTML = html;
+  },
+
+  selectFormCalendarDate(y, m, d) {
+    const dateObj = new Date(y, m, d);
+    const key = this.formatDateKey(dateObj);
+    const hiddenInput = document.getElementById("habit-input-specific-date");
+    if (hiddenInput) hiddenInput.value = key;
+
+    this.onSpecificDateChange(key);
+    this.renderFormMiniCalendar();
+  },
+
+  changeFormCalendarMonth(offset) {
+    this.formCalendarDate.setMonth(this.formCalendarDate.getMonth() + offset);
+    this.renderFormMiniCalendar();
+  },
+
+  // ==========================================================
+  // CUSTOM REMINDER TIME (PENGATUR JAM NOTIFIKASI)
+  // ==========================================================
+  toggleReminderSection(enabled) {
+    const drawer = document.getElementById("reminder-time-drawer");
+    if (drawer) {
+      drawer.style.display = enabled ? "flex" : "none";
+    }
+  },
+
+  setReminderTime(timeStr) {
+    const hidden = document.getElementById("habit-reminder-time");
+    if (hidden) hidden.value = timeStr;
+
+    const [h, m] = timeStr.split(":");
+    const hourInput = document.getElementById("reminder-hour-input");
+    const minInput = document.getElementById("reminder-minute-input");
+    if (hourInput) hourInput.value = h;
+    if (minInput) minInput.value = m;
+
+    document.querySelectorAll(".btn-time-chip").forEach(b => {
+      b.classList.toggle("active", b.textContent.includes(timeStr));
+    });
+
+    const pill = document.getElementById("reminder-summary-pill");
+    if (pill) pill.textContent = `🔔 Aktif: Jam ${timeStr}`;
+  },
+
+  adjustReminderHour(delta) {
+    const hourInput = document.getElementById("reminder-hour-input");
+    const minInput = document.getElementById("reminder-minute-input");
+    let h = (Number(hourInput.value) || 0) + delta;
+    if (h < 0) h = 23;
+    if (h > 23) h = 0;
+    const hStr = String(h).padStart(2, "0");
+    hourInput.value = hStr;
+
+    const mStr = minInput.value || "00";
+    this.updateReminderTimeFromInputs(hStr, mStr);
+  },
+
+  adjustReminderMinute(delta) {
+    const hourInput = document.getElementById("reminder-hour-input");
+    const minInput = document.getElementById("reminder-minute-input");
+    let m = (Number(minInput.value) || 0) + delta;
+    if (m < 0) m = 55;
+    if (m > 59) m = 0;
+    const mStr = String(m).padStart(2, "0");
+    minInput.value = mStr;
+
+    const hStr = hourInput.value || "08";
+    this.updateReminderTimeFromInputs(hStr, mStr);
+  },
+
+  onManualHourChange(val) {
+    let h = parseInt(val, 10);
+    if (isNaN(h) || h < 0) h = 0;
+    if (h > 23) h = 23;
+    const hStr = String(h).padStart(2, "0");
+    document.getElementById("reminder-hour-input").value = hStr;
+    const mStr = document.getElementById("reminder-minute-input").value || "00";
+    this.updateReminderTimeFromInputs(hStr, mStr);
+  },
+
+  onManualMinuteChange(val) {
+    let m = parseInt(val, 10);
+    if (isNaN(m) || m < 0) m = 0;
+    if (m > 59) m = 59;
+    const mStr = String(m).padStart(2, "0");
+    document.getElementById("reminder-minute-input").value = mStr;
+    const hStr = document.getElementById("reminder-hour-input").value || "08";
+    this.updateReminderTimeFromInputs(hStr, mStr);
+  },
+
+  updateReminderTimeFromInputs(hStr, mStr) {
+    const timeStr = `${hStr}:${mStr}`;
+    document.getElementById("habit-reminder-time").value = timeStr;
+    const pill = document.getElementById("reminder-summary-pill");
+    if (pill) pill.textContent = `🔔 Aktif: Jam ${timeStr}`;
+
+    document.querySelectorAll(".btn-time-chip").forEach(b => {
+      b.classList.toggle("active", b.textContent.includes(timeStr));
+    });
+  },
+
+  testNotificationSound() {
+    const timeStr = document.getElementById("habit-reminder-time").value || "20:30";
+    
+    // Minta izin Web Notification jika di browser
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+
+    // Jalankan Native Alert via Android Bridge
+    if (window.AndroidNativeNotification && typeof window.AndroidNativeNotification.sendNotification === "function") {
+      try {
+        window.AndroidNativeNotification.sendNotification("Tes Pengingat Jam " + timeStr, "Alarm & getar notifikasi Minimal Todo siap berbunyi!");
+      } catch (e) {
+        console.warn("Native bridge notification error:", e);
+      }
+    }
+
+    this.playVictoryChord();
+    this.showToast(`🔔 Tes Notifikasi: Alarm jam ${timeStr} berbunyi & bergetar!`, "success", 4000);
+  },
+
+  // ==========================================================
+  // BACKGROUND REMINDER ENGINE (CEK JADWAL OTOMATIS)
+  // ==========================================================
+  initReminderEngine() {
+    if (this.reminderInterval) clearInterval(this.reminderInterval);
+    // Jalankan interval per 20 detik
+    this.reminderInterval = setInterval(() => this.checkScheduledReminders(), 20000);
+    // Cek saat pertama buka aplikasi
+    setTimeout(() => this.checkScheduledReminders(), 2500);
+  },
+
+  checkScheduledReminders() {
+    const now = new Date();
+    const curHour = String(now.getHours()).padStart(2, "0");
+    const curMin = String(now.getMinutes()).padStart(2, "0");
+    const currentHHMM = `${curHour}:${curMin}`;
+    const todayKey = this.getTodayKey();
+
+    this.habits.forEach(habit => {
+      if (habit.reminderEnabled && habit.reminderTime === currentHHMM && !habit.completed) {
+        if (habit.lastNotifiedDate !== todayKey) {
+          habit.lastNotifiedDate = todayKey;
+          this.triggerNotificationAlert(habit);
+          this.saveLocal();
+        }
+      }
+    });
+  },
+
+  triggerNotificationAlert(habit) {
+    const title = `Pengingat: ${habit.title}`;
+    const message = habit.subtitle || `Waktunya menyelesaikan target ${habit.title}! Jaga ritme disiplinmu hari ini.`;
+
+    // 1. Android Native Notification Bridge
+    if (window.AndroidNativeNotification && typeof window.AndroidNativeNotification.sendNotification === "function") {
+      try {
+        window.AndroidNativeNotification.sendNotification(title, message);
+      } catch (e) {}
+    }
+
+    // 2. Web Notification API (PWA / Browser)
+    if ("Notification" in window && Notification.permission === "granted") {
+      try {
+        new Notification(title, {
+          body: message,
+          icon: "logo.svg"
+        });
+      } catch (e) {}
+    }
+
+    // 3. Audio & In-App Toast
+    this.playVictoryChord();
+    this.showToast(`🔔 ${title}: ${message}`, "info", 5000);
   },
 
   selectCardType(type) {
@@ -1144,6 +1410,11 @@ const App = {
       unit = "menit";
     }
 
+    // Reminder & Notification Setting
+    const reminderToggle = document.getElementById("habit-reminder-toggle");
+    const reminderEnabled = reminderToggle ? reminderToggle.checked : false;
+    const reminderTime = document.getElementById("habit-reminder-time") ? document.getElementById("habit-reminder-time").value : "20:30";
+
     if (editId) {
       // Edit habit
       const h = this.habits.find(item => item.id === editId);
@@ -1154,6 +1425,8 @@ const App = {
         h.scheduleType = scheduleType;
         h.targetDate = targetDate;
         h.date = scheduleType === "specific" ? this.formatShortDate(targetDate) : "HARIAN";
+        h.reminderEnabled = reminderEnabled;
+        h.reminderTime = reminderTime;
         h.targetGoal = targetGoal;
         h.unit = unit;
         h.theme = themeClass;
@@ -1169,6 +1442,9 @@ const App = {
         cardType: cardType,
         scheduleType: scheduleType,
         targetDate: targetDate,
+        reminderEnabled: reminderEnabled,
+        reminderTime: reminderTime,
+        lastNotifiedDate: null,
         currentProgress: 0,
         targetGoal: targetGoal,
         unit: unit,
