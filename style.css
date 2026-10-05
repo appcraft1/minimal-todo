@@ -1,0 +1,1901 @@
+/* ==========================================================
+   MINIMAL TODO — MASTER STYLING (v2.0)
+   Palet: Deep Matte Dark (#121316) + Yellow Bento + Terracotta + Soft Blue + Emerald
+   Anti-Browser UI: Zero native dropdowns, alerts, confirms, or datepickers.
+   ========================================================== */
+
+:root {
+  --bg-app: #121316;
+  --bg-dock: #1E2024;
+  --bg-card-empty: #1A1C20;
+  --bg-sheet: #181A1F;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-dashed: #374151;
+  
+  /* Bento Colors from Photo */
+  --card-yellow: #FDE047;
+  --card-yellow-text: #121316;
+  --card-terracotta: #7C2D12;
+  --card-terracotta-text: #FFFFFF;
+  --card-softblue: #93C5FD;
+  --card-softblue-text: #121316;
+  --card-emerald: #059669;
+  --card-emerald-text: #FFFFFF;
+  --card-purple: #8B5CF6;
+  --card-purple-text: #FFFFFF;
+  
+  --green-check: #22C55E;
+  --blue-active: #3B82F6;
+  --gray-empty: #26272B;
+  
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+body {
+  background-color: #08090A;
+  color: #FFFFFF;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* ==========================================================
+   0. CONFETTI FULLSCREEN CANVAS
+   ========================================================== */
+.confetti-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9999999;
+}
+
+/* ==========================================================
+   1. BESPOKE TOAST NOTIFICATION ENGINE (ANTI-ALERT)
+   ========================================================== */
+.toast-container {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 24px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: calc(100% - 36px);
+  max-width: 380px;
+  pointer-events: none;
+}
+
+.toast-item {
+  pointer-events: auto;
+  background: #1E2024;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  animation: toastSlideDown 0.35s var(--ease-spring);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.toast-item.toast-success { border-color: #22C55E; }
+.toast-item.toast-warning { border-color: #FACC15; }
+.toast-item.toast-error { border-color: #EF4444; }
+
+.toast-icon {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.toast-success .toast-icon { color: #22C55E; background: rgba(34, 197, 94, 0.15); }
+.toast-warning .toast-icon { color: #FACC15; background: rgba(250, 204, 21, 0.15); }
+.toast-error .toast-icon { color: #EF4444; background: rgba(239, 68, 68, 0.15); }
+
+.toast-message {
+  font-size: 13px;
+  font-weight: 600;
+  color: #FFFFFF;
+  line-height: 1.4;
+  flex: 1;
+}
+
+@keyframes toastSlideDown {
+  from { transform: translateY(-40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ==========================================================
+   2. BRANDED SPLASH SCREEN
+   ========================================================== */
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 99999999;
+  background: #121316;
+  background-image: radial-gradient(circle at 50% 40%, rgba(253, 224, 71, 0.08) 0%, transparent 65%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.5s ease;
+  transform: scale(1);
+  opacity: 1;
+  visibility: visible;
+}
+
+.splash-screen.fade-out {
+  opacity: 0;
+  transform: scale(1.05);
+  pointer-events: none;
+}
+
+.splash-screen.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  display: none !important;
+}
+
+.splash-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: splashPop 0.7s var(--ease-spring);
+}
+
+@keyframes splashPop {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.splash-logo-container {
+  box-shadow: 0 16px 48px rgba(253, 224, 71, 0.32);
+  border-radius: 20px;
+  animation: logoPulse 2.4s infinite ease-in-out;
+}
+
+@keyframes logoPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+.splash-title {
+  margin-top: 22px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: #FFFFFF;
+}
+
+.splash-subtitle {
+  font-size: 13px;
+  color: #9CA3AF;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+.splash-loader-bar {
+  width: 170px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  margin-top: 32px;
+  overflow: hidden;
+  position: relative;
+}
+
+.splash-loader-fill {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #FDE047, #F59E0B);
+  border-radius: 9999px;
+  animation: fillProgress 1.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes fillProgress {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(0); }
+}
+
+.splash-status-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9CA3AF;
+  margin-top: 12px;
+  letter-spacing: 0.2px;
+  transition: opacity 0.2s ease;
+}
+
+/* ==========================================================
+   3. APP VIEWPORT SHELL (IPHONE FORMAT)
+   ========================================================== */
+.app-viewport {
+  width: 100%;
+  max-width: 414px;
+  height: 100vh;
+  max-height: 896px;
+  background: var(--bg-app);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 18px 18px;
+  border-radius: 44px;
+  border: 4px solid #23252A;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+@media (max-width: 500px) {
+  body {
+    align-items: flex-start;
+    background: var(--bg-app);
+  }
+  .app-viewport {
+    max-width: 100%;
+    height: 100vh;
+    max-height: none;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+  }
+}
+
+/* ==========================================================
+   4. MAIN SCROLLABLE CONTENT & GREETING
+   ========================================================== */
+.main-content-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: calc(env(safe-area-inset-top, 0px) + 20px) 18px 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  scrollbar-width: none;
+}
+
+.main-content-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Dynamic Greeting Section */
+.dynamic-greeting-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 4px 6px;
+}
+
+.greeting-date {
+  font-size: 10px;
+  font-weight: 800;
+  color: #9CA3AF;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.greeting-heading {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  color: #FFFFFF;
+  margin-top: 2px;
+}
+
+.greeting-subtitle {
+  font-size: 11px;
+  color: #6B7280;
+  margin-top: 3px;
+  max-width: 250px;
+  line-height: 1.35;
+}
+
+/* Circular Progress Ring */
+.progress-ring-wrap {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s var(--ease-spring);
+}
+
+.progress-ring-wrap:active {
+  transform: scale(0.92);
+}
+
+.progress-ring-svg {
+  transform: rotate(-90deg);
+}
+
+.ring-bg {
+  fill: none;
+  stroke: #26272B;
+}
+
+.ring-fill {
+  fill: none;
+  stroke: #FDE047;
+  stroke-linecap: round;
+  stroke-dasharray: 144.5;
+  stroke-dashoffset: 144.5;
+  transition: stroke-dashoffset 0.6s var(--ease-spring);
+}
+
+.ring-percentage {
+  position: absolute;
+  font-size: 11px;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+/* Weekly Days Row (M T W T F S S) */
+.weekly-streak-section {
+  width: 100%;
+}
+
+.weekly-days-grid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.day-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+
+.day-letter {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6B7280;
+  text-transform: uppercase;
+}
+
+.day-status-pill {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--gray-empty);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s var(--ease-spring);
+  cursor: pointer;
+}
+
+.day-status-pill.completed {
+  background: var(--green-check);
+  color: #000000;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.35);
+}
+
+.day-status-pill.active-today {
+  border: 1.5px solid #FDE047;
+}
+
+.day-status-pill.active-today::after {
+  content: '';
+  width: 7px;
+  height: 7px;
+  background: #FDE047;
+  border-radius: 50%;
+}
+
+.day-status-pill.completed.active-today::after {
+  display: none;
+}
+
+/* ==========================================================
+   5. BENTO CARDS GRID & CARD VARIANTS
+   ========================================================== */
+.bento-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+/* Empty Habits State */
+.empty-habits-container {
+  grid-column: 1 / -1;
+  background: #181A1F;
+  border: 1.5px dashed rgba(255, 255, 255, 0.14);
+  border-radius: 28px;
+  padding: 42px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.25s var(--ease-spring);
+}
+
+.empty-habits-container:hover {
+  border-color: rgba(253, 224, 71, 0.5);
+  background: #1D1F24;
+  transform: translateY(-2px);
+}
+
+.empty-icon-wrap {
+  width: 60px;
+  height: 60px;
+  border-radius: 20px;
+  background: rgba(253, 224, 71, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(253, 224, 71, 0.18);
+}
+
+.empty-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+.empty-desc {
+  font-size: 13px;
+  color: #9CA3AF;
+  max-width: 280px;
+  line-height: 1.45;
+}
+
+.btn-empty-create {
+  margin-top: 6px;
+  background: #FDE047;
+  color: #121316;
+  font-size: 13px;
+  font-weight: 800;
+  border: none;
+  border-radius: 9999px;
+  padding: 12px 24px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 18px rgba(253, 224, 71, 0.35);
+}
+
+.btn-empty-create:active {
+  transform: scale(0.96);
+}
+
+.bento-card {
+  border-radius: 26px;
+  padding: 16px 14px 14px;
+  min-height: 195px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.2s var(--ease-spring), box-shadow 0.2s ease, border-color 0.2s ease;
+  overflow: hidden;
+  border: 2px solid transparent;
+}
+
+.bento-card:active {
+  transform: scale(0.96);
+}
+
+/* Bento Themes */
+.bento-card.theme-yellow {
+  background: var(--card-yellow);
+  color: var(--card-yellow-text);
+  box-shadow: 0 10px 24px rgba(250, 204, 21, 0.22);
+}
+
+.bento-card.theme-terracotta {
+  background: var(--card-terracotta);
+  color: var(--card-terracotta-text);
+  box-shadow: 0 10px 24px rgba(124, 45, 18, 0.35);
+}
+
+.bento-card.theme-softblue {
+  background: var(--card-softblue);
+  color: var(--card-softblue-text);
+  box-shadow: 0 10px 24px rgba(147, 197, 253, 0.25);
+}
+
+.bento-card.theme-emerald {
+  background: var(--card-emerald);
+  color: var(--card-emerald-text);
+  box-shadow: 0 10px 24px rgba(5, 150, 105, 0.28);
+}
+
+.bento-card.theme-purple {
+  background: var(--card-purple);
+  color: var(--card-purple-text);
+  box-shadow: 0 10px 24px rgba(139, 92, 246, 0.28);
+}
+
+/* Card Header & SVG Icons */
+.card-header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.icon-visual-svg {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-visual-svg svg {
+  width: 28px;
+  height: 28px;
+}
+
+.card-check-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.theme-terracotta .card-check-badge,
+.theme-emerald .card-check-badge,
+.theme-purple .card-check-badge {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.card-check-badge.checked {
+  background: #FFFFFF;
+  color: #121316;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.card-body {
+  flex: 1;
+}
+
+.card-title {
+  font-size: 14.5px;
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.3px;
+  margin-bottom: 6px;
+}
+
+.card-subtitle {
+  font-size: 10px;
+  line-height: 1.35;
+  opacity: 0.82;
+  font-weight: 500;
+}
+
+.card-footer {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-date {
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  opacity: 0.65;
+}
+
+.card-type-tag {
+  font-size: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+/* Card Type 2: Progressive Goal Stepper */
+.progressive-progress-wrap {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.progressive-bar-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.theme-terracotta .progressive-bar-track,
+.theme-emerald .progressive-bar-track,
+.theme-purple .progressive-bar-track {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.progressive-bar-fill {
+  height: 100%;
+  background: currentColor;
+  border-radius: 9999px;
+  transition: width 0.3s var(--ease-spring);
+}
+
+.progressive-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.stepper-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.12);
+  border: none;
+  color: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.theme-terracotta .stepper-btn,
+.theme-emerald .stepper-btn,
+.theme-purple .stepper-btn {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.stepper-btn:active {
+  transform: scale(0.85);
+}
+
+.stepper-status-label {
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* Card Type 3: Bento Focus Timer */
+.focus-timer-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin: 6px 0;
+}
+
+.timer-countdown-display {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.btn-timer-toggle {
+  margin-top: 8px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.15);
+  border: none;
+  color: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.theme-terracotta .btn-timer-toggle,
+.theme-emerald .btn-timer-toggle,
+.theme-purple .btn-timer-toggle {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.btn-timer-toggle:active {
+  transform: scale(0.9);
+}
+
+/* Card Type 4: One-Line Journal Bento Card */
+.bento-card.card-journal-banner {
+  grid-column: span 2;
+  min-height: auto;
+  padding: 14px 18px;
+  background: #1E2024;
+  border: 1px solid var(--border-subtle);
+  color: #FFFFFF;
+}
+
+.journal-banner-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.journal-banner-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: #FDE047;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.journal-banner-text {
+  font-size: 12.5px;
+  font-weight: 600;
+  font-style: italic;
+  color: #E5E7EB;
+  line-height: 1.4;
+}
+
+/* Card: Add New Slot */
+.bento-card.card-add-new {
+  background: var(--bg-card-empty);
+  border: 2px dashed var(--border-dashed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9CA3AF;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bento-card.card-add-new:hover {
+  border-color: #FDE047;
+  color: #FDE047;
+  background: rgba(253, 224, 71, 0.04);
+}
+
+.plus-symbol {
+  font-size: 34px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+/* Cloud Sync & Discipline Badge */
+.cloud-sync-chip {
+  align-self: center;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  border-radius: 9999px;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: background 0.2s ease;
+}
+
+.cloud-sync-chip:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sync-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22C55E;
+}
+
+.sync-dot.pulse {
+  animation: dotGlow 1.5s infinite;
+}
+
+@keyframes dotGlow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; box-shadow: 0 0 8px #22C55E; }
+}
+
+.sync-label {
+  font-size: 10px;
+  color: #9CA3AF;
+  font-weight: 600;
+}
+
+.discipline-badge {
+  font-size: 10px;
+  font-weight: 800;
+  color: #FDE047;
+  background: rgba(253, 224, 71, 0.12);
+  padding: 2px 8px;
+  border-radius: 9999px;
+  margin-left: 4px;
+}
+
+/* ==========================================================
+   6. FLOATING CAPSULE BOTTOM NAVIGATION DOCK
+   ========================================================== */
+.floating-bottom-dock {
+  position: absolute;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 40px);
+  max-width: 330px;
+  height: 56px;
+  background: var(--bg-dock);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 6px;
+  z-index: 90;
+}
+
+.dock-btn {
+  background: transparent;
+  border: none;
+  color: #9CA3AF;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-spring);
+}
+
+.dock-btn:active {
+  transform: scale(0.88);
+}
+
+.dock-btn.active {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dock-btn:hover {
+  color: #FFFFFF;
+}
+
+/* ==========================================================
+   7. BESPOKE SHEET MODALS (ANTI-NATIVE DIALOG)
+   ========================================================== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 999;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal-backdrop.open {
+  display: flex;
+}
+
+.modal-sheet-panel {
+  width: 100%;
+  max-width: 414px;
+  background: var(--bg-sheet);
+  border-radius: 32px 32px 0 0;
+  padding: 16px 20px 36px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6);
+  animation: slideUp 0.3s var(--ease-spring);
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.sheet-handle {
+  width: 40px;
+  height: 4px;
+  background: #374151;
+  border-radius: 9999px;
+  margin: 0 auto 16px;
+}
+
+.sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.sheet-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sheet-title-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(253, 224, 71, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sheet-header h2 {
+  font-size: 17px;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.3px;
+}
+
+.btn-close-modal {
+  background: #23252B;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #9CA3AF;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-close-modal:active {
+  transform: scale(0.9);
+  background: #33363F;
+}
+
+/* ==========================================================
+   BENTO FORM CARDS ARCHITECTURE (SCULPTED INSET CONTAINERS)
+   ========================================================== */
+.bento-form-card {
+  background: #17191E;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 20px;
+  padding: 14px 15px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bento-form-card:focus-within {
+  border-color: rgba(253, 224, 71, 0.35);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+}
+
+.bento-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.bento-card-title {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #9CA3AF;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bento-card-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #FDE047;
+  background: rgba(253, 224, 71, 0.12);
+  padding: 2px 8px;
+  border-radius: 9999px;
+  letter-spacing: 0.2px;
+}
+
+.bento-card-desc {
+  font-size: 12px;
+  color: #9CA3AF;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+/* Inset Input Box (iOS/Linear Grouped Field) */
+.bento-input-box {
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.bento-input-row {
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.bento-input-row label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.bento-input-row input,
+.bento-input-row textarea {
+  background: transparent !important;
+  border: none !important;
+  color: #FFFFFF !important;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  outline: none !important;
+  box-shadow: none !important;
+  padding: 2px 0;
+  width: 100%;
+  resize: none;
+}
+
+.bento-input-row input::placeholder,
+.bento-input-row textarea::placeholder {
+  color: #4B5563;
+  font-weight: 500;
+}
+
+.bento-divider-line {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.05);
+  margin: 0 14px;
+}
+
+/* Segmented Controls (Card Type & Schedule) */
+.segmented-control,
+.schedule-selector-segmented {
+  display: flex;
+  background: #101114;
+  padding: 4px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 4px;
+}
+
+.segment-btn,
+.btn-schedule-type {
+  flex: 1;
+  padding: 9px 8px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: #9CA3AF;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s var(--ease-spring);
+}
+
+.segment-btn:active,
+.btn-schedule-type:active {
+  transform: scale(0.97);
+}
+
+.segment-btn.active,
+.btn-schedule-type.active {
+  background: #23252C;
+  color: #FDE047;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+/* Specific Date Inset Drawer */
+.specific-date-box {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quick-date-chips {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-date-chip {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #D1D5DB;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-date-chip.active {
+  background: #FDE047;
+  color: #121316;
+  border-color: #FDE047;
+  box-shadow: 0 2px 8px rgba(253, 224, 71, 0.25);
+}
+
+.custom-date-picker-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 6px 12px;
+}
+
+.custom-date-label {
+  font-size: 11px;
+  color: #9CA3AF;
+  font-weight: 600;
+}
+
+.bespoke-date-input {
+  background: transparent;
+  border: none;
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 600;
+  outline: none;
+  color-scheme: dark;
+}
+
+/* Progressive Stepper Number & Satuan */
+.preset-label-row {
+  margin-bottom: 6px;
+}
+
+.preset-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.progressive-preset-chips {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.preset-chip {
+  padding: 8px 6px;
+  border-radius: 10px;
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #D1D5DB;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.preset-chip:hover,
+.preset-chip:active {
+  background: rgba(253, 224, 71, 0.14);
+  border-color: #FDE047;
+  color: #FDE047;
+  transform: translateY(-1px);
+}
+
+.stepper-inputs-row {
+  display: flex;
+  gap: 10px;
+}
+
+.stepper-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.stepper-col label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.stepper-counter-capsule {
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+  height: 42px;
+}
+
+.btn-stepper-tap {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #1F2128;
+  border: none;
+  color: #FFFFFF;
+  font-size: 16px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.btn-stepper-tap:active {
+  background: #FDE047;
+  color: #121316;
+}
+
+.stepper-counter-capsule input {
+  width: 50px;
+  text-align: center;
+  background: transparent;
+  border: none;
+  color: #FDE047;
+  font-size: 16px;
+  font-weight: 800;
+  outline: none;
+}
+
+.unit-input-capsule {
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+}
+
+.unit-input-capsule input {
+  background: transparent;
+  border: none;
+  color: #FFFFFF;
+  font-size: 13.5px;
+  font-weight: 600;
+  outline: none;
+  width: 100%;
+}
+
+/* Focus Timer Options & Custom Stepper */
+.timer-duration-options {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.btn-duration-choice {
+  flex: 1;
+  padding: 9px 4px;
+  border-radius: 10px;
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #9CA3AF;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-duration-choice.active {
+  border-color: #FDE047;
+  color: #121316;
+  background: #FDE047;
+  box-shadow: 0 2px 8px rgba(253, 224, 71, 0.25);
+}
+
+.custom-timer-adjuster {
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.custom-timer-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #9CA3AF;
+}
+
+.custom-stepper-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-custom-step {
+  padding: 6px 9px;
+  border-radius: 8px;
+  background: #1F2128;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #E5E7EB;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-custom-step:active {
+  background: #FDE047;
+  color: #121316;
+}
+
+.custom-minute-input-wrap {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+}
+
+.custom-minute-input-wrap input {
+  width: 44px;
+  text-align: center;
+  font-size: 17px;
+  font-weight: 800;
+  background: transparent;
+  border: none;
+  color: #FDE047;
+  outline: none;
+}
+
+.minute-unit {
+  font-size: 11px;
+  font-weight: 700;
+  color: #9CA3AF;
+}
+
+/* Color Radio Palette */
+.color-palette-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+}
+
+.color-radio { cursor: pointer; }
+.color-radio input { display: none; }
+
+.color-radio span {
+  display: block;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  transition: transform 0.2s var(--ease-spring), box-shadow 0.2s ease;
+}
+
+.color-radio.yellow span { background: #FDE047; }
+.color-radio.terracotta span { background: #7C2D12; }
+.color-radio.softblue span { background: #93C5FD; }
+.color-radio.emerald span { background: #059669; }
+.color-radio.purple span { background: #8B5CF6; }
+
+.color-radio input:checked + span {
+  transform: scale(1.15);
+  box-shadow: 0 0 0 3px #17191E, 0 0 0 5px #FDE047;
+}
+
+/* Icon Category Tabs & Scrollable Grid */
+.icon-category-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+  scrollbar-width: none;
+}
+
+.icon-category-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.icon-cat-btn {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #9CA3AF;
+  font-size: 10.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.icon-cat-btn.active {
+  background: #FDE047;
+  color: #121316;
+  border-color: #FDE047;
+}
+
+.icon-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  max-height: 180px;
+  overflow-y: auto;
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 8px;
+}
+
+.icon-selector-grid::-webkit-scrollbar {
+  width: 4px;
+}
+
+.icon-selector-grid::-webkit-scrollbar-thumb {
+  background: #2B2D33;
+  border-radius: 4px;
+}
+
+.btn-svg-choice {
+  background: #17191E;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9CA3AF;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-svg-choice svg {
+  width: 20px;
+  height: 20px;
+}
+
+.btn-svg-choice:hover {
+  border-color: #4B5563;
+  color: #FFFFFF;
+}
+
+.btn-svg-choice.active {
+  border-color: #FDE047;
+  color: #FDE047;
+  background: rgba(253, 224, 71, 0.16);
+  box-shadow: 0 0 10px rgba(253, 224, 71, 0.2);
+}
+
+/* Primary Action Button */
+.btn-primary-action {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #FDE047 0%, #EAB308 100%);
+  color: #121316;
+  border: none;
+  border-radius: 16px;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  cursor: pointer;
+  margin-top: 14px;
+  box-shadow: 0 8px 24px rgba(250, 204, 21, 0.3);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-primary-action:active {
+  transform: scale(0.98);
+  box-shadow: 0 4px 12px rgba(250, 204, 21, 0.2);
+}
+
+.btn-secondary-action {
+  padding: 12px;
+  background: #26272B;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ==========================================================
+   8. BESPOKE BENTO CALENDAR MATRIX (ANTI-INPUT-DATE)
+   ========================================================== */
+.calendar-hero-stats {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.stat-box {
+  flex: 1;
+  background: #121316;
+  border: 1px solid #2B2D33;
+  border-radius: 16px;
+  padding: 12px;
+  text-align: center;
+}
+
+.stat-number {
+  display: block;
+  font-size: 20px;
+  font-weight: 800;
+  color: #FDE047;
+}
+
+.stat-label {
+  font-size: 10px;
+  color: #9CA3AF;
+  font-weight: 600;
+}
+
+.calendar-month-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding: 4px 6px;
+}
+
+.calendar-month-label {
+  font-size: 14px;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+.btn-month-nav {
+  background: #26272B;
+  border: none;
+  color: #FFFFFF;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.calendar-matrix-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.calendar-day-header {
+  font-size: 10px;
+  font-weight: 700;
+  color: #6B7280;
+  text-align: center;
+  padding-bottom: 6px;
+}
+
+.calendar-day-cell {
+  height: 38px;
+  border-radius: 10px;
+  background: #121316;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #9CA3AF;
+  border: 1px solid transparent;
+  cursor: pointer;
+  position: relative;
+}
+
+.calendar-day-cell.completed-full {
+  background: var(--green-check);
+  color: #000000;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+}
+
+.calendar-day-cell.completed-partial {
+  background: rgba(250, 204, 21, 0.2);
+  color: #FDE047;
+  border-color: #FDE047;
+}
+
+.calendar-day-cell.is-today {
+  border: 1.5px solid #3B82F6;
+}
+
+.calendar-day-cell.empty {
+  opacity: 0.2;
+}
+
+/* Journal Archive in Calendar */
+.calendar-journal-archive {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid #2B2D33;
+}
+
+.archive-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 12px;
+}
+
+.journal-history-item {
+  background: #121316;
+  border: 1px solid #2B2D33;
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+.journal-item-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.journal-item-date {
+  font-size: 10px;
+  font-weight: 700;
+  color: #FDE047;
+}
+
+.journal-item-mood {
+  font-size: 10px;
+  color: #9CA3AF;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.journal-item-text {
+  font-size: 12px;
+  color: #E5E7EB;
+  line-height: 1.4;
+}
+
+/* ==========================================================
+   9. BESPOKE CONFIRM & QUICK ACTIONS SHEET
+   ========================================================== */
+.quick-action-sheet,
+.confirm-sheet {
+  text-align: center;
+}
+
+.quick-card-preview {
+  margin-bottom: 16px;
+  padding: 12px;
+  border-radius: 16px;
+  background: #121316;
+  font-weight: 700;
+  font-size: 14px;
+  color: #FFFFFF;
+}
+
+.quick-actions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quick-act-btn {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #121316;
+  border: 1px solid #2B2D33;
+  color: #FFFFFF;
+  font-size: 13.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.quick-act-btn:active {
+  background: #26272B;
+}
+
+.quick-act-btn.text-danger {
+  color: #EF4444;
+}
+
+.confirm-icon-box {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+}
+
+.confirm-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin-bottom: 6px;
+}
+
+.confirm-desc {
+  font-size: 12.5px;
+  color: #9CA3AF;
+  margin-bottom: 20px;
+}
+
+.confirm-buttons-row {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-cancel {
+  flex: 1;
+  padding: 14px;
+  border-radius: 14px;
+  background: #26272B;
+  color: #FFFFFF;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-confirm-danger {
+  flex: 1;
+  padding: 14px;
+  border-radius: 14px;
+  background: #EF4444;
+  color: #FFFFFF;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Journal Mood Selector */
+.mood-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.btn-mood-choice {
+  background: #121316;
+  border: 1px solid #2B2D33;
+  border-radius: 12px;
+  padding: 10px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: #9CA3AF;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-mood-choice.active {
+  border-color: #FDE047;
+  color: #FDE047;
+  background: rgba(253, 224, 71, 0.12);
+}
+
+.char-count {
+  font-size: 10px;
+  color: #6B7280;
+  text-align: right;
+  margin-top: 2px;
+}
+
+/* Settings Box */
+.settings-fcm-box {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #2B2D33;
+}
+
+.fcm-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.fcm-note {
+  font-size: 11px;
+  color: #9CA3AF;
+  margin-top: 4px;
+}
+
+/* Switch Toggle */
+.switch-toggle {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.switch-toggle input { display: none; }
+
+.switch-toggle .slider {
+  position: absolute; cursor: pointer; inset: 0;
+  background-color: #374151; border-radius: 9999px;
+  transition: .3s;
+}
+
+.switch-toggle .slider:before {
+  position: absolute; content: ""; height: 18px; width: 18px;
+  left: 3px; bottom: 3px; background-color: white; border-radius: 50%;
+  transition: .3s;
+}
+
+.switch-toggle input:checked + .slider { background-color: #FDE047; }
+.switch-toggle input:checked + .slider:before {
+  transform: translateX(20px);
+  background-color: #121316;
+}

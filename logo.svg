@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="yellowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FEF08A"/>
+      <stop offset="100%" stop-color="#FACC15"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+  <!-- Background Bento Card Frame -->
+  <rect x="32" y="32" width="448" height="448" rx="112" fill="#121316"/>
+  <rect x="56" y="56" width="400" height="400" rx="92" fill="url(#yellowGrad)" filter="url(#shadow)"/>
+  
+  <!-- Subtle Zen Sun Rays -->
+  <circle cx="256" cy="180" r="44" fill="#EAB308" fill-opacity="0.4"/>
+  <circle cx="256" cy="180" r="32" fill="#CA8A04"/>
+
+  <!-- Bold Black Minimalist Checkmark -->
+  <path d="M168 280 L236 348 L352 208" fill="none" stroke="#121316" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

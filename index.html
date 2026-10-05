@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>Minimal Todo — Visual Habit, Focus & Goals</title>
+  
+  <!-- Modern Typography (Plus Jakarta Sans & Outfit) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/svg+xml" href="logo.svg">
+  <meta name="theme-color" content="#121316">
+</head>
+<body>
+
+  <!-- ======================================================== -->
+  <!-- 0. CONFETTI FULLSCREEN CANVAS                           -->
+  <!-- ======================================================== -->
+  <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
+
+  <!-- ======================================================== -->
+  <!-- 1. BESPOKE TOAST NOTIFICATION CONTAINER (ANTI-ALERT)     -->
+  <!-- ======================================================== -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- ======================================================== -->
+  <!-- 2. BRANDED LOADING / SPLASH SCREEN                       -->
+  <!-- ======================================================== -->
+  <div id="app-splash-screen" class="splash-screen">
+    <div class="splash-content">
+      <div class="splash-logo-container">
+        <!-- Minimal Todo Master Vector Icon -->
+        <svg class="splash-logo-svg" viewBox="0 0 64 64" width="76" height="76" fill="none">
+          <rect width="64" height="64" rx="20" fill="#FDE047"/>
+          <circle cx="32" cy="20" r="5" fill="#CA8A04" fill-opacity="0.6"/>
+          <path d="M20 33L28 41L45 24" stroke="#121316" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h1 class="splash-title">Minimal Todo</h1>
+      <p class="splash-subtitle">Visual Habit, Focus & Mindful Goals</p>
+      
+      <div class="splash-loader-bar">
+        <div class="splash-loader-fill"></div>
+      </div>
+      <span class="splash-status-text" id="splash-status">Menyiapkan rutinitas hari ini...</span>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 3. MAIN APPLICATION VIEWPORT SHELL                       -->
+  <!-- ======================================================== -->
+  <div class="app-viewport">
+
+    <!-- Main Scrollable Content -->
+    <main class="main-content-scroll" id="main-scroll-area">
+
+      <!-- Dynamic Header: Greeting, Today's Date, & Daily Progress Ring -->
+      <section class="dynamic-greeting-section">
+        <div class="greeting-left">
+          <span class="greeting-date" id="greeting-live-date">KAMIS, 1 OKTOBER</span>
+          <h2 class="greeting-heading" id="greeting-time-text">Selamat Pagi</h2>
+          <p class="greeting-subtitle" id="greeting-motivational-quote">Sinar matahari pagi meningkatkan serotonin dan fokus.</p>
+        </div>
+        <div class="progress-ring-wrap" onclick="App.openCalendarModal()" title="Lihat Rekap Disiplin">
+          <svg class="progress-ring-svg" width="56" height="56" viewBox="0 0 56 56">
+            <circle class="ring-bg" cx="28" cy="28" r="23" stroke-width="4.5"/>
+            <circle class="ring-fill" id="ring-fill-circle" cx="28" cy="28" r="23" stroke-width="4.5"/>
+          </svg>
+          <div class="ring-percentage" id="ring-percentage-label">0%</div>
+        </div>
+      </section>
+
+      <!-- Weekly Habit Tracker Bar (M T W T F S S — Deteksi Hari Asli) -->
+      <section class="weekly-streak-section">
+        <div class="weekly-days-grid" id="weekly-days-container">
+          <!-- Populated by JavaScript with live real-date highlight and check pills -->
+        </div>
+      </section>
+
+      <!-- Bento Cards Grid (2 Kolom Persis Mockup Foto + Fitur Baru) -->
+      <section class="bento-cards-grid" id="bento-grid-container">
+        <!-- Rendered dynamically by app.js: Checklist, Progressive, Focus Timer, Journal & Add -->
+      </section>
+
+      <!-- Cloud Sync & Discipline Score Indicator Chip -->
+      <div class="cloud-sync-chip" id="cloud-sync-chip" onclick="App.openSyncSettings()">
+        <span class="sync-dot pulse" id="sync-dot-indicator"></span>
+        <span class="sync-label" id="sync-status-label">Lokal Aktif (Siap Sync Google Sheets)</span>
+        <span class="discipline-badge" id="discipline-score-badge">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px;"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+          <span id="discipline-score-text">0% Disiplin</span>
+        </span>
+      </div>
+
+    </main>
+
+    <!-- ======================================================== -->
+    <!-- 4. FLOATING CAPSULE BOTTOM NAVIGATION DOCK               -->
+    <!-- ======================================================== -->
+    <nav class="floating-bottom-dock" aria-label="Navigasi Utama">
+      <!-- 1. Quick Add (+) -->
+      <button class="dock-btn" id="btn-dock-add" onclick="App.openAddModal()" title="Tambah Kartu Bento">
+        <svg class="dock-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </button>
+
+      <!-- 2. One-Line Micro-Journal -->
+      <button class="dock-btn" id="btn-dock-journal" onclick="App.openJournalModal()" title="Catatan Syukur Harian">
+        <svg class="dock-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 20h9"/>
+          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+        </svg>
+      </button>
+
+      <!-- 3. Bento Grid View (Active) -->
+      <button class="dock-btn active" id="btn-dock-grid" onclick="App.switchToGridView()" title="Tampilan Kartu Bento">
+        <svg class="dock-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+          <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+          <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+          <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+        </svg>
+      </button>
+
+      <!-- 4. Calendar & Discipline Matrix -->
+      <button class="dock-btn" id="btn-dock-calendar" onclick="App.openCalendarModal()" title="Kalender & Rekap Disiplin">
+        <svg class="dock-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="3"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      </button>
+
+      <!-- 5. Cloud Database & Firebase Settings -->
+      <button class="dock-btn" id="btn-dock-settings" onclick="App.openSyncSettings()" title="Koneksi Google Sheets & FCM">
+        <svg class="dock-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </nav>
+
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 5. MODAL: TAMBAH / EDIT KARTU BENTO                      -->
+  <!-- ======================================================== -->
+  <div class="modal-backdrop" id="modal-add-habit" onclick="if(event.target===this) App.closeModal('modal-add-habit')">
+    <div class="modal-sheet-panel">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div class="sheet-title-wrap">
+          <div class="sheet-title-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FDE047" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          </div>
+          <h2 id="modal-habit-title-text">Buat Kartu Baru</h2>
+        </div>
+        <button class="btn-close-modal" onclick="App.closeModal('modal-add-habit')" aria-label="Tutup">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <form id="form-create-habit" onsubmit="App.handleSaveHabit(event)">
+        <input type="hidden" id="habit-edit-id" value="">
+        <input type="hidden" id="selected-card-type" value="checklist">
+        
+        <!-- SECTION 1: PILIH TIPE KARTU BENTO -->
+        <div class="bento-form-card">
+          <div class="bento-card-header">
+            <span class="bento-card-title">Tipe Kartu Bento</span>
+            <span class="bento-card-badge" id="bento-type-badge">Checklist Sederhana</span>
+          </div>
+          <div class="segmented-control" id="card-type-segmented">
+            <button type="button" class="segment-btn active" data-type="checklist" onclick="App.selectCardType('checklist')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Checklist</span>
+            </button>
+            <button type="button" class="segment-btn" data-type="progressive" onclick="App.selectCardType('progressive')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+              <span>Target Angka</span>
+            </button>
+            <button type="button" class="segment-btn" data-type="focus" onclick="App.selectCardType('focus')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span>Focus Timer</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- SECTION 2: INFORMASI TARGET UTAMA (INSET BOX) -->
+        <div class="bento-form-card">
+          <div class="bento-card-header">
+            <span class="bento-card-title">Informasi Target</span>
+          </div>
+          <div class="bento-input-box">
+            <div class="bento-input-row">
+              <label for="habit-input-title">Nama Target / Habit</label>
+              <input type="text" id="habit-input-title" required placeholder="Contoh: Minum Air, Baca Buku, Olahraga...">
+            </div>
+            <div class="bento-divider-line"></div>
+            <div class="bento-input-row">
+              <label for="habit-input-subtitle">Alasan & Motivasi ("The Why")</label>
+              <textarea id="habit-input-subtitle" rows="2" placeholder="Tulis alasan emosional kenapa hal ini penting untukmu..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: JADWAL TARGET (DAILY VS SPESIFIK) -->
+        <div class="bento-form-card">
+          <div class="bento-card-header">
+            <span class="bento-card-title">Jadwal Target</span>
+          </div>
+          <div class="schedule-selector-segmented">
+            <button type="button" class="btn-schedule-type active" id="sched-btn-daily" data-schedule="daily" onclick="App.selectScheduleType('daily')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span>Setiap Hari (Daily)</span>
+            </button>
+            <button type="button" class="btn-schedule-type" id="sched-btn-specific" data-schedule="specific" onclick="App.selectScheduleType('specific')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span>Tanggal Tertentu</span>
+            </button>
+          </div>
+          <input type="hidden" id="selected-schedule-type" value="daily">
+
+          <!-- Specific Date Inset Drawer -->
+          <div class="specific-date-box" id="specific-date-box" style="display:none;">
+            <div class="quick-date-chips">
+              <button type="button" class="btn-date-chip active" id="chip-date-today" onclick="App.setTargetDateOffset(0, this)">Hari Ini</button>
+              <button type="button" class="btn-date-chip" id="chip-date-tomorrow" onclick="App.setTargetDateOffset(1, this)">Besok</button>
+              <button type="button" class="btn-date-chip" id="chip-date-dayafter" onclick="App.setTargetDateOffset(2, this)">Lusa</button>
+            </div>
+            <div class="custom-date-picker-wrap">
+              <span class="custom-date-label">Pilih di Kalender:</span>
+              <input type="date" id="habit-input-specific-date" class="bespoke-date-input" onchange="App.onSpecificDateChange(this.value)">
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 4A: DYNAMIC TARGET ANGKA (PROGRESSIVE STEPPER) -->
+        <div class="bento-form-card progressive-fields" id="progressive-goal-fields" style="display:none;">
+          <div class="bento-card-header">
+            <span class="bento-card-title">Target Hitungan Bertahap</span>
+            <span class="bento-card-badge">Dicicil</span>
+          </div>
+
+          <!-- Presets Cepat 1-Klik -->
+          <div class="preset-label-row">
+            <span class="preset-title">Rekomendasi Cepat:</span>
+          </div>
+          <div class="progressive-preset-chips">
+            <button type="button" class="preset-chip" onclick="App.applyTargetPreset(8, 'gelas', 'water')">💧 8 Gelas</button>
+            <button type="button" class="preset-chip" onclick="App.applyTargetPreset(20, 'halaman', 'book')">📖 20 Hlm</button>
+            <button type="button" class="preset-chip" onclick="App.applyTargetPreset(5000, 'langkah', 'walk')">👟 5.000 Langkah</button>
+            <button type="button" class="preset-chip" onclick="App.applyTargetPreset(30, 'kali', 'dumbbell')">💪 30 Kali</button>
+            <button type="button" class="preset-chip" onclick="App.applyTargetPreset(2000, 'ml', 'water')">🥛 2.000 ml</button>
+            <button type="button" class="preset-chip" onclick="App.applyTargetPreset(45, 'menit', 'clock')">⏱️ 45 Menit</button>
+          </div>
+
+          <!-- Inset Dual Control: Stepper Number + Satuan -->
+          <div class="stepper-inputs-row">
+            <div class="stepper-col">
+              <label for="habit-input-target">Target Maksimal</label>
+              <div class="stepper-counter-capsule">
+                <button type="button" class="btn-stepper-tap" onclick="App.adjustTargetGoalInput(-1)" title="Kurang 1">−</button>
+                <input type="number" id="habit-input-target" min="1" value="8" placeholder="8">
+                <button type="button" class="btn-stepper-tap" onclick="App.adjustTargetGoalInput(1)" title="Tambah 1">+</button>
+              </div>
+            </div>
+            <div class="stepper-col">
+              <label for="habit-input-unit">Satuan Ukuran</label>
+              <div class="unit-input-capsule">
+                <input type="text" id="habit-input-unit" value="gelas" placeholder="gelas, halaman, kali...">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 4B: DYNAMIC FOCUS TIMER (SESUKA HATI) -->
+        <div class="bento-form-card focus-fields" id="focus-timer-fields" style="display:none;">
+          <div class="bento-card-header">
+            <span class="bento-card-title">Durasi Sesi Fokus</span>
+            <span class="bento-card-badge">Timer Pomodoro</span>
+          </div>
+
+          <!-- Presets Cepat Durasi -->
+          <div class="timer-duration-options">
+            <button type="button" class="btn-duration-choice" data-min="15" onclick="App.selectTimerDuration(15)">15m</button>
+            <button type="button" class="btn-duration-choice active" data-min="25" onclick="App.selectTimerDuration(25)">25m (Pomodoro)</button>
+            <button type="button" class="btn-duration-choice" data-min="45" onclick="App.selectTimerDuration(45)">45m</button>
+            <button type="button" class="btn-duration-choice" data-min="60" onclick="App.selectTimerDuration(60)">60m</button>
+          </div>
+
+          <!-- Stepper Atur Sendiri Sesuka Hati -->
+          <div class="custom-timer-adjuster">
+            <span class="custom-timer-label">Durasi Kustom:</span>
+            <div class="custom-stepper-wrap">
+              <button type="button" class="btn-custom-step" onclick="App.adjustCustomTimer(-5)" title="Kurang 5 Menit">−5m</button>
+              <button type="button" class="btn-custom-step" onclick="App.adjustCustomTimer(-1)" title="Kurang 1 Menit">−1m</button>
+              <div class="custom-minute-input-wrap">
+                <input type="number" id="custom-timer-minutes-input" min="1" max="360" value="25" oninput="App.onCustomTimerInput(this.value)">
+                <span class="minute-unit">menit</span>
+              </div>
+              <button type="button" class="btn-custom-step" onclick="App.adjustCustomTimer(1)" title="Tambah 1 Menit">+1m</button>
+              <button type="button" class="btn-custom-step" onclick="App.adjustCustomTimer(5)" title="Tambah 5 Menit">+5m</button>
+            </div>
+          </div>
+          <input type="hidden" id="selected-timer-duration" value="25">
+        </div>
+
+        <!-- SECTION 5: PILIHAN WARNA BENTO -->
+        <div class="bento-form-card">
+          <div class="bento-card-header">
+            <span class="bento-card-title">Warna Bento Card</span>
+            <span id="selected-color-name" class="bento-card-badge">Kuning Lemon</span>
+          </div>
+          <div class="color-palette-options" id="color-palette-picker">
+            <label class="color-radio yellow active" title="Kuning Lemon" onclick="App.updateColorLabel('#FDE047')">
+              <input type="radio" name="cardColor" value="#FDE047" checked>
+              <span></span>
+            </label>
+            <label class="color-radio terracotta" title="Terracotta / Brown" onclick="App.updateColorLabel('#7C2D12')">
+              <input type="radio" name="cardColor" value="#7C2D12">
+              <span></span>
+            </label>
+            <label class="color-radio softblue" title="Soft Blue" onclick="App.updateColorLabel('#93C5FD')">
+              <input type="radio" name="cardColor" value="#93C5FD">
+              <span></span>
+            </label>
+            <label class="color-radio emerald" title="Emerald Green" onclick="App.updateColorLabel('#059669')">
+              <input type="radio" name="cardColor" value="#059669">
+              <span></span>
+            </label>
+            <label class="color-radio purple" title="Lavender Violet" onclick="App.updateColorLabel('#8B5CF6')">
+              <input type="radio" name="cardColor" value="#8B5CF6">
+              <span></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- SECTION 6: KOLEKSI IKON PREMIUM (KATEGORI & GRID) -->
+        <div class="bento-form-card">
+          <div class="bento-card-header">
+            <span class="bento-card-title">Ikon Vektor Tajam</span>
+            <span id="selected-icon-preview-label" class="bento-card-badge">Bangun Pagi</span>
+          </div>
+          
+          <!-- Category Tabs -->
+          <div class="icon-category-tabs">
+            <button type="button" class="icon-cat-btn active" data-cat="all" onclick="App.filterIconCategory('all', this)">Semua (36)</button>
+            <button type="button" class="icon-cat-btn" data-cat="fitness" onclick="App.filterIconCategory('fitness', this)">Olahraga</button>
+            <button type="button" class="icon-cat-btn" data-cat="health" onclick="App.filterIconCategory('health', this)">Makanan/Tidur</button>
+            <button type="button" class="icon-cat-btn" data-cat="work" onclick="App.filterIconCategory('work', this)">Belajar/Kerja</button>
+            <button type="button" class="icon-cat-btn" data-cat="life" onclick="App.filterIconCategory('life', this)">Gaya Hidup</button>
+          </div>
+
+          <!-- Grid Ikon Scrollable -->
+          <div class="icon-selector-grid" id="icon-selector-grid">
+            <!-- Populated with 36+ bespoke inline SVGs by JavaScript -->
+          </div>
+          <input type="hidden" id="selected-icon-key" value="sun">
+        </div>
+
+        <button type="submit" class="btn-primary-action" id="btn-save-habit">Simpan Kartu Bento</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 6. MODAL: ONE-LINE MICRO-JOURNAL                        -->
+  <!-- ======================================================== -->
+  <div class="modal-backdrop" id="modal-journal" onclick="if(event.target===this) App.closeModal('modal-journal')">
+    <div class="modal-sheet-panel">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div class="sheet-title-wrap">
+          <div class="sheet-title-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          </div>
+          <h2>Catatan Syukur Harian</h2>
+        </div>
+        <button class="btn-close-modal" onclick="App.closeModal('modal-journal')" aria-label="Tutup">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <form id="form-journal" onsubmit="App.handleSaveJournal(event)">
+        <div class="bento-form-card">
+          <div class="bento-card-header">
+            <span class="bento-card-title">Refleksi Hari Ini</span>
+            <span class="char-count" id="journal-char-count">0 / 140</span>
+          </div>
+          <div class="bento-input-box">
+            <div class="bento-input-row">
+              <textarea id="journal-input-text" maxlength="140" rows="3" required placeholder="Hari ini saya bersyukur karena..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="bento-form-card">
+          <div class="bento-card-header">
+            <span class="bento-card-title">Suasana Hati</span>
+            <span class="bento-card-badge">Mood Vektor</span>
+          </div>
+          <div class="mood-selector-grid" id="mood-selector-grid">
+            <!-- Mood pills with bespoke SVGs -->
+          </div>
+          <input type="hidden" id="selected-mood-key" value="smile">
+        </div>
+
+        <button type="submit" class="btn-primary-action">Simpan Refleksi</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 7. MODAL: BENTO KALENDER & REKAP DISIPLIN (ANTI-INPUT-DATE) -->
+  <!-- ======================================================== -->
+  <div class="modal-backdrop" id="modal-calendar" onclick="if(event.target===this) App.closeModal('modal-calendar')">
+    <div class="modal-sheet-panel">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div class="sheet-title-wrap">
+          <div class="sheet-title-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+          <h2>Kalender & Matriks Disiplin</h2>
+        </div>
+        <button class="btn-close-modal" onclick="App.closeModal('modal-calendar')" aria-label="Tutup">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- Stats Highlight -->
+      <div class="calendar-hero-stats">
+        <div class="stat-box">
+          <span class="stat-number" id="cal-stat-streak">0</span>
+          <span class="stat-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:3px;"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+            Hari Streak
+          </span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-number" id="cal-stat-rate">0%</span>
+          <span class="stat-label">Tingkat Disiplin</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-number" id="cal-stat-level">Lvl 1</span>
+          <span class="stat-label" id="cal-stat-level-title">Langkah Awal</span>
+        </div>
+      </div>
+
+      <!-- Custom Month Navigation -->
+      <div class="calendar-month-bar">
+        <button type="button" class="btn-month-nav" onclick="App.changeCalendarMonth(-1)">‹</button>
+        <span class="calendar-month-label" id="calendar-current-month-label">Oktober 2026</span>
+        <button type="button" class="btn-month-nav" onclick="App.changeCalendarMonth(1)">›</button>
+      </div>
+
+      <!-- Bespoke Day Matrix Grid -->
+      <div class="calendar-matrix-wrap" id="calendar-matrix-container">
+        <!-- Rendered by JS without native datepickers -->
+      </div>
+
+      <!-- Journal Archive Section -->
+      <div class="calendar-journal-archive" id="calendar-journal-history">
+        <h3 class="archive-title">Arsip Catatan Syukur</h3>
+        <div id="journal-history-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 8. MODAL: LONG-PRESS QUICK ACTIONS (BESPOKE SHEET)      -->
+  <!-- ======================================================== -->
+  <div class="modal-backdrop" id="modal-quick-action" onclick="if(event.target===this) App.closeModal('modal-quick-action')">
+    <div class="modal-sheet-panel quick-action-sheet">
+      <div class="sheet-handle"></div>
+      <div class="quick-card-preview" id="quick-action-preview">
+        <!-- Rendered dynamically -->
+      </div>
+      <div class="quick-actions-list">
+        <button type="button" class="quick-act-btn" onclick="App.editCurrentQuickCard()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          <span>Ubah Rincian & Warna</span>
+        </button>
+        <button type="button" class="quick-act-btn" onclick="App.resetCurrentQuickCardProgress()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          <span>Reset Progres Hari Ini</span>
+        </button>
+        <button type="button" class="quick-act-btn text-danger" onclick="App.promptDeleteCurrentCard()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <span>Hapus Kartu Bento</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 9. MODAL: KONFIRMASI BESPOKE (ANTI-CONFIRM BROWSER)      -->
+  <!-- ======================================================== -->
+  <div class="modal-backdrop" id="modal-confirm" onclick="if(event.target===this) App.closeModal('modal-confirm')">
+    <div class="modal-sheet-panel confirm-sheet">
+      <div class="confirm-icon-box">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <h3 class="confirm-title" id="confirm-title-text">Hapus Kartu Bento?</h3>
+      <p class="confirm-desc" id="confirm-desc-text">Kartu ini akan dihapus dari daftar harian Anda.</p>
+      <div class="confirm-buttons-row">
+        <button type="button" class="btn-cancel" onclick="App.closeModal('modal-confirm')">Batal</button>
+        <button type="button" class="btn-confirm-danger" id="btn-execute-confirm">Ya, Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 10. MODAL: PENGATURAN GOOGLE SHEETS & FIREBASE           -->
+  <!-- ======================================================== -->
+  <div class="modal-backdrop" id="modal-settings" onclick="if(event.target===this) App.closeModal('modal-settings')">
+    <div class="modal-sheet-panel">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div class="sheet-title-wrap">
+          <div class="sheet-title-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </div>
+          <h2>Koneksi Cloud & Database</h2>
+        </div>
+        <button class="btn-close-modal" onclick="App.closeModal('modal-settings')" aria-label="Tutup">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- Cloud Sync Bento Card -->
+      <div class="bento-form-card">
+        <div class="bento-card-header">
+          <span class="bento-card-title">Google Sheets Sync</span>
+          <span class="bento-card-badge">Gratis</span>
+        </div>
+        <p class="bento-card-desc">Hubungkan dengan Google Sheets via URL Apps Script Web App secara langsung.</p>
+        <div class="bento-input-box" style="margin-top: 10px;">
+          <div class="bento-input-row">
+            <label for="input-gas-url">URL Google Apps Script</label>
+            <input type="url" id="input-gas-url" placeholder="https://script.google.com/macros/s/.../exec">
+          </div>
+        </div>
+        <div class="settings-actions" style="margin-top: 12px; display: flex; gap: 8px;">
+          <button type="button" class="btn-secondary-action" onclick="App.saveGasUrl()">Simpan URL</button>
+          <button type="button" class="btn-primary-action" onclick="App.syncWithGoogleSheets(true)" style="margin-top:0; flex:1; display:flex; align-items:center; justify-content:center; gap:6px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+            <span>Sinkron Sekarang</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Push Notification Bento Card -->
+      <div class="bento-form-card">
+        <div class="bento-card-header">
+          <span class="bento-card-title">Push Notifikasi Harian</span>
+          <label class="switch-toggle">
+            <input type="checkbox" id="toggle-fcm-reminders" onchange="App.togglePushNotifications(this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <p class="bento-card-desc">Terima pengingat pagi (07:00) dan evaluasi malam (20:00 WIB) langsung di layar HP.</p>
+      </div>
+
+      <button type="button" class="btn-secondary-action" onclick="App.closeModal('modal-settings'); App.showSplashScreen();" style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px; margin-top: 6px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        <span>Putar Ulang Loading Screen</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Application Scripts -->
+  <script src="updater.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
