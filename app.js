@@ -57,7 +57,15 @@ const SVG_ICONS = {
   // UI Support
   check: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`,
   play: `<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
-  pause: `<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`
+  pause: `<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`,
+  calendar: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+  repeat: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`,
+  bell: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
+  plus: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+  minus: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+  cloud: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>`,
+  cloudCheck: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/><polyline points="8 14 11 17 16 12"/></svg>`,
+  chevronRight: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`
 };
 
 const ICON_CATALOG = [
@@ -114,6 +122,8 @@ const App = {
   activeTimers: {},
   calendarViewDate: new Date(),
   formCalendarDate: new Date(),
+  selectedDateKey: "",
+  calendarModalSelectedDayKey: "",
   reminderInterval: null,
   audioCtx: null,
   longPressTimer: null,
@@ -123,6 +133,8 @@ const App = {
   init() {
     this.showSplashScreen();
     this.loadData();
+    this.selectedDateKey = this.getTodayKey();
+    this.calendarModalSelectedDayKey = this.getTodayKey();
     this.renderHeaderAndLiveCalendar();
     this.populateIconPicker();
     this.populateMoodPicker();
@@ -130,12 +142,20 @@ const App = {
     this.updateProgressRing();
     this.initConfetti();
     this.initReminderEngine();
+
+    // Auto-pull dari Google Sheets jika URL sudah tersimpan di HP
+    if (this.gasEndpoint) {
+      setTimeout(() => this.pullFromGoogleSheets(false), 800);
+    }
   },
 
   formatDateKey(date) {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const d = String(date.getDate()).padStart(2, "0");
+    if (!date) return "";
+    if (typeof date === "string" && !date.includes("T")) return date;
+    const dObj = (date instanceof Date) ? date : new Date(date);
+    const y = dObj.getFullYear();
+    const m = String(dObj.getMonth() + 1).padStart(2, "0");
+    const d = String(dObj.getDate()).padStart(2, "0");
     return `${y}-${m}-${d}`;
   },
 
@@ -143,15 +163,72 @@ const App = {
     return this.formatDateKey(new Date());
   },
 
+  getHabitsForDate(dateKey) {
+    if (!dateKey) dateKey = this.getTodayKey();
+    return this.habits.filter(h => {
+      const sched = h.scheduleType || "daily";
+      if (sched === "daily") return true;
+      if (sched === "specific") {
+        return h.targetDate === dateKey;
+      }
+      return true;
+    });
+  },
+
+  selectDate(dateInput) {
+    let key = dateInput;
+    if (dateInput instanceof Date) {
+      key = this.formatDateKey(dateInput);
+    } else if (typeof dateInput === "string" && dateInput.includes("T")) {
+      key = this.formatDateKey(new Date(dateInput));
+    }
+    this.selectedDateKey = key;
+    this.calendarModalSelectedDayKey = key;
+    this.renderHeaderAndLiveCalendar();
+    this.renderBentoCards();
+    this.updateProgressRing();
+  },
+
+  selectToday() {
+    this.selectDate(this.getTodayKey());
+    this.showToast("Menampilkan target hari ini.", "info");
+  },
+
+  handleDayPillClick(dateInput) {
+    this.selectDate(dateInput);
+  },
+
   renderHeaderAndLiveCalendar() {
     const now = new Date();
-    const daysIndo = ["MINGGU", "SENIN", "SELASA", "RABU", "KAMIS", "JUMAT", "SABTU"];
-    const monthsIndo = ["JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"];
+    const daysIndo = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+    const monthsIndo = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     
+    const isViewingToday = (this.selectedDateKey === this.getTodayKey());
+
+    // Banner filter tanggal aktif
+    const bannerEl = document.getElementById("active-date-view-banner");
+    const bannerNameEl = document.getElementById("active-date-banner-name");
+    if (bannerEl) {
+      if (isViewingToday) {
+        bannerEl.style.display = "none";
+      } else {
+        bannerEl.style.display = "flex";
+        if (bannerNameEl) {
+          const parts = this.selectedDateKey.split("-").map(Number);
+          if (parts.length === 3) {
+            const selDate = new Date(parts[0], parts[1] - 1, parts[2]);
+            bannerNameEl.textContent = `${daysIndo[selDate.getDay()]}, ${parts[2]} ${monthsIndo[parts[1] - 1]} ${parts[0]}`;
+          } else {
+            bannerNameEl.textContent = this.selectedDateKey;
+          }
+        }
+      }
+    }
+
     // Header Live Date
     const liveDateEl = document.getElementById("greeting-live-date");
     if (liveDateEl) {
-      liveDateEl.textContent = `${daysIndo[now.getDay()]}, ${now.getDate()} ${monthsIndo[now.getMonth()]}`;
+      liveDateEl.textContent = `${daysIndo[now.getDay()].toUpperCase()}, ${now.getDate()} ${monthsIndo[now.getMonth()].toUpperCase()}`;
     }
 
     // Dynamic Greeting by Hour
@@ -160,54 +237,67 @@ const App = {
     const quoteEl = document.getElementById("greeting-motivational-quote");
 
     if (headingEl) {
-      if (hour >= 5 && hour < 12) {
-        headingEl.textContent = "Selamat Pagi";
-        if (quoteEl) quoteEl.textContent = "Sinar matahari pagi meningkatkan produksi serotonin dan fokus.";
-      } else if (hour >= 12 && hour < 16) {
-        headingEl.textContent = "Selamat Siang";
-        if (quoteEl) quoteEl.textContent = "Tetap terhidrasi dan pertahankan momentum ritme harimu.";
-      } else if (hour >= 16 && hour < 19) {
-        headingEl.textContent = "Selamat Sore";
-        if (quoteEl) quoteEl.textContent = "Hampir selesai! Sempurnakan habitmu sebelum petang.";
+      if (!isViewingToday) {
+        headingEl.textContent = "Jadwal Terpilih";
+        if (quoteEl) quoteEl.textContent = "Fokus menyelesaikan target pada tanggal yang Anda tentukan.";
       } else {
-        headingEl.textContent = "Selamat Malam";
-        if (quoteEl) quoteEl.textContent = "Waktunya refleksi diri dan istirahat berkualitas.";
+        if (hour >= 5 && hour < 12) {
+          headingEl.textContent = "Selamat Pagi";
+          if (quoteEl) quoteEl.textContent = "Sinar matahari pagi meningkatkan produksi serotonin dan fokus.";
+        } else if (hour >= 12 && hour < 16) {
+          headingEl.textContent = "Selamat Siang";
+          if (quoteEl) quoteEl.textContent = "Tetap terhidrasi dan pertahankan momentum ritme harimu.";
+        } else if (hour >= 16 && hour < 19) {
+          headingEl.textContent = "Selamat Sore";
+          if (quoteEl) quoteEl.textContent = "Hampir selesai! Sempurnakan habitmu sebelum petang.";
+        } else {
+          headingEl.textContent = "Selamat Malam";
+          if (quoteEl) quoteEl.textContent = "Waktunya refleksi diri dan istirahat berkualitas.";
+        }
       }
     }
 
-    // Render Weekly Streak Bar (M T W T F S S)
+    // Render Weekly Streak Bar (M T W T F S S) dengan angka tanggal
     const weeklyContainer = document.getElementById("weekly-days-container");
     if (!weeklyContainer) return;
 
-    // Hitung awal pekan (Senin)
-    const currentDay = now.getDay(); // 0 is Sunday, 1 is Monday...
-    const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay;
-    const mondayDate = new Date(now);
-    mondayDate.setDate(now.getDate() + mondayOffset);
+    // Basis awal pekan: hitung Senin dari tanggal yang sedang dilihat atau hari ini
+    let baseDate = now;
+    if (this.selectedDateKey) {
+      const parts = this.selectedDateKey.split("-").map(Number);
+      if (parts.length === 3) baseDate = new Date(parts[0], parts[1] - 1, parts[2]);
+    }
 
-    const weekLetters = ["M", "T", "W", "T", "F", "S", "S"];
+    const currentDay = baseDate.getDay(); // 0 is Sunday, 1 is Monday...
+    const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay;
+    const mondayDate = new Date(baseDate);
+    mondayDate.setDate(baseDate.getDate() + mondayOffset);
+
+    const weekLetters = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
     let weekHtml = "";
 
     for (let i = 0; i < 7; i++) {
       const d = new Date(mondayDate);
       d.setDate(mondayDate.getDate() + i);
-      const isToday = d.toDateString() === now.toDateString();
-      const isPast = d < now && !isToday;
       const dayKey = this.formatDateKey(d);
-      
-      // HANYA tandai selesai jika memang ada data riil target yang 100% selesai!
+      const isToday = (dayKey === this.getTodayKey());
+      const isSelected = (dayKey === this.selectedDateKey);
+
+      // Hitung apakah seluruh habit hari ini tuntas
+      const dayHabits = this.getHabitsForDate(dayKey);
       let isCompleted = false;
-      if (isToday) {
-        isCompleted = Boolean(this.habits.length > 0 && this.habits.every(h => h.completed));
-      } else if (isPast) {
+      if (dayHabits.length > 0) {
+        isCompleted = dayHabits.every(h => h.completed);
+      } else {
         const rec = this.history[dayKey];
         isCompleted = Boolean(rec && rec.percentage === 100 && rec.totalHabits > 0);
       }
 
       weekHtml += `
-        <div class="day-column" onclick="App.handleDayPillClick('${d.toISOString()}')">
-          <span class="day-letter" style="${isToday ? 'color:#FDE047;' : ''}">${weekLetters[i]}</span>
-          <div class="day-status-pill ${isCompleted ? 'completed' : ''} ${isToday ? 'active-today' : ''}">
+        <div class="day-column" onclick="App.handleDayPillClick('${d.toISOString()}')" title="${daysIndo[d.getDay()]}, ${d.getDate()} ${monthsIndo[d.getMonth()]}">
+          <span class="day-letter" style="${isSelected ? 'color:#FDE047; font-weight:800;' : ''}">${weekLetters[i]}</span>
+          <span class="day-num" style="${isSelected ? 'color:#FDE047;' : ''}">${d.getDate()}</span>
+          <div class="day-status-pill ${isCompleted ? 'completed' : ''} ${isToday ? 'active-today' : ''} ${isSelected ? 'selected-view-day' : ''}">
             ${isCompleted ? SVG_ICONS.check : ''}
           </div>
         </div>
@@ -218,26 +308,7 @@ const App = {
 
   handleDayPillClick(dateIso) {
     const d = new Date(dateIso);
-    const months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
-    const dayKey = this.formatDateKey(d);
-    const isToday = d.toDateString() === new Date().toDateString();
-
-    if (isToday) {
-      if (this.habits.length === 0) {
-        this.showToast("Hari ini: Belum ada target yang dibuat.", "info");
-      } else {
-        const done = this.habits.filter(h => h.completed).length;
-        const pct = Math.round((done / this.habits.length) * 100);
-        this.showToast(`Hari ini: ${done} dari ${this.habits.length} target tuntas (${pct}%).`, "info");
-      }
-    } else {
-      const rec = this.history[dayKey];
-      if (rec && rec.totalHabits > 0) {
-        this.showToast(`Tanggal ${d.getDate()} ${months[d.getMonth()]}: ${rec.percentage}% tuntas (${rec.completedCount}/${rec.totalHabits} habit).`, "info");
-      } else {
-        this.showToast(`Tanggal ${d.getDate()} ${months[d.getMonth()]}: Belum ada riwayat aktivitas.`, "info");
-      }
-    }
+    this.selectDate(d);
   },
 
   // ==========================================================
@@ -305,26 +376,32 @@ const App = {
     if (!container) return;
 
     let html = "";
+    const isToday = (this.selectedDateKey === this.getTodayKey());
 
-    // 1. Render Kartu Jurnal Mikro Paling Atas (Banner)
-    const todayJournal = this.journalList[0];
-    if (todayJournal) {
-      html += `
-        <div class="bento-card card-journal-banner" onclick="App.openJournalModal()">
-          <div class="journal-banner-header">
-            <span class="journal-banner-label">Refleksi Hari Ini</span>
-            <div style="display:flex; align-items:center; gap:6px;">
-              <span style="color:#FDE047;">${SVG_ICONS[todayJournal.moodKey] || SVG_ICONS.smile}</span>
-              <span style="font-size:10px; color:#9CA3AF;">${todayJournal.moodLabel || 'Bersyukur'}</span>
+    // 1. Render Kartu Jurnal Mikro Paling Atas (Banner) jika melihat hari ini
+    if (isToday) {
+      const todayJournal = this.journalList[0];
+      if (todayJournal) {
+        html += `
+          <div class="bento-card card-journal-banner" onclick="App.openJournalModal()">
+            <div class="journal-banner-header">
+              <span class="journal-banner-label">Refleksi Hari Ini</span>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span style="color:#FDE047;">${SVG_ICONS[todayJournal.moodKey] || SVG_ICONS.smile}</span>
+                <span style="font-size:10px; color:#9CA3AF;">${todayJournal.moodLabel || 'Bersyukur'}</span>
+              </div>
             </div>
+            <p class="journal-banner-text">"${todayJournal.reflectionText}"</p>
           </div>
-          <p class="journal-banner-text">"${todayJournal.reflectionText}"</p>
-        </div>
-      `;
+        `;
+      }
     }
 
+    // Ambil hanya habit yang relevan dengan tanggal yang sedang aktif
+    const visibleHabits = this.getHabitsForDate(this.selectedDateKey);
+
     // 2. Render Kartu-Kartu Bento atau Empty State
-    if (this.habits.length === 0) {
+    if (visibleHabits.length === 0) {
       html += `
         <div class="empty-habits-container" onclick="App.openAddModal()" title="Mulai Tambah Target">
           <div class="empty-icon-wrap">
@@ -333,18 +410,18 @@ const App = {
               <line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
           </div>
-          <h3 class="empty-title">Belum Ada Target Harian</h3>
-          <p class="empty-desc">Ruang fokusmu masih bersih. Ketuk di sini atau tombol '+' untuk membuat kartu bento pertamamu!</p>
-          <button type="button" class="btn-empty-create" onclick="event.stopPropagation(); App.openAddModal()">+ Buat Target Pertama</button>
+          <h3 class="empty-title">${isToday ? "Belum Ada Target Hari Ini" : "Tidak Ada Target di Tanggal Ini"}</h3>
+          <p class="empty-desc">${isToday ? "Ruang fokusmu masih bersih. Ketuk di sini atau tombol '+' untuk membuat kartu bento pertamamu!" : "Belum ada jadwal khusus yang dicatat di tanggal ini. Ketuk untuk membuat target baru!"}</p>
+          <button type="button" class="btn-empty-create" onclick="event.stopPropagation(); App.openAddModal()">+ Buat Target</button>
         </div>
       `;
     } else {
-      this.habits.forEach(habit => {
+      visibleHabits.forEach(habit => {
         const iconSvg = SVG_ICONS[habit.iconSvgKey] || SVG_ICONS.sun;
 
         const scheduleBadge = (habit.scheduleType === 'specific' && habit.targetDate)
-          ? `<span class="card-schedule-badge badge-specific">📅 ${this.formatShortDate(habit.targetDate)}</span>`
-          : `<span class="card-schedule-badge badge-daily">🔄 HARIAN</span>`;
+          ? `<span class="card-badge badge-specific" title="Jadwal Tanggal ${this.formatShortDate(habit.targetDate)}"><span class="badge-icon">${SVG_ICONS.calendar}</span><span>${this.formatShortDate(habit.targetDate)}</span></span>`
+          : `<span class="card-badge badge-daily" title="Rutin Setiap Hari"><span class="badge-icon">${SVG_ICONS.repeat}</span><span>Harian</span></span>`;
 
         html += `
         <div class="bento-card ${habit.theme} ${habit.completed ? 'is-completed' : ''}" 
@@ -356,7 +433,8 @@ const App = {
           <div class="card-header-icon">
             <span class="icon-visual-svg">${iconSvg}</span>
             <div class="card-check-badge ${habit.completed ? 'checked' : ''}" 
-                 onclick="event.stopPropagation(); App.toggleChecklist('${habit.id}')">
+                 onclick="event.stopPropagation(); App.toggleChecklist('${habit.id}')"
+                 title="${habit.completed ? 'Selesai' : 'Tandai Selesai'}">
               ${habit.completed ? SVG_ICONS.check : ''}
             </div>
           </div>
@@ -369,8 +447,14 @@ const App = {
           </div>
 
           <div class="card-footer">
-            ${scheduleBadge}
-            ${habit.reminderEnabled && habit.reminderTime ? `<span class="card-reminder-tag">🔔 ${habit.reminderTime}</span>` : ''}
+            <div class="card-footer-tags">
+              ${scheduleBadge}
+              ${habit.reminderEnabled && habit.reminderTime ? `
+              <span class="card-badge badge-reminder" title="Alarm ${habit.reminderTime}">
+                <span class="badge-icon">${SVG_ICONS.bell}</span>
+                <span>${habit.reminderTime}</span>
+              </span>` : ''}
+            </div>
             <span class="card-type-tag">${habit.cardType}</span>
           </div>
         </div>
@@ -399,9 +483,9 @@ const App = {
             <div class="progressive-bar-fill" style="width: ${pct}%;"></div>
           </div>
           <div class="progressive-actions-row">
-            <button class="stepper-btn" onclick="App.stepProgress('${habit.id}', -1)">−</button>
+            <button class="stepper-btn" onclick="App.stepProgress('${habit.id}', -1)" title="Kurang">${SVG_ICONS.minus}</button>
             <span class="stepper-status-label">${habit.currentProgress} / ${habit.targetGoal} ${habit.unit}</span>
-            <button class="stepper-btn" onclick="App.stepProgress('${habit.id}', 1)">+</button>
+            <button class="stepper-btn" onclick="App.stepProgress('${habit.id}', 1)" title="Tambah">${SVG_ICONS.plus}</button>
           </div>
         </div>
       `;
@@ -672,15 +756,17 @@ const App = {
     const ringEl = document.getElementById("ring-fill-circle");
     const disciplineEl = document.getElementById("discipline-score-text");
 
-    if (this.habits.length === 0) {
+    const currentHabits = this.getHabitsForDate(this.selectedDateKey);
+
+    if (currentHabits.length === 0) {
       if (labelEl) labelEl.textContent = "0%";
       if (ringEl) ringEl.style.strokeDashoffset = 144.51;
       if (disciplineEl) disciplineEl.textContent = "0% Disiplin";
       return;
     }
 
-    const completedCount = this.habits.filter(h => h.completed).length;
-    const pct = Math.round((completedCount / this.habits.length) * 100);
+    const completedCount = currentHabits.filter(h => h.completed).length;
+    const pct = Math.round((completedCount / currentHabits.length) * 100);
 
     if (labelEl) labelEl.textContent = `${pct}%`;
     if (disciplineEl) disciplineEl.textContent = `${pct}% Disiplin`;
@@ -692,19 +778,18 @@ const App = {
       ringEl.style.strokeDashoffset = offset;
     }
 
-    // Catat riwayat hari ini ke state & storage
-    const todayKey = this.getTodayKey();
-    this.history[todayKey] = {
-      date: todayKey,
-      completedCount: completedCount,
-      totalHabits: this.habits.length,
-      percentage: pct,
-      updatedAt: new Date().toISOString()
-    };
-    this.saveHistoryLocal();
-
-    // Re-render header kalender pekanan agar pill hari ini sinkron langsung
-    this.renderHeaderAndLiveCalendar();
+    // Catat riwayat ke state & storage jika sedang melihat hari ini
+    if (this.selectedDateKey === this.getTodayKey()) {
+      const todayKey = this.getTodayKey();
+      this.history[todayKey] = {
+        date: todayKey,
+        completedCount: completedCount,
+        totalHabits: currentHabits.length,
+        percentage: pct,
+        updatedAt: new Date().toISOString()
+      };
+      this.saveHistoryLocal();
+    }
   },
 
   checkAllCompletedCelebration() {
@@ -909,14 +994,32 @@ const App = {
     return `${d} ${months[m - 1]}`;
   },
 
-  openAddModal() {
+  openAddModal(presetDateKey = null) {
     document.getElementById("modal-habit-title-text").textContent = "Buat Kartu Baru";
     document.getElementById("habit-edit-id").value = "";
     document.getElementById("form-create-habit").reset();
     
-    this.selectScheduleType("daily");
-    this.formCalendarDate = new Date();
-    this.setTargetDateOffset(0, document.getElementById("chip-date-today"));
+    // Jika ada preset tanggal atau sedang melihat tanggal selain hari ini
+    const targetDateToUse = presetDateKey || (this.selectedDateKey && this.selectedDateKey !== this.getTodayKey() ? this.selectedDateKey : null);
+
+    if (targetDateToUse) {
+      this.selectScheduleType("specific");
+      const parts = targetDateToUse.split("-").map(Number);
+      if (parts.length === 3) {
+        this.formCalendarDate = new Date(parts[0], parts[1] - 1, parts[2]);
+      } else {
+        this.formCalendarDate = new Date();
+      }
+      const dateInput = document.getElementById("habit-input-specific-date");
+      if (dateInput) dateInput.value = targetDateToUse;
+      this.onSpecificDateChange(targetDateToUse);
+      this.renderFormMiniCalendar();
+    } else {
+      this.selectScheduleType("daily");
+      this.formCalendarDate = new Date();
+      this.setTargetDateOffset(0, document.getElementById("chip-date-today"));
+    }
+
     this.selectCardType("checklist");
     this.selectTimerDuration(25);
     
@@ -1459,9 +1562,14 @@ const App = {
     }
 
     this.saveLocal();
+    if (scheduleType === "specific" && targetDate) {
+      this.selectedDateKey = targetDate;
+      this.calendarModalSelectedDayKey = targetDate;
+    }
+    this.renderHeaderAndLiveCalendar();
     this.renderBentoCards();
     this.closeModal("modal-add-habit");
-    this.syncWithGoogleSheets(false);
+    this.pushToGoogleSheets(false);
   },
 
   // ==========================================================
@@ -1609,44 +1717,53 @@ const App = {
       html += `<div class="calendar-day-cell empty"></div>`;
     }
 
-    // Hari 1 s/d totalDays (MURNI DATA NYATA, NOL DATA DUMMY)
+    // Hari 1 s/d totalDays
     for (let day = 1; day <= totalDays; day++) {
       const isToday = (today.getFullYear() === y && today.getMonth() === m && today.getDate() === day);
       const dayDate = new Date(y, m, day);
       const dayKey = this.formatDateKey(dayDate);
-      let statusClass = "";
-      let detailMsg = "";
+      const isSelected = (this.calendarModalSelectedDayKey === dayKey);
 
-      if (isToday) {
-        if (this.habits.length > 0) {
-          const done = this.habits.filter(h => h.completed).length;
-          const pct = Math.round((done / this.habits.length) * 100);
-          if (pct === 100) statusClass = "completed-full";
-          else if (pct > 0) statusClass = "completed-partial";
-          detailMsg = `Hari ini (${day} ${months[m]}): ${done}/${this.habits.length} target tuntas (${pct}%)`;
-        } else {
-          detailMsg = `Hari ini (${day} ${months[m]}): Belum ada target yang dibuat`;
-        }
+      const dayHabits = this.getHabitsForDate(dayKey);
+      const hasSpecific = this.habits.some(h => h.scheduleType === 'specific' && h.targetDate === dayKey);
+
+      let statusClass = "";
+      if (dayHabits.length > 0) {
+        if (dayHabits.every(h => h.completed)) statusClass = "completed-full";
+        else if (dayHabits.some(h => h.completed)) statusClass = "completed-partial";
       } else {
         const rec = this.history[dayKey];
         if (rec && rec.totalHabits > 0) {
           if (rec.percentage === 100) statusClass = "completed-full";
           else if (rec.percentage > 0) statusClass = "completed-partial";
-          detailMsg = `Tanggal ${day} ${months[m]} ${y}: ${rec.percentage}% tuntas (${rec.completedCount}/${rec.totalHabits} habit)`;
-        } else {
-          detailMsg = `Tanggal ${day} ${months[m]} ${y}: Belum ada riwayat aktivitas`;
         }
       }
 
+      let dotHtml = "";
+      if (dayHabits.length > 0) {
+        const isDone = dayHabits.every(h => h.completed);
+        dotHtml = `<span class="cal-dot-indicator ${hasSpecific ? 'is-specific' : ''} ${isDone ? 'is-completed' : ''}"></span>`;
+      }
+
+      let cellClasses = ["calendar-day-cell"];
+      if (statusClass) cellClasses.push(statusClass);
+      if (isToday) cellClasses.push("is-today");
+      if (isSelected) cellClasses.push("selected-cal-day");
+
       html += `
-        <div class="calendar-day-cell ${statusClass} ${isToday ? 'is-today' : ''}" 
-             onclick="App.showToast('${detailMsg}', 'info')">
-          ${day}
+        <div class="${cellClasses.join(' ')}" 
+             onclick="App.selectCalendarModalDay(${y}, ${m}, ${day})"
+             ondblclick="App.openSelectedCalendarDateOnBoard()">
+          <span>${day}</span>
+          ${dotHtml}
         </div>
       `;
     }
     html += `</div>`;
     container.innerHTML = html;
+
+    // Render daftar agenda untuk tanggal yang dipilih di kalender
+    this.renderCalendarModalAgenda();
 
     // Render Riwayat Jurnal
     const journalWrap = document.getElementById("journal-history-list");
@@ -1667,11 +1784,92 @@ const App = {
     }
   },
 
+  selectCalendarModalDay(y, m, day) {
+    const d = new Date(y, m, day);
+    this.calendarModalSelectedDayKey = this.formatDateKey(d);
+    this.renderCalendarMonth();
+  },
+
+  renderCalendarModalAgenda() {
+    const titleEl = document.getElementById("calendar-selected-agenda-title");
+    const container = document.getElementById("calendar-agenda-items-container");
+    if (!container) return;
+
+    const parts = (this.calendarModalSelectedDayKey || this.getTodayKey()).split("-").map(Number);
+    const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    const daysIndo = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+    
+    let dateLabel = this.calendarModalSelectedDayKey;
+    if (parts.length === 3) {
+      const d = new Date(parts[0], parts[1] - 1, parts[2]);
+      dateLabel = `${daysIndo[d.getDay()]}, ${parts[2]} ${months[parts[1] - 1]}`;
+    }
+
+    const isToday = (this.calendarModalSelectedDayKey === this.getTodayKey());
+    if (titleEl) {
+      titleEl.textContent = isToday ? `Agenda Hari Ini (${dateLabel})` : `Agenda: ${dateLabel}`;
+    }
+
+    const dayHabits = this.getHabitsForDate(this.calendarModalSelectedDayKey);
+
+    if (dayHabits.length === 0) {
+      container.innerHTML = `
+        <div class="agenda-empty-state">
+          <span>Belum ada jadwal yang dicatat khusus tanggal ini.</span>
+          <button type="button" class="btn-agenda-add-target" onclick="App.openAddModal('${this.calendarModalSelectedDayKey}'); App.closeModal('modal-calendar');">
+            + Tambah Target Tanggal Ini
+          </button>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = dayHabits.map(h => {
+      const iconSvg = SVG_ICONS[h.iconSvgKey] || SVG_ICONS.sun;
+      return `
+        <div class="agenda-item-card ${h.completed ? 'is-done' : ''}">
+          <div class="agenda-item-left">
+            <span class="agenda-item-icon">${iconSvg}</span>
+            <div class="agenda-item-details">
+              <span class="agenda-item-title">${h.title}</span>
+              <div class="agenda-item-meta">
+                <span class="card-badge ${h.scheduleType === 'specific' ? 'badge-specific' : 'badge-daily'}">
+                  <span class="badge-icon">${h.scheduleType === 'specific' ? SVG_ICONS.calendar : SVG_ICONS.repeat}</span>
+                  <span>${h.scheduleType === 'specific' ? this.formatShortDate(h.targetDate) : 'Harian'}</span>
+                </span>
+                ${h.reminderEnabled && h.reminderTime ? `
+                <span class="card-badge badge-reminder">
+                  <span class="badge-icon">${SVG_ICONS.bell}</span>
+                  <span>${h.reminderTime}</span>
+                </span>` : ''}
+              </div>
+            </div>
+          </div>
+          <button type="button" class="agenda-item-check ${h.completed ? 'checked' : ''}" 
+                  onclick="App.toggleChecklist('${h.id}'); App.renderCalendarModalAgenda();"
+                  title="${h.completed ? 'Selesai' : 'Tandai Selesai'}">
+            ${h.completed ? SVG_ICONS.check : ''}
+          </button>
+        </div>
+      `;
+    }).join("");
+  },
+
+  openSelectedCalendarDateOnBoard() {
+    this.selectedDateKey = this.calendarModalSelectedDayKey;
+    this.closeModal("modal-calendar");
+    this.renderHeaderAndLiveCalendar();
+    this.renderBentoCards();
+    this.updateProgressRing();
+    this.showToast(`Menampilkan jadwal untuk tanggal ${this.formatShortDate(this.selectedDateKey)}.`, "info");
+  },
+
   // ==========================================================
-  // 13. CLOUD GOOGLE SHEETS & FIREBASE SYNC
+  // 13. CLOUD GOOGLE SHEETS & FIREBASE SYNC (TWO-WAY ENGINE)
   // ==========================================================
   openSyncSettings() {
     document.getElementById("input-gas-url").value = this.gasEndpoint;
+    this.updateSyncStatusLabel();
     document.getElementById("modal-settings").classList.add("open");
   },
 
@@ -1683,34 +1881,185 @@ const App = {
     this.syncWithGoogleSheets(true);
   },
 
-  async syncWithGoogleSheets(showNotification = false) {
-    if (!this.gasEndpoint) {
-      if (showNotification) this.showToast("Masukkan URL Google Apps Script Web App terlebih dahulu.", "warning");
-      return;
-    }
-
+  updateSyncStatusLabel(statusText = null, isSuccess = true) {
     const dot = document.getElementById("sync-dot-indicator");
     const label = document.getElementById("sync-status-label");
-    if (label) label.textContent = "Menyinkronkan ke Cloud...";
+    const miniDot = document.getElementById("sync-mini-dot");
+    const miniLabel = document.getElementById("sync-last-time-label");
+
+    const text = statusText || (this.gasEndpoint ? "Google Sheets Terhubung" : "Lokal Aktif (Siap Sync)");
+    if (label) label.textContent = text;
+    if (dot) dot.style.background = isSuccess ? "#22C55E" : "#EF4444";
+    if (miniDot) miniDot.style.background = isSuccess ? "#22C55E" : "#EF4444";
+    if (miniLabel) miniLabel.textContent = text;
+  },
+
+  async pullFromGoogleSheets(showNotification = false) {
+    if (!this.gasEndpoint) {
+      if (showNotification) this.showToast("Masukkan URL Google Apps Script Web App terlebih dahulu.", "warning");
+      return false;
+    }
+
+    this.updateSyncStatusLabel("Menarik data dari Google Sheets...", true);
+
+    try {
+      const url = new URL(this.gasEndpoint);
+      url.searchParams.set("action", "get_all");
+      url.searchParams.set("_t", Date.now());
+
+      const response = await fetch(url.toString(), {
+        method: "GET",
+        headers: { "Accept": "application/json" }
+      });
+
+      if (!response.ok) throw new Error("HTTP " + response.status);
+      const data = await response.json();
+
+      if (data && data.success && Array.isArray(data.habits)) {
+        this.mergeHabitsFromRemote(data.habits);
+        
+        // Merge jurnal jika ada
+        if (Array.isArray(data.journal) && data.journal.length > 0) {
+          data.journal.forEach(remoteJ => {
+            if (!this.journalList.some(localJ => localJ.id === remoteJ.id)) {
+              this.journalList.push(remoteJ);
+            }
+          });
+          this.saveJournalLocal();
+        }
+
+        this.saveLocal();
+        this.renderBentoCards();
+        this.updateProgressRing();
+        this.renderHeaderAndLiveCalendar();
+
+        const timeNow = new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+        this.updateSyncStatusLabel(`Tersinkron: ${data.habits.length} target (${timeNow} WIB)`, true);
+
+        if (showNotification) {
+          this.showToast(`Berhasil menarik ${data.habits.length} target dari Google Sheets!`, "success");
+        }
+        return true;
+      } else {
+        throw new Error(data.error || "Format respon tidak valid");
+      }
+    } catch (e) {
+      console.warn("Pull error:", e);
+      this.updateSyncStatusLabel("Gagal koneksi ke Google Sheets", false);
+      if (showNotification) {
+        this.showToast("Gagal mengambil data: " + (e.message || "Cek URL/akses 'Anyone'"), "warning");
+      }
+      return false;
+    }
+  },
+
+  async pushToGoogleSheets(showNotification = false) {
+    if (!this.gasEndpoint) {
+      if (showNotification) this.showToast("Masukkan URL Google Apps Script Web App terlebih dahulu.", "warning");
+      return false;
+    }
+
+    this.updateSyncStatusLabel("Mengirim data ke Google Sheets...", true);
 
     try {
       await fetch(this.gasEndpoint, {
         method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
           action: "sync_habits",
           habits: this.habits
         })
       });
 
-      if (label) label.textContent = "Cloud Sync Aktif (Google Sheets Terhubung)";
-      if (dot) dot.style.background = "#22C55E";
-      if (showNotification) this.showToast("Sinkronisasi Google Sheets Berhasil!", "success");
+      const timeNow = new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+      this.updateSyncStatusLabel(`Data terkirim ke Cloud (${timeNow} WIB)`, true);
+
+      if (showNotification) {
+        this.showToast("Data berhasil dikirim ke Google Sheets!", "success");
+      }
+      return true;
     } catch (e) {
-      if (label) label.textContent = "Mode Offline (Tersimpan di HP)";
-      if (showNotification) this.showToast("Berjalan dalam mode offline.", "info");
+      console.warn("Push error:", e);
+      this.updateSyncStatusLabel("Gagal kirim data ke Google Sheets", false);
+      if (showNotification) {
+        this.showToast("Gagal kirim ke Google Sheets: " + (e.message || "Offline"), "warning");
+      }
+      return false;
     }
+  },
+
+  async syncWithGoogleSheets(showNotification = false) {
+    if (!this.gasEndpoint) {
+      if (showNotification) this.showToast("Masukkan URL Google Apps Script Web App terlebih dahulu.", "warning");
+      return;
+    }
+
+    if (showNotification) this.showToast("Menjalankan sinkronisasi 2 arah...", "info");
+
+    // 1. Tarik data dari cloud terlebih dahulu
+    const pulled = await this.pullFromGoogleSheets(false);
+
+    // 2. Kirim data gabungan kembali ke cloud
+    const pushed = await this.pushToGoogleSheets(false);
+
+    if (pulled || pushed) {
+      const timeNow = new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+      this.updateSyncStatusLabel(`Sinkron 2 Arah Aktif (${timeNow} WIB)`, true);
+      if (showNotification) {
+        this.showToast("Sinkronisasi 2 arah berhasil! Data APK dan Google Sheets telah sinkron.", "success");
+      }
+    } else {
+      if (showNotification) {
+        this.showToast("Sinkronisasi gagal. Pastikan izin Web App adalah 'Anyone'.", "warning");
+      }
+    }
+  },
+
+  mergeHabitsFromRemote(remoteHabits) {
+    if (!Array.isArray(remoteHabits)) return;
+
+    remoteHabits.forEach(rh => {
+      const existing = this.habits.find(lh => lh.id === rh.id);
+      if (existing) {
+        // Update data yang ada
+        existing.title = rh.title || existing.title;
+        existing.subtitle = rh.subtitle !== undefined ? rh.subtitle : existing.subtitle;
+        existing.cardType = rh.cardType || existing.cardType;
+        existing.scheduleType = rh.scheduleType || existing.scheduleType;
+        existing.targetDate = rh.targetDate !== undefined ? rh.targetDate : existing.targetDate;
+        existing.date = existing.scheduleType === 'specific' ? this.formatShortDate(existing.targetDate) : "HARIAN";
+        existing.theme = rh.theme || existing.theme;
+        existing.iconSvgKey = rh.iconSvgKey || existing.iconSvgKey;
+        existing.currentProgress = rh.currentProgress !== undefined ? rh.currentProgress : existing.currentProgress;
+        existing.targetGoal = rh.targetGoal !== undefined ? rh.targetGoal : existing.targetGoal;
+        existing.unit = rh.unit !== undefined ? rh.unit : existing.unit;
+        existing.completed = Boolean(rh.completed !== undefined ? rh.completed : existing.completed);
+        existing.streak = rh.streak !== undefined ? rh.streak : existing.streak;
+        existing.reminderEnabled = Boolean(rh.reminderEnabled !== undefined ? rh.reminderEnabled : existing.reminderEnabled);
+        existing.reminderTime = rh.reminderTime || existing.reminderTime;
+      } else {
+        // Habit baru dari Google Sheets
+        this.habits.push({
+          id: rh.id || ("habit_cloud_" + Date.now() + "_" + Math.floor(Math.random() * 1000)),
+          title: rh.title || "Target Baru",
+          subtitle: rh.subtitle || "",
+          cardType: rh.cardType || "checklist",
+          scheduleType: rh.scheduleType || (rh.targetDate ? "specific" : "daily"),
+          targetDate: rh.targetDate || null,
+          reminderEnabled: Boolean(rh.reminderEnabled),
+          reminderTime: rh.reminderTime || "20:30",
+          lastNotifiedDate: null,
+          currentProgress: Number(rh.currentProgress) || 0,
+          targetGoal: Number(rh.targetGoal) || 1,
+          unit: rh.unit || "",
+          date: (rh.scheduleType === 'specific' && rh.targetDate) ? this.formatShortDate(rh.targetDate) : "HARIAN",
+          theme: rh.theme || "theme-yellow",
+          iconSvgKey: rh.iconSvgKey || "sun",
+          completed: Boolean(rh.completed),
+          streak: Number(rh.streak) || 0
+        });
+      }
+    });
   },
 
   togglePushNotifications(enabled) {

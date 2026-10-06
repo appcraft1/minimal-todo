@@ -601,28 +601,79 @@ body {
   font-weight: 500;
 }
 
+.bento-card.is-completed {
+  opacity: 0.88;
+}
+
+.bento-card.is-completed .card-title {
+  text-decoration: line-through;
+  opacity: 0.8;
+}
+
 .card-footer {
   margin-top: 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
-.card-date {
-  font-size: 8.5px;
+.card-footer-tags {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.card-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9.5px;
   font-weight: 700;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  opacity: 0.65;
+  padding: 3.5px 8px;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.14);
+  color: inherit;
+  letter-spacing: 0.3px;
+  line-height: 1;
+  backdrop-filter: blur(4px);
+}
+
+.theme-terracotta .card-badge,
+.theme-emerald .card-badge,
+.theme-purple .card-badge {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.card-badge .badge-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-badge .badge-icon svg {
+  width: 11px;
+  height: 11px;
+  stroke-width: 2.2;
 }
 
 .card-type-tag {
   font-size: 8px;
   font-weight: 800;
   text-transform: uppercase;
-  padding: 2px 6px;
+  padding: 2.5px 6.5px;
   border-radius: 9999px;
   background: rgba(0, 0, 0, 0.12);
+  letter-spacing: 0.4px;
+  line-height: 1;
+}
+
+.theme-terracotta .card-type-tag,
+.theme-emerald .card-type-tag,
+.theme-purple .card-type-tag {
+  background: rgba(255, 255, 255, 0.18);
 }
 
 /* Card Type 2: Progressive Goal Stepper */
@@ -2218,3 +2269,341 @@ body {
   transform: translateX(20px);
   background-color: #121316;
 }
+
+/* ==========================================================
+   ACTIVE SPECIFIC DATE VIEW BANNER
+   ========================================================== */
+.active-date-view-banner {
+  background: #181A1F;
+  border: 1.5px solid rgba(253, 224, 71, 0.35);
+  border-radius: 20px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 16px rgba(253, 224, 71, 0.08);
+  margin-bottom: 4px;
+}
+
+.banner-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.banner-icon-svg {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: rgba(253, 224, 71, 0.15);
+  color: #FDE047;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.banner-icon-svg svg {
+  width: 20px;
+  height: 20px;
+}
+
+.banner-text-wrap {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.banner-sublabel {
+  font-size: 9px;
+  font-weight: 800;
+  color: #FDE047;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.banner-datename {
+  font-size: 14px;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-return-today {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #FFFFFF;
+  border-radius: 9999px;
+  padding: 7px 14px;
+  font-size: 11.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-return-today:active {
+  transform: scale(0.95);
+  background: rgba(253, 224, 71, 0.25);
+  color: #FDE047;
+}
+
+/* Day Column Enhancements */
+.day-num {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #D1D5DB;
+  line-height: 1;
+}
+
+.day-status-pill.selected-view-day {
+  border: 2px solid #FDE047 !important;
+  box-shadow: 0 0 14px rgba(253, 224, 71, 0.55);
+  transform: scale(1.1);
+}
+
+/* ==========================================================
+   CALENDAR MATRIX SCHEDULE DOTS & AGENDAR
+   ========================================================== */
+.calendar-day-cell {
+  position: relative;
+}
+
+.calendar-day-cell.selected-cal-day {
+  border: 2px solid #FDE047 !important;
+  background: rgba(253, 224, 71, 0.16) !important;
+  color: #FDE047 !important;
+  font-weight: 800;
+}
+
+.cal-dot-indicator {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #9CA3AF;
+}
+
+.cal-dot-indicator.is-specific {
+  background: #FDE047;
+  box-shadow: 0 0 6px rgba(253, 224, 71, 0.9);
+}
+
+.cal-dot-indicator.is-completed {
+  background: #22C55E;
+}
+
+/* Calendar Selected Day Agenda Section */
+.calendar-day-agenda-section {
+  margin-top: 18px;
+  background: #181A1F;
+  border: 1px solid var(--border-subtle);
+  border-radius: 22px;
+  padding: 16px;
+}
+
+.agenda-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 10px;
+}
+
+.agenda-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agenda-title-icon {
+  color: #FDE047;
+  display: flex;
+  align-items: center;
+}
+
+.agenda-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.2px;
+}
+
+.btn-open-day-board {
+  background: #FDE047;
+  color: #121316;
+  border: none;
+  border-radius: 9999px;
+  padding: 6px 14px;
+  font-size: 11.5px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  box-shadow: 0 4px 12px rgba(253, 224, 71, 0.3);
+}
+
+.btn-open-day-board:active {
+  transform: scale(0.95);
+}
+
+.calendar-agenda-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.agenda-item-card {
+  background: #1F2228;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.agenda-item-card.is-done {
+  opacity: 0.82;
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+.agenda-item-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.agenda-item-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  background: rgba(253, 224, 71, 0.12);
+  color: #FDE047;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.agenda-item-icon svg {
+  width: 19px;
+  height: 19px;
+}
+
+.agenda-item-details {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.agenda-item-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #FFFFFF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agenda-item-card.is-done .agenda-item-title {
+  text-decoration: line-through;
+  opacity: 0.75;
+}
+
+.agenda-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: #9CA3AF;
+  margin-top: 3px;
+}
+
+.agenda-item-check {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #2A2D33;
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
+  color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.agenda-item-check.checked {
+  background: #22C55E;
+  border-color: #22C55E;
+  color: #000000;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.35);
+}
+
+.agenda-empty-state {
+  text-align: center;
+  padding: 16px 12px;
+  color: #9CA3AF;
+  font-size: 12.5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-agenda-add-target {
+  background: rgba(253, 224, 71, 0.15);
+  border: 1px dashed rgba(253, 224, 71, 0.5);
+  color: #FDE047;
+  border-radius: 9999px;
+  padding: 8px 18px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-agenda-add-target:active {
+  transform: scale(0.96);
+  background: rgba(253, 224, 71, 0.25);
+}
+
+/* Settings Modal Sync Buttons */
+.btn-sync-sub-action {
+  background: #23262D;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-sync-sub-action:active {
+  transform: scale(0.97);
+  background: #2E323A;
+  border-color: rgba(253, 224, 71, 0.4);
+}
+

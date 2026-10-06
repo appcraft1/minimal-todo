@@ -1,11 +1,11 @@
 {
   "appName": "Minimal Todo",
   "appId": "com.appcraft.minimaltodo",
-  "version": "1.0.2",
-  "versionCode": 3,
-  "releaseDate": "2026-10-06",
+  "version": "1.0.3",
+  "versionCode": 4,
+  "releaseDate": "2026-10-07",
   "apkFileName": "Minimal Todo.apk",
-  "changeLog": "Pembaruan: Custom Bento Mini Calendar (zero browser popup) dan pengaturan jam notifikasi kustom dengan spinner tactile.",
+  "changeLog": "Pembaruan v2.1: Sinkronisasi Google Sheets 2-Arah (Pull & Push), kalender agenda tanggal tertentu, perbaikan layout kartu Bento, dan 100% SVG murni.",
   "otaUpdateUrl": "https://appcraft1.github.io/minimal-todo/",
   "backendSheetTab": "DB_Habits"
 }

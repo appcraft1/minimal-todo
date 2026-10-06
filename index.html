@@ -12,6 +12,7 @@
   
   <link rel="stylesheet" href="style.css">
   <link rel="icon" type="image/svg+xml" href="logo.svg">
+  <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#121316">
 </head>
 <body>
@@ -79,6 +80,23 @@
           <!-- Populated by JavaScript with live real-date highlight and check pills -->
         </div>
       </section>
+
+      <!-- Date Filter Active Banner (shown when viewing a date other than today) -->
+      <div class="active-date-view-banner" id="active-date-view-banner" style="display: none;">
+        <div class="banner-left">
+          <span class="banner-icon-svg" id="active-date-banner-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </span>
+          <div class="banner-text-wrap">
+            <span class="banner-sublabel">TAMPILAN TANGGAL TERTENTU</span>
+            <span class="banner-datename" id="active-date-banner-name">Sabtu, 10 Oktober 2026</span>
+          </div>
+        </div>
+        <button type="button" class="btn-return-today" onclick="App.selectToday()" title="Kembali ke Jadwal Hari Ini">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          <span>Hari Ini</span>
+        </button>
+      </div>
 
       <!-- Bento Cards Grid (2 Kolom Persis Mockup Foto + Fitur Baru) -->
       <section class="bento-cards-grid" id="bento-grid-container">
@@ -319,7 +337,10 @@
             <input type="hidden" id="habit-reminder-time" value="20:30">
 
             <div class="reminder-test-row">
-              <span class="reminder-summary-pill" id="reminder-summary-pill">🔔 Aktif: Jam 20:30</span>
+              <span class="reminder-summary-pill" id="reminder-summary-pill">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                <span id="reminder-summary-text">Aktif: Jam 20:30</span>
+              </span>
               <button type="button" class="btn-test-notif" onclick="App.testNotificationSound()" title="Coba notifikasi dan getar sekarang">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                 <span>Tes Notifikasi</span>
@@ -553,6 +574,25 @@
         <!-- Rendered by JS without native datepickers -->
       </div>
 
+      <!-- Selected Day Schedule Agenda Section -->
+      <div class="calendar-day-agenda-section" id="calendar-day-agenda-section">
+        <div class="agenda-header-row">
+          <div class="agenda-title-wrap">
+            <span class="agenda-title-icon" id="agenda-title-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </span>
+            <h3 class="agenda-title" id="calendar-selected-agenda-title">Agenda Tanggal</h3>
+          </div>
+          <button type="button" class="btn-open-day-board" id="btn-open-selected-day-board" onclick="App.openSelectedCalendarDateOnBoard()">
+            <span>Buka di Beranda</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+        <div class="calendar-agenda-items" id="calendar-agenda-items-container">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
       <!-- Journal Archive Section -->
       <div class="calendar-journal-archive" id="calendar-journal-history">
         <h3 class="archive-title">Arsip Catatan Syukur</h3>
@@ -635,12 +675,28 @@
             <input type="url" id="input-gas-url" placeholder="https://script.google.com/macros/s/.../exec">
           </div>
         </div>
-        <div class="settings-actions" style="margin-top: 12px; display: flex; gap: 8px;">
-          <button type="button" class="btn-secondary-action" onclick="App.saveGasUrl()">Simpan URL</button>
-          <button type="button" class="btn-primary-action" onclick="App.syncWithGoogleSheets(true)" style="margin-top:0; flex:1; display:flex; align-items:center; justify-content:center; gap:6px;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
-            <span>Sinkron Sekarang</span>
-          </button>
+        <div class="sync-actions-grid" style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn-secondary-action" onclick="App.saveGasUrl()" style="flex:1;">Simpan URL</button>
+            <button type="button" class="btn-primary-action" onclick="App.syncWithGoogleSheets(true)" style="margin-top:0; flex:1.5; display:flex; align-items:center; justify-content:center; gap:6px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+              <span>Sinkron 2 Arah</span>
+            </button>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn-sync-sub-action" onclick="App.pullFromGoogleSheets(true)" style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px;" title="Tarik data terbaru dari Google Sheet ke aplikasi ini">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Tarik dari Cloud</span>
+            </button>
+            <button type="button" class="btn-sync-sub-action" onclick="App.pushToGoogleSheets(true)" style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px;" title="Kirim data dari aplikasi ini ke Google Sheet">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <span>Kirim ke Cloud</span>
+            </button>
+          </div>
+          <div class="sync-last-status-row" id="sync-last-status-row" style="font-size:11px; color:#9CA3AF; margin-top:2px; display:flex; align-items:center; gap:6px;">
+            <span class="sync-mini-dot" id="sync-mini-dot" style="width:7px; height:7px; border-radius:50%; background:#9CA3AF;"></span>
+            <span id="sync-last-time-label">Status: Belum disinkronkan</span>
+          </div>
         </div>
       </div>
 
