@@ -369,8 +369,16 @@
             <button type="button" class="preset-chip" onclick="App.applyTargetPreset(45, 'menit', 'clock')">⏱️ 45 Menit</button>
           </div>
 
-          <!-- Inset Dual Control: Stepper Number + Satuan -->
-          <div class="stepper-inputs-row">
+          <!-- Inset Dual Control: Progres Saat Ini + Target Maksimal + Satuan -->
+          <div class="stepper-inputs-row" style="margin-bottom: 12px;">
+            <div class="stepper-col">
+              <label for="habit-input-current-progress">Progres Saat Ini</label>
+              <div class="stepper-counter-capsule">
+                <button type="button" class="btn-stepper-tap" onclick="App.adjustCurrentProgressInput(-1)" title="Kurang 1">−</button>
+                <input type="number" id="habit-input-current-progress" min="0" value="0" placeholder="0">
+                <button type="button" class="btn-stepper-tap" onclick="App.adjustCurrentProgressInput(1)" title="Tambah 1">+</button>
+              </div>
+            </div>
             <div class="stepper-col">
               <label for="habit-input-target">Target Maksimal</label>
               <div class="stepper-counter-capsule">
@@ -379,7 +387,9 @@
                 <button type="button" class="btn-stepper-tap" onclick="App.adjustTargetGoalInput(1)" title="Tambah 1">+</button>
               </div>
             </div>
-            <div class="stepper-col">
+          </div>
+          <div class="stepper-inputs-row">
+            <div class="stepper-col" style="flex:1;">
               <label for="habit-input-unit">Satuan Ukuran</label>
               <div class="unit-input-capsule">
                 <input type="text" id="habit-input-unit" value="gelas" placeholder="gelas, halaman, kali...">
@@ -614,6 +624,10 @@
         <button type="button" class="quick-act-btn" onclick="App.editCurrentQuickCard()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
           <span>Ubah Rincian & Warna</span>
+        </button>
+        <button type="button" class="quick-act-btn" id="btn-quick-adjust-progress" onclick="App.promptSetQuickCardProgress()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <span>Ubah Angka Progres Langsung</span>
         </button>
         <button type="button" class="quick-act-btn" onclick="App.resetCurrentQuickCardProgress()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>

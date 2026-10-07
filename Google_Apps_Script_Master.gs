@@ -314,35 +314,52 @@ function doPost(e) {
       const headerRow = existingData.length > 0 ? existingData[0].map(h => String(h).trim().toLowerCase()) : [];
       
       const colIndex = name => headerRow.indexOf(name.toLowerCase());
-      const idxId = Math.max(colIndex("id"), 0);
+      const idxId = colIndex("id");
+      const idxTitle = colIndex("title");
+      const idxSubtitle = colIndex("subtitle");
+      const idxCardType = colIndex("cardtype");
+      const idxProgress = colIndex("currentprogress");
+      const idxTarget = colIndex("targetgoal");
+      const idxUnit = colIndex("unit");
+      const idxTheme = colIndex("colortheme");
+      const idxIcon = colIndex("iconsvgkey");
+      const idxCompleted = colIndex("completed");
+      const idxStreak = colIndex("streak");
+      const idxScheduleType = colIndex("scheduletype");
+      const idxTargetDate = colIndex("targetdate");
+      const idxReminderEnabled = colIndex("reminderenabled");
+      const idxReminderTime = colIndex("remindertime");
+      const idxLastUpdated = colIndex("lastupdated");
 
       habitsList.forEach(h => {
         let foundRow = -1;
         for (let r = 1; r < existingData.length; r++) {
-          if (String(existingData[r][idxId]).trim() === String(h.id).trim()) {
+          if (idxId >= 0 && String(existingData[r][idxId]).trim() === String(h.id).trim()) {
             foundRow = r + 1;
             break;
           }
         }
 
-        const rowValues = [
-          h.id || ("habit_" + Date.now()),
-          h.title || "",
-          h.subtitle || "",
-          h.cardType || "checklist",
-          h.currentProgress !== undefined ? h.currentProgress : 0,
-          h.targetGoal !== undefined ? h.targetGoal : 1,
-          h.unit || "",
-          h.theme || "theme-yellow",
-          h.iconSvgKey || "sun",
-          h.completed ? "YES" : "NO",
-          h.streak !== undefined ? h.streak : 0,
-          h.scheduleType || "daily",
-          h.targetDate || "",
-          h.reminderEnabled ? "YES" : "NO",
-          h.reminderTime || "20:30",
-          new Date().toISOString()
-        ];
+        const numCols = Math.max(headerRow.length, 16);
+        const rowValues = new Array(numCols).fill("");
+
+        // Petakan tiap kolom secara presisi berdasarkan posisi header riil di Google Sheet
+        if (idxId >= 0) rowValues[idxId] = h.id || ("habit_" + Date.now());
+        if (idxTitle >= 0) rowValues[idxTitle] = h.title || "";
+        if (idxSubtitle >= 0) rowValues[idxSubtitle] = h.subtitle || "";
+        if (idxCardType >= 0) rowValues[idxCardType] = h.cardType || "checklist";
+        if (idxProgress >= 0) rowValues[idxProgress] = (h.currentProgress !== undefined && !isNaN(Number(h.currentProgress))) ? Number(h.currentProgress) : 0;
+        if (idxTarget >= 0) rowValues[idxTarget] = (h.targetGoal !== undefined && !isNaN(Number(h.targetGoal))) ? Number(h.targetGoal) : 1;
+        if (idxUnit >= 0) rowValues[idxUnit] = h.unit || "";
+        if (idxTheme >= 0) rowValues[idxTheme] = h.theme || "theme-yellow";
+        if (idxIcon >= 0) rowValues[idxIcon] = h.iconSvgKey || "sun";
+        if (idxCompleted >= 0) rowValues[idxCompleted] = h.completed ? "YES" : "NO";
+        if (idxStreak >= 0) rowValues[idxStreak] = (h.streak !== undefined && !isNaN(Number(h.streak))) ? Number(h.streak) : 0;
+        if (idxScheduleType >= 0) rowValues[idxScheduleType] = h.scheduleType || "daily";
+        if (idxTargetDate >= 0) rowValues[idxTargetDate] = h.targetDate || "";
+        if (idxReminderEnabled >= 0) rowValues[idxReminderEnabled] = h.reminderEnabled ? "YES" : "NO";
+        if (idxReminderTime >= 0) rowValues[idxReminderTime] = h.reminderTime || "20:30";
+        if (idxLastUpdated >= 0) rowValues[idxLastUpdated] = new Date().toISOString();
 
         if (foundRow > 0) {
           sheet.getRange(foundRow, 1, 1, rowValues.length).setValues([rowValues]);
@@ -352,6 +369,36 @@ function doPost(e) {
       });
 
       return jsonResponse({ success: true, count: habitsList.length, message: "Sinkronisasi berhasil disimpan di Google Sheet!" });
+    }
+
+    // A2. Update Progres Spesifik (Aksi Cepat Stepper APK)
+    if (action === "update_progress") {
+      const sheet = ss.getSheetByName("DB_Habits");
+      if (!sheet) return jsonResponse({ error: "Tab DB_Habits tidak ditemukan" });
+
+      const targetId = String(payload.id || "").trim();
+      const progressVal = Number(payload.currentProgress);
+      const isCompleted = payload.completed ? "YES" : "NO";
+
+      const existingData = sheet.getDataRange().getValues();
+      const headerRow = existingData.length > 0 ? existingData[0].map(h => String(h).trim().toLowerCase()) : [];
+      const colIndex = name => headerRow.indexOf(name.toLowerCase());
+      const idxId = colIndex("id");
+      const idxProgress = colIndex("currentprogress");
+      const idxCompleted = colIndex("completed");
+      const idxLastUpdated = colIndex("lastupdated");
+
+      if (idxId >= 0 && idxProgress >= 0 && targetId) {
+        for (let r = 1; r < existingData.length; r++) {
+          if (String(existingData[r][idxId]).trim() === targetId) {
+            sheet.getRange(r + 1, idxProgress + 1).setValue(isNaN(progressVal) ? 0 : progressVal);
+            if (idxCompleted >= 0) sheet.getRange(r + 1, idxCompleted + 1).setValue(isCompleted);
+            if (idxLastUpdated >= 0) sheet.getRange(r + 1, idxLastUpdated + 1).setValue(new Date().toISOString());
+            return jsonResponse({ success: true, message: "Progres kartu berhasil diperbarui!" });
+          }
+        }
+      }
+      return jsonResponse({ success: false, message: "ID kartu tidak ditemukan di spreadsheet" });
     }
 
     // B. Simpan Refleksi Jurnal Harian

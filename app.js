@@ -129,6 +129,18 @@ const App = {
   longPressTimer: null,
   longPressTriggered: false,
   currentQuickCardId: null,
+  debouncePushTimer: null,
+
+  debouncedPushToGoogleSheets(delay = 1000) {
+    if (!this.gasEndpoint) return;
+    if (this.debouncePushTimer) {
+      clearTimeout(this.debouncePushTimer);
+    }
+    this.updateSyncStatusLabel("Menyimpan perubahan ke Cloud...", true);
+    this.debouncePushTimer = setTimeout(() => {
+      this.pushToGoogleSheets(false);
+    }, delay);
+  },
 
   init() {
     this.showSplashScreen();
@@ -433,6 +445,8 @@ const App = {
           <div class="card-header-icon">
             <span class="icon-visual-svg">${iconSvg}</span>
             <div class="card-check-badge ${habit.completed ? 'checked' : ''}" 
+                 onpointerdown="event.stopPropagation()"
+                 onpointerup="event.stopPropagation()"
                  onclick="event.stopPropagation(); App.toggleChecklist('${habit.id}')"
                  title="${habit.completed ? 'Selesai' : 'Tandai Selesai'}">
               ${habit.completed ? SVG_ICONS.check : ''}
@@ -478,14 +492,17 @@ const App = {
     if (habit.cardType === "progressive") {
       const pct = Math.min(100, Math.round((habit.currentProgress / habit.targetGoal) * 100));
       return `
-        <div class="progressive-progress-wrap" onclick="event.stopPropagation()">
+        <div class="progressive-progress-wrap" 
+             onpointerdown="event.stopPropagation()" 
+             onpointerup="event.stopPropagation()" 
+             onclick="event.stopPropagation()">
           <div class="progressive-bar-track">
             <div class="progressive-bar-fill" style="width: ${pct}%;"></div>
           </div>
           <div class="progressive-actions-row">
-            <button class="stepper-btn" onclick="App.stepProgress('${habit.id}', -1)" title="Kurang">${SVG_ICONS.minus}</button>
+            <button type="button" class="stepper-btn" onclick="event.stopPropagation(); App.stepProgress('${habit.id}', -1)" title="Kurang">${SVG_ICONS.minus}</button>
             <span class="stepper-status-label">${habit.currentProgress} / ${habit.targetGoal} ${habit.unit}</span>
-            <button class="stepper-btn" onclick="App.stepProgress('${habit.id}', 1)" title="Tambah">${SVG_ICONS.plus}</button>
+            <button type="button" class="stepper-btn" onclick="event.stopPropagation(); App.stepProgress('${habit.id}', 1)" title="Tambah">${SVG_ICONS.plus}</button>
           </div>
         </div>
       `;
@@ -558,7 +575,54 @@ const App = {
     if (preview) {
       preview.textContent = `${habit.title} (${habit.cardType.toUpperCase()})`;
     }
+    const adjustBtn = document.getElementById("btn-quick-adjust-progress");
+    if (adjustBtn) {
+      adjustBtn.style.display = habit.cardType === "progressive" ? "flex" : "none";
+    }
     document.getElementById("modal-quick-action").classList.add("open");
+  },
+
+  promptSetQuickCardProgress() {
+    const id = this.currentQuickCardId;
+    this.closeModal("modal-quick-action");
+    const habit = this.habits.find(h => h.id === id);
+    if (!habit) return;
+
+    const currentVal = habit.currentProgress || 0;
+    const inputStr = prompt(`Masukkan angka progres baru untuk "${habit.title}" (Target: ${habit.targetGoal} ${habit.unit}):`, currentVal);
+    if (inputStr === null) return;
+
+    const parsed = parseInt(inputStr, 10);
+    if (isNaN(parsed) || parsed < 0) {
+      this.showToast("Angka progres tidak valid.", "warning");
+      return;
+    }
+
+    habit.currentProgress = parsed;
+    habit.updatedAt = Date.now();
+    if (habit.currentProgress >= habit.targetGoal && !habit.completed) {
+      habit.completed = true;
+      habit.streak = (habit.streak || 0) + 1;
+      this.playChime(true);
+      this.showToast(`Target "${habit.title}" tercapai!`, "success");
+    } else if (habit.currentProgress < habit.targetGoal && habit.completed) {
+      habit.completed = false;
+      habit.streak = Math.max(0, (habit.streak || 1) - 1);
+    }
+
+    this.saveLocal();
+    this.renderBentoCards();
+    this.checkAllCompletedCelebration();
+    this.showToast(`Progres "${habit.title}" diubah menjadi ${habit.currentProgress} ${habit.unit}.`, "success");
+    this.pushToGoogleSheets(false);
+  },
+
+  adjustCurrentProgressInput(delta) {
+    const input = document.getElementById("habit-input-current-progress");
+    if (!input) return;
+    let val = (Number(input.value) || 0) + delta;
+    if (val < 0) val = 0;
+    input.value = val;
   },
 
   editCurrentQuickCard() {
@@ -597,6 +661,8 @@ const App = {
     this.selectCardType(habit.cardType);
 
     if (habit.cardType === "progressive") {
+      const curProgInput = document.getElementById("habit-input-current-progress");
+      if (curProgInput) curProgInput.value = habit.currentProgress || 0;
       document.getElementById("habit-input-target").value = habit.targetGoal;
       document.getElementById("habit-input-unit").value = habit.unit;
     } else if (habit.cardType === "focus") {
@@ -629,10 +695,11 @@ const App = {
 
     habit.completed = false;
     habit.currentProgress = 0;
+    habit.updatedAt = Date.now();
     this.saveLocal();
     this.renderBentoCards();
     this.showToast(`Progres "${habit.title}" berhasil direset.`, "info");
-    this.syncWithGoogleSheets(false);
+    this.pushToGoogleSheets(false);
   },
 
   promptDeleteCurrentCard() {
@@ -649,7 +716,7 @@ const App = {
         this.saveLocal();
         this.renderBentoCards();
         this.showToast("Kartu berhasil dihapus.", "success");
-        this.syncWithGoogleSheets(false);
+        this.pushToGoogleSheets(false);
       }
     );
   },
@@ -662,6 +729,7 @@ const App = {
     if (!habit) return;
 
     habit.completed = !habit.completed;
+    habit.updatedAt = Date.now();
     if (habit.completed) {
       habit.streak = (habit.streak || 0) + 1;
       this.playChime(true);
@@ -673,7 +741,7 @@ const App = {
     this.saveLocal();
     this.renderBentoCards();
     this.checkAllCompletedCelebration();
-    this.syncWithGoogleSheets(false);
+    this.debouncedPushToGoogleSheets();
   },
 
   stepProgress(id, amount) {
@@ -682,6 +750,7 @@ const App = {
 
     const stepSize = habit.targetGoal >= 1000 ? 250 : 1;
     habit.currentProgress = Math.max(0, habit.currentProgress + (amount * stepSize));
+    habit.updatedAt = Date.now();
     
     // Otomatis tandai selesai jika mencapai target
     if (habit.currentProgress >= habit.targetGoal && !habit.completed) {
@@ -697,7 +766,7 @@ const App = {
     this.saveLocal();
     this.renderBentoCards();
     this.checkAllCompletedCelebration();
-    this.syncWithGoogleSheets(false);
+    this.debouncedPushToGoogleSheets();
   },
 
   toggleFocusTimer(id) {
@@ -736,12 +805,13 @@ const App = {
           t.interval = null;
           habit.completed = true;
           habit.streak = (habit.streak || 0) + 1;
+          habit.updatedAt = Date.now();
           this.playVictoryChord();
           this.showToast(`Sesi Fokus Selesai: "${habit.title}" tuntas!`, "success");
           this.saveLocal();
           this.renderBentoCards();
           this.checkAllCompletedCelebration();
-          this.syncWithGoogleSheets(false);
+          this.pushToGoogleSheets(false);
         }
       }, 1000);
       this.renderBentoCards();
@@ -998,6 +1068,8 @@ const App = {
     document.getElementById("modal-habit-title-text").textContent = "Buat Kartu Baru";
     document.getElementById("habit-edit-id").value = "";
     document.getElementById("form-create-habit").reset();
+    const curProgInput = document.getElementById("habit-input-current-progress");
+    if (curProgInput) curProgInput.value = 0;
     
     // Jika ada preset tanggal atau sedang melihat tanggal selain hari ini
     const targetDateToUse = presetDateKey || (this.selectedDateKey && this.selectedDateKey !== this.getTodayKey() ? this.selectedDateKey : null);
@@ -1362,8 +1434,10 @@ const App = {
   applyTargetPreset(target, unit, iconKey) {
     const targetInput = document.getElementById("habit-input-target");
     const unitInput = document.getElementById("habit-input-unit");
+    const curProgInput = document.getElementById("habit-input-current-progress");
     if (targetInput) targetInput.value = target;
     if (unitInput) unitInput.value = unit;
+    if (curProgInput) curProgInput.value = 0;
     if (iconKey) this.selectIconKey(iconKey);
     this.showToast(`Preset "${target} ${unit}" terpasang!`, "info");
   },
@@ -1504,10 +1578,13 @@ const App = {
 
     let targetGoal = 1;
     let unit = "kali";
+    let curProgressVal = 0;
 
     if (cardType === "progressive") {
-      targetGoal = Number(document.getElementById("habit-input-target").value) || 8;
+      targetGoal = Math.max(1, Number(document.getElementById("habit-input-target").value) || 8);
       unit = document.getElementById("habit-input-unit").value.trim() || "unit";
+      const progInput = document.getElementById("habit-input-current-progress");
+      curProgressVal = progInput ? Math.max(0, Number(progInput.value) || 0) : 0;
     } else if (cardType === "focus") {
       targetGoal = Number(document.getElementById("selected-timer-duration").value) || 25;
       unit = "menit";
@@ -1534,6 +1611,11 @@ const App = {
         h.unit = unit;
         h.theme = themeClass;
         h.iconSvgKey = iconKey;
+        h.updatedAt = Date.now();
+        if (cardType === "progressive") {
+          h.currentProgress = curProgressVal;
+          h.completed = h.currentProgress >= h.targetGoal;
+        }
         this.showToast(`Kartu "${title}" berhasil diubah!`, "success");
       }
     } else {
@@ -1548,14 +1630,15 @@ const App = {
         reminderEnabled: reminderEnabled,
         reminderTime: reminderTime,
         lastNotifiedDate: null,
-        currentProgress: 0,
+        currentProgress: cardType === "progressive" ? curProgressVal : 0,
         targetGoal: targetGoal,
         unit: unit,
         date: scheduleType === "specific" ? this.formatShortDate(targetDate) : "HARIAN",
         theme: themeClass,
         iconSvgKey: iconKey,
-        completed: false,
-        streak: 0
+        completed: cardType === "progressive" ? (curProgressVal >= targetGoal) : false,
+        streak: 0,
+        updatedAt: Date.now()
       };
       this.habits.push(newHabit);
       this.showToast(`Kartu "${title}" berhasil ditambahkan!`, "success");
@@ -1994,19 +2077,24 @@ const App = {
       return;
     }
 
-    if (showNotification) this.showToast("Menjalankan sinkronisasi 2 arah...", "info");
+    if (showNotification) this.showToast("Menjalankan sinkronisasi...", "info");
 
-    // 1. Tarik data dari cloud terlebih dahulu
-    const pulled = await this.pullFromGoogleSheets(false);
+    if (this.debouncePushTimer) {
+      clearTimeout(this.debouncePushTimer);
+      this.debouncePushTimer = null;
+    }
 
-    // 2. Kirim data gabungan kembali ke cloud
+    // 1. Kirim data lokal terbaru ke cloud terlebih dahulu
     const pushed = await this.pushToGoogleSheets(false);
 
-    if (pulled || pushed) {
+    // 2. Tarik data dari cloud untuk sinkronisasi 2 arah
+    const pulled = await this.pullFromGoogleSheets(false);
+
+    if (pushed || pulled) {
       const timeNow = new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
       this.updateSyncStatusLabel(`Sinkron 2 Arah Aktif (${timeNow} WIB)`, true);
       if (showNotification) {
-        this.showToast("Sinkronisasi 2 arah berhasil! Data APK dan Google Sheets telah sinkron.", "success");
+        this.showToast("Sinkronisasi berhasil! Data APK dan Google Sheets telah sinkron.", "success");
       }
     } else {
       if (showNotification) {
@@ -2021,7 +2109,9 @@ const App = {
     remoteHabits.forEach(rh => {
       const existing = this.habits.find(lh => lh.id === rh.id);
       if (existing) {
-        // Update data yang ada
+        // Jangan timpa jika data lokal baru saja diubah pengguna dalam 60 detik terakhir
+        const isRecentlyEditedLocally = existing.updatedAt && (Date.now() - existing.updatedAt < 60000);
+
         existing.title = rh.title || existing.title;
         existing.subtitle = rh.subtitle !== undefined ? rh.subtitle : existing.subtitle;
         existing.cardType = rh.cardType || existing.cardType;
@@ -2030,11 +2120,14 @@ const App = {
         existing.date = existing.scheduleType === 'specific' ? this.formatShortDate(existing.targetDate) : "HARIAN";
         existing.theme = rh.theme || existing.theme;
         existing.iconSvgKey = rh.iconSvgKey || existing.iconSvgKey;
-        existing.currentProgress = rh.currentProgress !== undefined ? rh.currentProgress : existing.currentProgress;
-        existing.targetGoal = rh.targetGoal !== undefined ? rh.targetGoal : existing.targetGoal;
+        
+        if (!isRecentlyEditedLocally) {
+          existing.currentProgress = (rh.currentProgress !== undefined && !isNaN(Number(rh.currentProgress))) ? Number(rh.currentProgress) : existing.currentProgress;
+          existing.completed = Boolean(rh.completed !== undefined ? rh.completed : existing.completed);
+        }
+        existing.targetGoal = (rh.targetGoal !== undefined && !isNaN(Number(rh.targetGoal))) ? Number(rh.targetGoal) : existing.targetGoal;
         existing.unit = rh.unit !== undefined ? rh.unit : existing.unit;
-        existing.completed = Boolean(rh.completed !== undefined ? rh.completed : existing.completed);
-        existing.streak = rh.streak !== undefined ? rh.streak : existing.streak;
+        existing.streak = (rh.streak !== undefined && !isNaN(Number(rh.streak))) ? Number(rh.streak) : existing.streak;
         existing.reminderEnabled = Boolean(rh.reminderEnabled !== undefined ? rh.reminderEnabled : existing.reminderEnabled);
         existing.reminderTime = rh.reminderTime || existing.reminderTime;
       } else {
@@ -2056,7 +2149,8 @@ const App = {
           theme: rh.theme || "theme-yellow",
           iconSvgKey: rh.iconSvgKey || "sun",
           completed: Boolean(rh.completed),
-          streak: Number(rh.streak) || 0
+          streak: Number(rh.streak) || 0,
+          updatedAt: Date.now()
         });
       }
     });
