@@ -1,11 +1,11 @@
 {
   "appName": "Minimal Todo",
   "appId": "com.appcraft.minimaltodo",
-  "version": "1.0.4",
-  "versionCode": 5,
+  "version": "1.0.5",
+  "versionCode": 6,
   "releaseDate": "2026-10-08",
   "apkFileName": "Minimal Todo.apk",
-  "changeLog": "Pembaruan v2.2: Multi-User Cloud Google Sheets! Form Daftar & Login dengan isolasi data masing-masing pengguna, tanpa perlu input link /exec lagi.",
+  "changeLog": "Pembaruan v2.3: Desain Login Full Page Lucu, urutan loading screen setelah login, swipe refresh aman tanpa logout, reset form otomatis, 12 suasana hati, & arsip syukur terkelompok per tanggal.",
   "otaUpdateUrl": "https://appcraft1.github.io/minimal-todo/",
   "backendSheetTab": "DB_Habits"
 }

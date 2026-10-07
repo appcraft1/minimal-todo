@@ -3,8 +3,8 @@
  * Memeriksa pembaruan revisi web/APK langsung dari Cloud.
  */
 const CloudUpdater = {
-  localVersion: "1.0.4",
-  localVersionCode: 5,
+  localVersion: "1.0.5",
+  localVersionCode: 6,
 
   async checkForUpdates(cloudEndpoint) {
     if (!cloudEndpoint) return;

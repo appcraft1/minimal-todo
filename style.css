@@ -2849,4 +2849,550 @@ body {
   margin-top: 2px;
 }
 
+/* ==========================================================
+   15. CUTE FULL-PAGE ONBOARDING & LOGIN SCREEN (DESAIN LUCU)
+   ========================================================== */
+.fullpage-auth-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 999999999;
+  background: #0D0E12;
+  background-image: 
+    radial-gradient(circle at 50% 15%, rgba(253, 224, 71, 0.14) 0%, transparent 60%),
+    radial-gradient(circle at 85% 85%, rgba(244, 114, 182, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 15% 75%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 24px 20px;
+  transition: opacity 0.4s var(--ease-spring), transform 0.4s var(--ease-spring), visibility 0.4s ease;
+}
+
+.fullpage-auth-screen.fade-out {
+  opacity: 0;
+  transform: scale(0.96);
+  pointer-events: none;
+}
+
+.cute-auth-container {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+  margin: auto;
+}
+
+/* Floating Cute Doodles */
+.cute-doodle {
+  position: absolute;
+  font-size: 20px;
+  pointer-events: none;
+  animation: cuteFloat 3.5s ease-in-out infinite alternate;
+  opacity: 0.75;
+  user-select: none;
+}
+
+.cute-doodle-1 { top: -10px; left: 16px; animation-delay: 0s; }
+.cute-doodle-2 { top: 12px; right: 20px; font-size: 18px; animation-delay: 1.2s; }
+.cute-doodle-3 { bottom: 65px; left: 10px; font-size: 16px; animation-delay: 2.1s; }
+.cute-doodle-4 { bottom: 85px; right: 14px; font-size: 22px; animation-delay: 0.8s; }
+
+@keyframes cuteFloat {
+  0% { transform: translateY(0px) rotate(0deg) scale(1); }
+  50% { transform: translateY(-8px) rotate(8deg) scale(1.1); }
+  100% { transform: translateY(-14px) rotate(-6deg) scale(1.05); }
+}
+
+/* Mascot Header */
+.cute-mascot-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.cute-mascot-avatar-wrap {
+  position: relative;
+  width: 112px;
+  height: 112px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  animation: cuteBounce 2.8s ease-in-out infinite;
+}
+
+@keyframes cuteBounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-10px) scale(1.04); }
+}
+
+.cute-mascot-svg {
+  filter: drop-shadow(0 10px 24px rgba(253, 224, 71, 0.35));
+}
+
+.cute-speech-badge {
+  display: inline-block;
+  background: rgba(253, 224, 71, 0.16);
+  border: 1px solid rgba(253, 224, 71, 0.35);
+  color: #FDE047;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 12px;
+  border-radius: 9999px;
+  letter-spacing: 0.3px;
+  margin-bottom: 6px;
+}
+
+.cute-auth-title {
+  font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+
+.cute-auth-desc {
+  font-size: 12.5px;
+  color: #9CA3AF;
+  line-height: 1.45;
+  max-width: 310px;
+}
+
+/* Cute Form Card */
+.cute-auth-form-card {
+  width: 100%;
+  background: #15171C;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 28px;
+  padding: 20px 18px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+/* Playful Tabs */
+.cute-tabs-row {
+  display: flex;
+  gap: 8px;
+  background: #0E0F13;
+  padding: 5px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  margin-bottom: 18px;
+}
+
+.cute-tab-pill {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: transparent;
+  border: none;
+  color: #9CA3AF;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s var(--ease-spring);
+}
+
+.cute-tab-pill.active {
+  background: #FDE047;
+  color: #121316;
+  font-weight: 800;
+  box-shadow: 0 4px 16px rgba(253, 224, 71, 0.35);
+  transform: scale(1.02);
+}
+
+/* Cute Input Fields */
+.cute-input-group {
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cute-input-group label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #D1D5DB;
+  letter-spacing: 0.2px;
+  padding-left: 2px;
+}
+
+.cute-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #0E0F13;
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 12px 14px;
+  transition: all 0.2s ease;
+}
+
+.cute-input-wrap:focus-within {
+  border-color: #FDE047;
+  background: #111317;
+  box-shadow: 0 0 0 3px rgba(253, 224, 71, 0.2);
+}
+
+.cute-input-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cute-input-wrap input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #FFFFFF;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
+}
+
+.cute-input-wrap input::placeholder {
+  color: #6B7280;
+  font-size: 12.5px;
+}
+
+/* Cute Avatar Picker */
+.cute-avatar-picker-section {
+  margin: 12px 0 16px;
+  background: #0E0F13;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 10px 12px;
+}
+
+.cute-avatar-picker-title {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #9CA3AF;
+  margin-bottom: 8px;
+}
+
+.cute-avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+
+.cute-avatar-btn {
+  height: 38px;
+  border-radius: 12px;
+  background: #17191E;
+  border: 1.5px solid transparent;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-spring);
+}
+
+.cute-avatar-btn:hover {
+  transform: scale(1.1);
+  background: rgba(253, 224, 71, 0.12);
+}
+
+.cute-avatar-btn.active {
+  background: rgba(253, 224, 71, 0.22);
+  border-color: #FDE047;
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(253, 224, 71, 0.35);
+}
+
+/* Data Safe Banner */
+.cute-data-safe-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.22);
+  border-radius: 14px;
+  padding: 8px 12px;
+  margin-bottom: 16px;
+  font-size: 11px;
+  color: #86EFAC;
+  line-height: 1.35;
+}
+
+.cute-data-safe-note svg {
+  flex-shrink: 0;
+}
+
+/* Cute Bouncy Submit Button */
+.cute-btn-submit {
+  width: 100%;
+  padding: 15px 18px;
+  background: linear-gradient(135deg, #FDE047 0%, #EAB308 100%);
+  color: #121316;
+  border: none;
+  border-radius: 18px;
+  font-size: 14px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(253, 224, 71, 0.35);
+  transition: all 0.2s var(--ease-spring);
+  font-family: inherit;
+}
+
+.cute-btn-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(253, 224, 71, 0.45);
+}
+
+.cute-btn-submit:active {
+  transform: scale(0.96);
+  box-shadow: 0 4px 14px rgba(253, 224, 71, 0.25);
+}
+
+.cute-footer-cloud-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6B7280;
+  margin-top: 18px;
+}
+
+/* ==========================================================
+   16. PULL TO REFRESH INTERACTIVE INDICATOR (SWIPE KE BAWAH)
+   ========================================================== */
+.pull-refresh-indicator {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 8px 0;
+  margin-top: -38px;
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.25s var(--ease-spring), opacity 0.25s ease;
+  z-index: 50;
+}
+
+.pull-refresh-icon-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #17191E;
+  border: 1px solid rgba(253, 224, 71, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  transition: transform 0.25s ease;
+}
+
+.pull-refresh-svg {
+  transition: transform 0.25s ease;
+}
+
+.pull-refresh-indicator.ready .pull-refresh-svg {
+  transform: rotate(180deg);
+}
+
+.pull-refresh-indicator.refreshing .pull-refresh-svg {
+  animation: spinPull 0.8s linear infinite;
+}
+
+@keyframes spinPull {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.pull-refresh-text {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #FDE047;
+  letter-spacing: 0.2px;
+}
+
+/* ==========================================================
+   17. 12-MOOD SELECTOR GRID (SUASANA HATI LENGKAP & LUCU)
+   ========================================================== */
+.mood-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.btn-mood-choice {
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  padding: 10px 4px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-spring);
+  color: #9CA3AF;
+}
+
+.btn-mood-choice:hover {
+  background: rgba(253, 224, 71, 0.08);
+  border-color: rgba(253, 224, 71, 0.3);
+  color: #FDE047;
+  transform: translateY(-2px);
+}
+
+.btn-mood-choice.active {
+  background: #FDE047 !important;
+  border-color: #FDE047 !important;
+  color: #121316 !important;
+  font-weight: 800;
+  box-shadow: 0 4px 14px rgba(253, 224, 71, 0.35);
+  transform: scale(1.05);
+}
+
+.mood-svg-box {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mood-svg-box svg {
+  width: 20px;
+  height: 20px;
+}
+
+.mood-choice-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* ==========================================================
+   18. GROUPED GRATITUDE JOURNAL TIMELINE ARCHIVE
+   ========================================================== */
+.journal-timeline-group {
+  margin-bottom: 18px;
+}
+
+.journal-timeline-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding-left: 2px;
+}
+
+.timeline-date-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timeline-date-label {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #FDE047;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.timeline-count-badge {
+  font-size: 9.5px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.08);
+  color: #9CA3AF;
+  padding: 1px 7px;
+  border-radius: 9999px;
+  margin-left: auto;
+}
+
+.journal-timeline-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.journal-history-item {
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  padding: 12px 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  transition: all 0.2s ease;
+}
+
+.journal-history-item:hover {
+  border-color: rgba(253, 224, 71, 0.25);
+}
+
+.journal-item-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.journal-item-mood-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(253, 224, 71, 0.12);
+  border: 1px solid rgba(253, 224, 71, 0.25);
+  color: #FDE047;
+  padding: 2px 9px;
+  border-radius: 9999px;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.mood-badge-icon {
+  width: 13px;
+  height: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mood-badge-icon svg {
+  width: 12px;
+  height: 12px;
+}
+
+.journal-item-time {
+  font-size: 10.5px;
+  color: #9CA3AF;
+  font-weight: 600;
+}
+
+.journal-item-text {
+  font-size: 13px;
+  color: #F3F4F6;
+  line-height: 1.45;
+  font-style: italic;
+}
+
+
 

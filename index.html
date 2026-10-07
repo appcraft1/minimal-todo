@@ -28,6 +28,164 @@
   <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
   <!-- ======================================================== -->
+  <!-- 1. CUTE FULL-PAGE ONBOARDING & LOGIN SCREEN (DESAIN LUCU) -->
+  <!-- ======================================================== -->
+  <div id="fullpage-auth-screen" class="fullpage-auth-screen" style="display: none;">
+    <div class="cute-auth-container">
+      <!-- Floating Cute Doodles -->
+      <div class="cute-doodle cute-doodle-1">✨</div>
+      <div class="cute-doodle cute-doodle-2">⭐</div>
+      <div class="cute-doodle cute-doodle-3">💫</div>
+      <div class="cute-doodle cute-doodle-4">🌱</div>
+
+      <!-- Cute Animated Character / Mascot -->
+      <div class="cute-mascot-card">
+        <div class="cute-mascot-avatar-wrap">
+          <svg class="cute-mascot-svg" viewBox="0 0 120 120" width="108" height="108" fill="none">
+            <!-- Glow background -->
+            <circle cx="60" cy="60" r="54" fill="url(#cuteMascotGrad)" fill-opacity="0.3"/>
+            <!-- Cute Buddy Body (Soft Rounded Lemon Mochi) -->
+            <rect x="22" y="24" width="76" height="74" rx="30" fill="#FDE047"/>
+            <rect x="24" y="26" width="72" height="70" rx="28" stroke="#CA8A04" stroke-width="2.5" stroke-opacity="0.35"/>
+            <!-- Rosy Cheeks -->
+            <ellipse cx="36" cy="66" rx="7" ry="4" fill="#F472B6" fill-opacity="0.9"/>
+            <ellipse cx="84" cy="66" rx="7" ry="4" fill="#F472B6" fill-opacity="0.9"/>
+            <!-- Sparkly Eyes -->
+            <circle cx="44" cy="55" r="5.5" fill="#121316"/>
+            <circle cx="42.5" cy="53" r="2" fill="#FFFFFF"/>
+            <circle cx="76" cy="55" r="5.5" fill="#121316"/>
+            <circle cx="74.5" cy="53" r="2" fill="#FFFFFF"/>
+            <!-- Happy Smiling Mouth -->
+            <path d="M52 64C54 68 66 68 68 64" stroke="#121316" stroke-width="3" stroke-linecap="round"/>
+            <!-- Cute Little Sprout / Leaf on top -->
+            <path d="M60 24C60 15 54 12 50 14C46 16 52 24 58 24" fill="#22C55E"/>
+            <path d="M60 24C60 16 67 13 71 16C74 19 68 25 61 24" fill="#4ADE80"/>
+            <!-- Little Sparkle Stars -->
+            <path d="M96 28L98 33L103 35L98 37L96 42L94 37L89 35L94 33Z" fill="#FDE047"/>
+            <path d="M18 42L19.5 46L23.5 47.5L19.5 49L18 53L16.5 49L12.5 47.5L16.5 46Z" fill="#FACC15"/>
+            <defs>
+              <radialGradient id="cuteMascotGrad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#FDE047"/>
+                <stop offset="100%" stop-color="#EAB308" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="cute-mascot-speech">
+          <span class="cute-speech-badge">Sahabat Fokus Kamu ✨</span>
+          <h1 class="cute-auth-title" id="cute-auth-main-title">Halo Sahabat! 👋</h1>
+          <p class="cute-auth-desc" id="cute-auth-main-desc">Yuk masuk dan mulai harimu dengan penuh semangat & target yang tercapai!</p>
+        </div>
+      </div>
+
+      <!-- Cute Auth Card -->
+      <div class="cute-auth-form-card">
+        <!-- Playful Tabs -->
+        <div class="cute-tabs-row">
+          <button type="button" class="cute-tab-pill active" id="cute-tab-login" onclick="App.switchCuteAuthTab('login')">
+            <span class="cute-tab-icon">🌟</span>
+            <span>Masuk Akun</span>
+          </button>
+          <button type="button" class="cute-tab-pill" id="cute-tab-register" onclick="App.switchCuteAuthTab('register')">
+            <span class="cute-tab-icon">🌱</span>
+            <span>Daftar Baru</span>
+          </button>
+        </div>
+
+        <!-- FORM LOGIN -->
+        <form id="form-cute-login" onsubmit="App.handleCuteLogin(event)">
+          <div class="cute-input-group">
+            <label for="cute-login-username">Nama Panggilan / Username</label>
+            <div class="cute-input-wrap">
+              <span class="cute-input-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FDE047" stroke-width="2.2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </span>
+              <input type="text" id="cute-login-username" required placeholder="misal: asep99" autocomplete="username" autocapitalize="none" spellcheck="false">
+            </div>
+          </div>
+
+          <div class="cute-input-group">
+            <label for="cute-login-pin">PIN Rahasia 4 Angka (Opsional)</label>
+            <div class="cute-input-wrap">
+              <span class="cute-input-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </span>
+              <input type="password" id="cute-login-pin" maxlength="6" placeholder="4 angka pengaman..." inputmode="numeric">
+            </div>
+          </div>
+
+          <button type="submit" class="cute-btn-submit" id="btn-cute-submit-login">
+            <span>Yuk, Masuk Sekarang! ✨</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </button>
+        </form>
+
+        <!-- FORM REGISTER -->
+        <form id="form-cute-register" onsubmit="App.handleCuteRegister(event)" style="display: none;">
+          <div class="cute-input-group">
+            <label for="cute-reg-fullname">Siapa Nama Lengkap / Panggilanmu?</label>
+            <div class="cute-input-wrap">
+              <span class="cute-input-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FDE047" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/></svg>
+              </span>
+              <input type="text" id="cute-reg-fullname" required placeholder="misal: Asep Permana" autocomplete="name">
+            </div>
+          </div>
+
+          <div class="cute-input-group">
+            <label for="cute-reg-username">Pilih Username Keren</label>
+            <div class="cute-input-wrap">
+              <span class="cute-input-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2.2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </span>
+              <input type="text" id="cute-reg-username" required placeholder="hanya huruf & angka (misal: asep99)" autocomplete="username" autocapitalize="none" spellcheck="false">
+            </div>
+          </div>
+
+          <div class="cute-input-group">
+            <label for="cute-reg-pin">Buat PIN Pengaman (Opsional)</label>
+            <div class="cute-input-wrap">
+              <span class="cute-input-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </span>
+              <input type="password" id="cute-reg-pin" maxlength="6" placeholder="4 angka pengaman..." inputmode="numeric">
+            </div>
+          </div>
+
+          <!-- Cute Avatar Chooser -->
+          <div class="cute-avatar-picker-section">
+            <span class="cute-avatar-picker-title">Pilih Ikon Lucumu:</span>
+            <div class="cute-avatar-grid" id="cute-avatar-grid">
+              <button type="button" class="cute-avatar-btn active" data-avatar="star" onclick="App.selectCuteAvatar('star')">🌟</button>
+              <button type="button" class="cute-avatar-btn" data-avatar="cat" onclick="App.selectCuteAvatar('cat')">🐱</button>
+              <button type="button" class="cute-avatar-btn" data-avatar="bear" onclick="App.selectCuteAvatar('bear')">🐻</button>
+              <button type="button" class="cute-avatar-btn" data-avatar="fox" onclick="App.selectCuteAvatar('fox')">🦊</button>
+              <button type="button" class="cute-avatar-btn" data-avatar="panda" onclick="App.selectCuteAvatar('panda')">🐼</button>
+              <button type="button" class="cute-avatar-btn" data-avatar="bunny" onclick="App.selectCuteAvatar('bunny')">🐰</button>
+            </div>
+            <input type="hidden" id="selected-cute-avatar" value="star">
+          </div>
+
+          <div class="cute-data-safe-note">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+            <span>Target yang sudah kamu buat di HP ini aman & tersambung otomatis!</span>
+          </div>
+
+          <button type="submit" class="cute-btn-submit" id="btn-cute-submit-register">
+            <span>Daftar & Mulai Petualangan! 🌱</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </button>
+        </form>
+      </div>
+
+      <div class="cute-footer-cloud-badge">
+        <span class="sync-mini-dot" style="background:#22C55E; width:7px; height:7px; border-radius:50%; display:inline-block;"></span>
+        <span>Google Sheet Cloud Database Terpusat</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
   <!-- 2. BRANDED LOADING / SPLASH SCREEN                       -->
   <!-- ======================================================== -->
   <div id="app-splash-screen" class="splash-screen">
@@ -57,6 +215,16 @@
 
     <!-- Main Scrollable Content -->
     <main class="main-content-scroll" id="main-scroll-area">
+
+      <!-- Pull-to-Refresh Interactive Indicator (Swipe ke Bawah) -->
+      <div id="pull-refresh-indicator" class="pull-refresh-indicator">
+        <div class="pull-refresh-icon-circle">
+          <svg class="pull-refresh-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FDE047" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+          </svg>
+        </div>
+        <span class="pull-refresh-text" id="pull-refresh-text">Tarik untuk menyegarkan...</span>
+      </div>
 
       <!-- User Account Quick Bar (Multi-User Bento) -->
       <div class="user-account-bar" id="user-account-bar" onclick="App.openAuthModal()" title="Kelola Akun & Akses Personal">

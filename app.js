@@ -147,7 +147,6 @@ const App = {
   },
 
   init() {
-    this.showSplashScreen();
     this.loadData();
     this.selectedDateKey = this.getTodayKey();
     this.calendarModalSelectedDayKey = this.getTodayKey();
@@ -159,15 +158,25 @@ const App = {
     this.updateProgressRing();
     this.initConfetti();
     this.initReminderEngine();
+    this.initPullToRefresh();
 
-    // Auto-connect ke Google Sheets terpusat & sambut user
-    if (this.currentUser) {
+    // Urutan Startup Sesuai Permintaan:
+    // "posisinya tepat sebelum loading screen, jadi setelah login baru loading screen muncul dan diarahkan ke isi APK"
+    if (!this.currentUser) {
+      // Jika belum login, sembunyikan loading/splash screen seketika & tampilkan login full-page yang lucu
+      const splash = document.getElementById("app-splash-screen");
+      if (splash) {
+        splash.style.display = "none";
+        splash.classList.add("hidden");
+      }
+      this.showFullPageAuth();
+    } else {
+      // Jika sudah login, sembunyikan auth dan jalankan loading screen sebelum masuk ke isi APK
+      this.hideFullPageAuth();
+      this.showSplashScreen();
       if (this.gasEndpoint) {
         setTimeout(() => this.pullFromGoogleSheets(false), 900);
       }
-    } else {
-      // Jika belum masuk akun pada instalasi baru, tampilkan dialog login setelah splash screen
-      setTimeout(() => this.openAuthModal(), 1100);
     }
   },
 
@@ -1593,15 +1602,28 @@ const App = {
 
     const moods = [
       { key: "smile", label: "Bahagia", icon: SVG_ICONS.smile },
-      { key: "zap", label: "Produktif", icon: SVG_ICONS.zap },
-      { key: "leaf", label: "Tenang / Zen", icon: SVG_ICONS.leaf },
-      { key: "calm", label: "Lelah", icon: SVG_ICONS.calm }
+      { key: "sparkles", label: "Bersyukur", icon: SVG_ICONS.sparkles },
+      { key: "heart", label: "Penuh Cinta", icon: SVG_ICONS.heart },
+      { key: "zap", label: "Semangat", icon: SVG_ICONS.zap },
+      { key: "sun", label: "Optimis", icon: SVG_ICONS.sun },
+      { key: "leaf", label: "Tenang", icon: SVG_ICONS.leaf },
+      { key: "coffee", label: "Santai", icon: SVG_ICONS.coffee },
+      { key: "meditate", label: "Zen Hening", icon: SVG_ICONS.meditate },
+      { key: "star", label: "Bangga", icon: SVG_ICONS.star },
+      { key: "target", label: "Fokus", icon: SVG_ICONS.target },
+      { key: "music", label: "Ceria", icon: SVG_ICONS.music },
+      { key: "moon", label: "Istirahat", icon: SVG_ICONS.moon }
     ];
 
+    const currentKey = document.getElementById("selected-mood-key") ? (document.getElementById("selected-mood-key").value || "smile") : "smile";
+
     grid.innerHTML = moods.map(m => `
-      <button type="button" class="btn-mood-choice ${m.key === 'smile' ? 'active' : ''}" data-mood="${m.key}" onclick="App.selectMood('${m.key}')">
-        ${m.icon}
-        <span>${m.label}</span>
+      <button type="button" class="btn-mood-choice ${m.key === currentKey ? 'active' : ''}" 
+              data-mood="${m.key}" 
+              onclick="App.selectMood('${m.key}')" 
+              title="${m.label}">
+        <span class="mood-svg-box">${m.icon}</span>
+        <span class="mood-choice-label">${m.label}</span>
       </button>
     `).join("");
   },
@@ -1610,7 +1632,8 @@ const App = {
     document.querySelectorAll(".btn-mood-choice").forEach(b => {
       b.classList.toggle("active", b.getAttribute("data-mood") === key);
     });
-    document.getElementById("selected-mood-key").value = key;
+    const hidden = document.getElementById("selected-mood-key");
+    if (hidden) hidden.value = key;
   },
 
   handleSaveHabit(e) {
@@ -1712,49 +1735,107 @@ const App = {
     this.renderHeaderAndLiveCalendar();
     this.renderBentoCards();
     this.closeModal("modal-add-habit");
+
+    // RESET FORM HABIT SETIAP KALI SELESAI INPUT DATA
+    const formHabit = document.getElementById("form-create-habit");
+    if (formHabit) formHabit.reset();
+    const editIdInput = document.getElementById("habit-edit-id");
+    if (editIdInput) editIdInput.value = "";
+    this.selectCardType("checklist");
+    this.selectScheduleType("daily");
+    this.selectIconKey("sun");
+    this.updateColorLabel("#FDE047");
+
     this.pushToGoogleSheets(false);
   },
 
   // ==========================================================
-  // 11. ONE-LINE MICRO JOURNAL
+  // 11. ONE-LINE MICRO JOURNAL (CATATAN SYUKUR)
   // ==========================================================
   openJournalModal() {
-    const todayJournal = this.journalList[0];
+    // RESET FORM JURNAL SETIAP KALI DIBUKA (BERSIH SETIAP INPUT BARU)
+    const formEl = document.getElementById("form-journal");
+    if (formEl) formEl.reset();
     const input = document.getElementById("journal-input-text");
-    if (input && todayJournal) {
-      input.value = todayJournal.reflectionText;
-      document.getElementById("journal-char-count").textContent = `${input.value.length} / 140`;
-    }
+    if (input) input.value = "";
+    const counter = document.getElementById("journal-char-count");
+    if (counter) counter.textContent = "0 / 140";
+    this.selectMood("smile");
     document.getElementById("modal-journal").classList.add("open");
   },
 
   handleSaveJournal(e) {
     e.preventDefault();
-    const text = document.getElementById("journal-input-text").value.trim();
-    const moodKey = document.getElementById("selected-mood-key").value || "smile";
-    const moodLabels = { smile: "Bahagia", zap: "Produktif", leaf: "Tenang", calm: "Lelah" };
+    const input = document.getElementById("journal-input-text");
+    const text = input ? input.value.trim() : "";
+    if (!text) {
+      this.showToast("Tuliskan sedikit rasa syukurmu hari ini ya!", "warning");
+      return;
+    }
+
+    const moodKey = document.getElementById("selected-mood-key") ? (document.getElementById("selected-mood-key").value || "smile") : "smile";
+    const moodLabels = {
+      smile: "Bahagia",
+      sparkles: "Bersyukur",
+      heart: "Penuh Cinta",
+      zap: "Bersemangat",
+      sun: "Optimis",
+      leaf: "Tenang",
+      coffee: "Santai",
+      meditate: "Zen Hening",
+      star: "Bangga",
+      target: "Fokus",
+      music: "Ceria",
+      moon: "Lega & Istirahat"
+    };
+
+    const now = new Date();
+    const daysIndo = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+    const monthsIndo = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    const dayName = daysIndo[now.getDay()];
+    const dateNum = now.getDate();
+    const monthName = monthsIndo[now.getMonth()];
+    const yearNum = now.getFullYear();
+    const timeStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 
     const entry = {
       id: "j_" + Date.now(),
-      date: "Hari Ini",
+      createdAt: Date.now(),
+      dateKey: this.formatDateKey(now),
+      date: `${dayName}, ${dateNum} ${monthName}`,
+      time: `${timeStr} WIB`,
+      fullDateLabel: `${dayName}, ${dateNum} ${monthName} ${yearNum}`,
       reflectionText: text,
       moodKey: moodKey,
-      moodLabel: moodLabels[moodKey] || "Bersyukur"
+      moodLabel: moodLabels[moodKey] || "Bersyukur",
+      username: this.currentUser ? this.currentUser.username : ""
     };
 
     this.journalList.unshift(entry);
     this.saveJournalLocal();
+
+    // RESET FORM JURNAL SETIAP KALI SELESAI INPUT DATA
+    const formEl = document.getElementById("form-journal");
+    if (formEl) formEl.reset();
+    if (input) input.value = "";
+    const counter = document.getElementById("journal-char-count");
+    if (counter) counter.textContent = "0 / 140";
+    this.selectMood("smile");
+
     this.renderBentoCards();
     this.closeModal("modal-journal");
-    this.showToast("Refleksi harian berhasil disimpan!", "success");
+    this.showToast("Catatan syukur tersimpan! ✨", "success");
     
     // Sync journal to Google Sheets
     if (this.gasEndpoint) {
       fetch(this.gasEndpoint, {
         method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "save_journal", journal: entry })
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "save_journal",
+          username: this.currentUser ? this.currentUser.username : "",
+          journal: entry
+        })
       }).catch(err => console.log(err));
     }
   },
@@ -1908,23 +1989,96 @@ const App = {
     // Render daftar agenda untuk tanggal yang dipilih di kalender
     this.renderCalendarModalAgenda();
 
-    // Render Riwayat Jurnal
+    // Render Arsip Catatan Syukur Terkelompok Sesuai Kapan Diinputnya
+    this.renderJournalArchive();
+  },
+
+  renderJournalArchive() {
     const journalWrap = document.getElementById("journal-history-list");
-    if (journalWrap) {
-      if (this.journalList.length === 0) {
-        journalWrap.innerHTML = `<div class="empty-journal-state" style="padding: 16px 0; text-align: center; color: #71717A; font-size: 13px;">Belum ada riwayat catatan refleksi.</div>`;
-      } else {
-        journalWrap.innerHTML = this.journalList.map(j => `
-          <div class="journal-history-item">
-            <div class="journal-item-meta">
-              <span class="journal-item-date">${j.date}</span>
-              <span class="journal-item-mood">${SVG_ICONS[j.moodKey] || SVG_ICONS.smile} ${j.moodLabel || ''}</span>
-            </div>
-            <p class="journal-item-text">"${j.reflectionText}"</p>
-          </div>
-        `).join("");
-      }
+    if (!journalWrap) return;
+
+    if (!this.journalList || this.journalList.length === 0) {
+      journalWrap.innerHTML = `
+        <div class="empty-journal-state" style="padding: 24px 12px; text-align: center; color: #9CA3AF; font-size: 13px;">
+          <div style="font-size: 28px; margin-bottom: 6px;">✨</div>
+          <p style="margin: 0; font-weight: 700; color: #E5E7EB;">Belum ada arsip catatan syukur</p>
+          <p style="margin: 4px 0 0; font-size: 11.5px; color: #71717A;">Tuliskan rasa syukurmu hari ini untuk mengabadikan momen bahagia.</p>
+        </div>
+      `;
+      return;
     }
+
+    // Kelompokkan entri catatan syukur berdasarkan tanggal input (dateKey / tanggal)
+    const grouped = {};
+    this.journalList.forEach(j => {
+      let groupKey = j.dateKey;
+      if (!groupKey && j.createdAt) {
+        groupKey = this.formatDateKey(new Date(j.createdAt));
+      }
+      if (!groupKey) {
+        groupKey = j.date || "Catatan Sebelumnya";
+      }
+
+      if (!grouped[groupKey]) {
+        grouped[groupKey] = {
+          dateKey: groupKey,
+          displayLabel: j.fullDateLabel || j.date || groupKey,
+          items: []
+        };
+      }
+      grouped[groupKey].items.push(j);
+    });
+
+    // Urutkan grup tanggal secara kronologis dari yang terbaru ke terlama
+    const sortedKeys = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+    const todayKey = this.getTodayKey();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayKey = this.formatDateKey(yesterday);
+
+    let html = "";
+    sortedKeys.forEach(k => {
+      const grp = grouped[k];
+      let headerText = grp.displayLabel;
+      if (k === todayKey) {
+        headerText = `Hari Ini • ${grp.displayLabel}`;
+      } else if (k === yesterdayKey) {
+        headerText = `Kemarin • ${grp.displayLabel}`;
+      }
+
+      html += `
+        <div class="journal-timeline-group">
+          <div class="journal-timeline-header">
+            <span class="timeline-date-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FDE047" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </span>
+            <span class="timeline-date-label">${headerText}</span>
+            <span class="timeline-count-badge">${grp.items.length} Refleksi</span>
+          </div>
+          <div class="journal-timeline-cards">
+            ${grp.items.map(item => `
+              <div class="journal-history-item">
+                <div class="journal-item-meta">
+                  <span class="journal-item-mood-badge">
+                    <span class="mood-badge-icon">${SVG_ICONS[item.moodKey] || SVG_ICONS.smile}</span>
+                    <span>${item.moodLabel || 'Bersyukur'}</span>
+                  </span>
+                  <span class="journal-item-time">${item.time || item.date || ''}</span>
+                </div>
+                <p class="journal-item-text">"${item.reflectionText}"</p>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    });
+
+    journalWrap.innerHTML = html;
   },
 
   selectCalendarModalDay(y, m, day) {
@@ -2267,7 +2421,7 @@ const App = {
     if (mainArea) mainArea.scrollTo({ top: 0, behavior: "smooth" });
   },
 
-  showSplashScreen() {
+  showSplashScreen(customMsg = null) {
     const splash = document.getElementById("app-splash-screen");
     const fill = document.querySelector(".splash-loader-fill");
     const status = document.getElementById("splash-status");
@@ -2282,7 +2436,7 @@ const App = {
       fill.style.animation = "fillProgress 1.6s cubic-bezier(0.25, 1, 0.5, 1) forwards";
     }
 
-    if (status) status.textContent = "Menyiapkan ruang fokus...";
+    if (status) status.textContent = customMsg || "Menyiapkan ruang fokus...";
 
     setTimeout(() => {
       if (status) status.textContent = "Memuat target harian...";
@@ -2302,34 +2456,324 @@ const App = {
   },
 
   // ==========================================================
-  // 14. BENTO MULTI-USER CLOUD AUTHENTICATION & PROFILE ENGINE
+  // 14. CUTE FULL-PAGE ONBOARDING & AUTHENTICATION (DESAIN LUCU)
+  // ==========================================================
+  showFullPageAuth() {
+    const screen = document.getElementById("fullpage-auth-screen");
+    if (!screen) return;
+    screen.style.display = "flex";
+    screen.classList.remove("fade-out");
+    this.switchCuteAuthTab("login");
+  },
+
+  hideFullPageAuth() {
+    const screen = document.getElementById("fullpage-auth-screen");
+    if (!screen) return;
+    screen.classList.add("fade-out");
+    setTimeout(() => {
+      screen.style.display = "none";
+    }, 380);
+  },
+
+  switchCuteAuthTab(tab) {
+    const tabLogin = document.getElementById("cute-tab-login");
+    const tabReg = document.getElementById("cute-tab-register");
+    const formLogin = document.getElementById("form-cute-login");
+    const formReg = document.getElementById("form-cute-register");
+    const title = document.getElementById("cute-auth-main-title");
+    const desc = document.getElementById("cute-auth-main-desc");
+
+    if (tab === "register") {
+      if (tabLogin) tabLogin.classList.remove("active");
+      if (tabReg) tabReg.classList.add("active");
+      if (formLogin) formLogin.style.display = "none";
+      if (formReg) formReg.style.display = "block";
+      if (title) title.textContent = "Yuk Berteman! 🌱";
+      if (desc) desc.textContent = "Buat akun barumu agar target dan catatan syukurmu tersimpan rapi & terpisah di Google Sheets!";
+    } else {
+      if (tabLogin) tabLogin.classList.add("active");
+      if (tabReg) tabReg.classList.remove("active");
+      if (formLogin) formLogin.style.display = "block";
+      if (formReg) formReg.style.display = "none";
+      if (title) title.textContent = "Halo Sahabat! 👋";
+      if (desc) desc.textContent = "Masuk dan mulai harimu dengan penuh semangat & target yang tercapai!";
+    }
+  },
+
+  selectCuteAvatar(key) {
+    document.querySelectorAll(".cute-avatar-btn").forEach(b => {
+      b.classList.toggle("active", b.getAttribute("data-avatar") === key);
+    });
+    const hidden = document.getElementById("selected-cute-avatar");
+    if (hidden) hidden.value = key;
+  },
+
+  async handleCuteLogin(e) {
+    e.preventDefault();
+    const userIn = document.getElementById("cute-login-username");
+    const pinIn = document.getElementById("cute-login-pin");
+    if (!userIn) return;
+
+    const rawUsername = userIn.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
+    const rawPin = pinIn ? pinIn.value.trim() : "";
+
+    if (!rawUsername || rawUsername.length < 3) {
+      this.showToast("Username minimal 3 karakter ya! (huruf, angka, _)", "warning");
+      return;
+    }
+
+    const btn = document.getElementById("btn-cute-submit-login");
+    if (btn) {
+      btn.disabled = true;
+      btn.style.opacity = "0.7";
+    }
+
+    this.showToast(`Menghubungkan ke profil @${rawUsername}...`, "info");
+
+    const userObj = {
+      username: rawUsername,
+      fullName: rawUsername.charAt(0).toUpperCase() + rawUsername.slice(1),
+      pin: rawPin,
+      avatarKey: "star",
+      loggedInAt: new Date().toISOString()
+    };
+
+    // Migrasi data aman: wariskan target lokal yang sudah diinput agar TIDAK ADA YANG HILANG
+    const userKey = `minimal_todo_habits_${rawUsername}`;
+    const existingUserData = localStorage.getItem(userKey);
+    if (!existingUserData && this.habits.length > 0) {
+      this.habits.forEach(h => { h.username = rawUsername; });
+      localStorage.setItem(userKey, JSON.stringify(this.habits));
+    } else if (existingUserData) {
+      try {
+        this.habits = JSON.parse(existingUserData);
+      } catch (err) {}
+    }
+
+    this.currentUser = userObj;
+    localStorage.setItem("minimal_todo_user", JSON.stringify(userObj));
+    this.updateUserProfileUI();
+
+    // Sesuai alur pengguna: login berhasil -> sembunyikan auth -> BARU loading screen muncul -> diarahkan ke isi APK
+    this.hideFullPageAuth();
+    this.showSplashScreen(`Selamat datang kembali, @${rawUsername}! Menyiapkan ruang fokus...`);
+
+    // Sinkronisasi otomatis ke Google Apps Script di background
+    if (this.gasEndpoint) {
+      try {
+        fetch(this.gasEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "login_user",
+            username: rawUsername,
+            pin: rawPin,
+            fullName: userObj.fullName
+          })
+        }).catch(() => {});
+      } catch (err) {}
+
+      await this.pullFromGoogleSheets(false);
+    }
+
+    if (btn) {
+      btn.disabled = false;
+      btn.style.opacity = "1";
+    }
+
+    this.renderBentoCards();
+    this.updateProgressRing();
+    this.renderHeaderAndLiveCalendar();
+  },
+
+  async handleCuteRegister(e) {
+    e.preventDefault();
+    const nameIn = document.getElementById("cute-reg-fullname");
+    const userIn = document.getElementById("cute-reg-username");
+    const pinIn = document.getElementById("cute-reg-pin");
+    const avatarIn = document.getElementById("selected-cute-avatar");
+
+    if (!userIn) return;
+
+    const rawName = nameIn ? nameIn.value.trim() : "";
+    const rawUsername = userIn.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
+    const rawPin = pinIn ? pinIn.value.trim() : "";
+    const avatarKey = avatarIn ? avatarIn.value : "star";
+
+    if (!rawUsername || rawUsername.length < 3) {
+      this.showToast("Username minimal 3 karakter ya! (huruf, angka, _)", "warning");
+      return;
+    }
+
+    const btn = document.getElementById("btn-cute-submit-register");
+    if (btn) {
+      btn.disabled = true;
+      btn.style.opacity = "0.7";
+    }
+
+    this.showToast(`Mendaftarkan akun @${rawUsername}...`, "info");
+
+    const userObj = {
+      username: rawUsername,
+      fullName: rawName || (rawUsername.charAt(0).toUpperCase() + rawUsername.slice(1)),
+      pin: rawPin,
+      avatarKey: avatarKey,
+      registeredAt: new Date().toISOString()
+    };
+
+    // Wariskan seluruh habit lokal yang ada agar TIDAK ADA YANG HILANG
+    const userKey = `minimal_todo_habits_${rawUsername}`;
+    this.habits.forEach(h => { h.username = rawUsername; });
+    localStorage.setItem(userKey, JSON.stringify(this.habits));
+
+    this.currentUser = userObj;
+    localStorage.setItem("minimal_todo_user", JSON.stringify(userObj));
+    this.updateUserProfileUI();
+
+    // Sesuai alur pengguna: daftar berhasil -> sembunyikan auth -> BARU loading screen muncul -> masuk isi APK
+    this.hideFullPageAuth();
+    this.showSplashScreen(`Menyiapkan petualangan untuk @${rawUsername}...`);
+
+    if (this.gasEndpoint) {
+      try {
+        await fetch(this.gasEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "register_user",
+            username: rawUsername,
+            fullName: userObj.fullName,
+            pin: rawPin
+          })
+        });
+      } catch (err) {}
+
+      await this.pushToGoogleSheets(false);
+      await this.pullFromGoogleSheets(false);
+    }
+
+    if (btn) {
+      btn.disabled = false;
+      btn.style.opacity = "1";
+    }
+
+    this.renderBentoCards();
+    this.updateProgressRing();
+    this.renderHeaderAndLiveCalendar();
+  },
+
+  // ==========================================================
+  // 15. PULL-TO-REFRESH (SWIPE KE BAWAH TANPA LOGOUT)
+  // ==========================================================
+  initPullToRefresh() {
+    const mainArea = document.getElementById("main-scroll-area");
+    const indicator = document.getElementById("pull-refresh-indicator");
+    const textEl = document.getElementById("pull-refresh-text");
+    const svgEl = indicator ? indicator.querySelector(".pull-refresh-svg") : null;
+    if (!mainArea || !indicator) return;
+
+    let startY = 0;
+    let currentY = 0;
+    let isPulling = false;
+    let isRefreshing = false;
+    const threshold = 65;
+
+    mainArea.addEventListener("touchstart", (e) => {
+      if (isRefreshing) return;
+      if (mainArea.scrollTop <= 0) {
+        startY = e.touches[0].clientY;
+        isPulling = true;
+      } else {
+        isPulling = false;
+      }
+    }, { passive: true });
+
+    mainArea.addEventListener("touchmove", (e) => {
+      if (!isPulling || isRefreshing) return;
+      currentY = e.touches[0].clientY;
+      const pullDist = currentY - startY;
+
+      if (pullDist > 0 && mainArea.scrollTop <= 0) {
+        const visualDist = Math.min(85, pullDist * 0.45);
+        indicator.style.height = `${visualDist}px`;
+        indicator.style.opacity = Math.min(1, visualDist / 40);
+
+        if (svgEl) {
+          const deg = Math.min(180, (visualDist / threshold) * 180);
+          svgEl.style.transform = `rotate(${deg}deg)`;
+        }
+
+        if (visualDist >= threshold) {
+          indicator.classList.add("ready");
+          if (textEl) textEl.textContent = "Lepaskan untuk menyegarkan...";
+        } else {
+          indicator.classList.remove("ready");
+          if (textEl) textEl.textContent = "Tarik untuk menyegarkan...";
+        }
+      }
+    }, { passive: true });
+
+    const endPull = async () => {
+      if (!isPulling || isRefreshing) return;
+      isPulling = false;
+
+      if (indicator.classList.contains("ready")) {
+        isRefreshing = true;
+        indicator.classList.remove("ready");
+        indicator.classList.add("refreshing");
+        if (textEl) textEl.textContent = "Menyinkronkan data Cloud...";
+        indicator.style.height = "52px";
+
+        // Tarik data dari Google Sheets. SESI USER TIDAK AKAN PERNAH LOGOUT!
+        try {
+          await this.pullFromGoogleSheets(true);
+        } catch (err) {}
+
+        if (textEl) textEl.textContent = "Tersinkron!";
+        setTimeout(() => {
+          indicator.classList.remove("refreshing");
+          indicator.style.height = "0px";
+          indicator.style.opacity = "0";
+          if (svgEl) svgEl.style.transform = "rotate(0deg)";
+          isRefreshing = false;
+        }, 500);
+      } else {
+        indicator.style.height = "0px";
+        indicator.style.opacity = "0";
+        if (svgEl) svgEl.style.transform = "rotate(0deg)";
+      }
+    };
+
+    mainArea.addEventListener("touchend", endPull, { passive: true });
+    mainArea.addEventListener("touchcancel", endPull, { passive: true });
+  },
+
+  // ==========================================================
+  // 16. BENTO MULTI-USER CLOUD AUTHENTICATION & PROFILE ENGINE
   // ==========================================================
   openAuthModal() {
+    if (!this.currentUser) {
+      // Jika belum masuk akun, langsung tampilkan Cute Full Page Onboarding!
+      this.showFullPageAuth();
+      return;
+    }
+
     const modal = document.getElementById("modal-auth");
     if (!modal) return;
 
     const loggedView = document.getElementById("auth-logged-view");
     const formView = document.getElementById("auth-form-view");
 
-    if (this.currentUser) {
-      if (loggedView) loggedView.style.display = "block";
-      if (formView) formView.style.display = "none";
-      this.updateProfileModalStats();
-    } else {
-      if (loggedView) loggedView.style.display = "none";
-      if (formView) formView.style.display = "block";
-      this.switchAuthTab("login");
-    }
+    if (loggedView) loggedView.style.display = "block";
+    if (formView) formView.style.display = "none";
+    this.updateProfileModalStats();
 
     modal.classList.add("open");
   },
 
   showSwitchAccountForm() {
-    const loggedView = document.getElementById("auth-logged-view");
-    const formView = document.getElementById("auth-form-view");
-    if (loggedView) loggedView.style.display = "none";
-    if (formView) formView.style.display = "block";
-    this.switchAuthTab("login");
+    this.closeModal("modal-auth");
+    this.showFullPageAuth();
   },
 
   switchAuthTab(tab) {
@@ -2383,7 +2827,6 @@ const App = {
       loggedInAt: new Date().toISOString()
     };
 
-    // Migrasi aman: Jika user baru login dan belum ada file data terpisah, hubungkan data lokal yang ada agar TIDAK HILANG
     const userKey = `minimal_todo_habits_${rawUsername}`;
     const existingUserData = localStorage.getItem(userKey);
     if (!existingUserData && this.habits.length > 0) {
@@ -2401,7 +2844,6 @@ const App = {
     this.updateUserProfileUI();
     this.closeModal("modal-auth");
 
-    // Sinkronisasi otomatis ke Google Apps Script di background
     if (this.gasEndpoint) {
       try {
         fetch(this.gasEndpoint, {
@@ -2463,7 +2905,6 @@ const App = {
       registeredAt: new Date().toISOString()
     };
 
-    // Migrasi aman: Hubungkan semua target lokal yang sudah dibuat ke akun baru ini agar TIDAK ADA YANG HILANG
     const userKey = `minimal_todo_habits_${rawUsername}`;
     this.habits.forEach(h => { h.username = rawUsername; });
     localStorage.setItem(userKey, JSON.stringify(this.habits));
@@ -2474,7 +2915,6 @@ const App = {
     this.updateUserProfileUI();
     this.closeModal("modal-auth");
 
-    // Daftarkan ke Google Apps Script Cloud
     if (this.gasEndpoint) {
       try {
         await fetch(this.gasEndpoint, {
@@ -2489,7 +2929,6 @@ const App = {
         });
       } catch (e) {}
 
-      // Kirim habits yang sudah ada ke spreadsheet di bawah akun baru ini
       await this.pushToGoogleSheets(false);
       await this.pullFromGoogleSheets(false);
     }
@@ -2522,8 +2961,8 @@ const App = {
         this.closeModal("modal-auth");
         this.showToast("Berhasil keluar dari akun.", "info");
 
-        // Buka form login lagi agar user berikutnya bisa masuk
-        setTimeout(() => this.openAuthModal(), 400);
+        // Langsung arahkan kembali ke Full Page Onboarding/Login berdesain lucu
+        setTimeout(() => this.showFullPageAuth(), 350);
       }
     );
   },
