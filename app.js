@@ -114,11 +114,15 @@ const ICON_CATALOG = [
   { key: "star", label: "Prestasi Spesial", cat: "life" }
 ];
 
+// DEFAULT ENDPOINT GOOGLE APPS SCRIPT WEB APP (AUTO-CONNECT)
+const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbwrH5ou-7ZP5xzPNBT3fm_1QUo0YuM0AzGbwTko_Ggt73FgxQFx3c_dmwmDrc1i_iKPVQ/exec";
+
 const App = {
   habits: [],
   journalList: [],
   history: {},
   gasEndpoint: "",
+  currentUser: null, // { username, fullName, pin, loggedInAt }
   activeTimers: {},
   calendarViewDate: new Date(),
   formCalendarDate: new Date(),
@@ -147,6 +151,7 @@ const App = {
     this.loadData();
     this.selectedDateKey = this.getTodayKey();
     this.calendarModalSelectedDayKey = this.getTodayKey();
+    this.updateUserProfileUI();
     this.renderHeaderAndLiveCalendar();
     this.populateIconPicker();
     this.populateMoodPicker();
@@ -155,9 +160,14 @@ const App = {
     this.initConfetti();
     this.initReminderEngine();
 
-    // Auto-pull dari Google Sheets jika URL sudah tersimpan di HP
-    if (this.gasEndpoint) {
-      setTimeout(() => this.pullFromGoogleSheets(false), 800);
+    // Auto-connect ke Google Sheets terpusat & sambut user
+    if (this.currentUser) {
+      if (this.gasEndpoint) {
+        setTimeout(() => this.pullFromGoogleSheets(false), 900);
+      }
+    } else {
+      // Jika belum masuk akun pada instalasi baru, tampilkan dialog login setelah splash screen
+      setTimeout(() => this.openAuthModal(), 1100);
     }
   },
 
@@ -249,21 +259,23 @@ const App = {
     const quoteEl = document.getElementById("greeting-motivational-quote");
 
     if (headingEl) {
+      const userGreetingName = this.currentUser ? (" " + (this.currentUser.fullName || this.currentUser.username).split(" ")[0]) : "";
+
       if (!isViewingToday) {
         headingEl.textContent = "Jadwal Terpilih";
         if (quoteEl) quoteEl.textContent = "Fokus menyelesaikan target pada tanggal yang Anda tentukan.";
       } else {
         if (hour >= 5 && hour < 12) {
-          headingEl.textContent = "Selamat Pagi";
+          headingEl.textContent = `Selamat Pagi${userGreetingName}`;
           if (quoteEl) quoteEl.textContent = "Sinar matahari pagi meningkatkan produksi serotonin dan fokus.";
         } else if (hour >= 12 && hour < 16) {
-          headingEl.textContent = "Selamat Siang";
+          headingEl.textContent = `Selamat Siang${userGreetingName}`;
           if (quoteEl) quoteEl.textContent = "Tetap terhidrasi dan pertahankan momentum ritme harimu.";
         } else if (hour >= 16 && hour < 19) {
-          headingEl.textContent = "Selamat Sore";
+          headingEl.textContent = `Selamat Sore${userGreetingName}`;
           if (quoteEl) quoteEl.textContent = "Hampir selesai! Sempurnakan habitmu sebelum petang.";
         } else {
-          headingEl.textContent = "Selamat Malam";
+          headingEl.textContent = `Selamat Malam${userGreetingName}`;
           if (quoteEl) quoteEl.textContent = "Waktunya refleksi diri dan istirahat berkualitas.";
         }
       }
@@ -327,15 +339,32 @@ const App = {
   // 2. DATA LAYER (OFFLINE-FIRST + GOOGLE SHEETS SYNC)
   // ==========================================================
   loadData() {
-    // Bersihkan semua data dummy lama jika ada di storage pengguna
-    localStorage.removeItem("minimal_todo_habits_v2");
-    localStorage.removeItem("minimal_todo_journal_v2");
-    localStorage.removeItem("minimal_todo_history_v2");
+    // 1. Muat profil user saat ini
+    const savedUser = localStorage.getItem("minimal_todo_user");
+    if (savedUser) {
+      try {
+        this.currentUser = JSON.parse(savedUser);
+      } catch (e) {
+        this.currentUser = null;
+      }
+    }
 
-    const savedHabits = localStorage.getItem("minimal_todo_habits_clean");
-    const savedJournal = localStorage.getItem("minimal_todo_journal_clean");
-    const savedHistory = localStorage.getItem("minimal_todo_history_clean");
-    this.gasEndpoint = localStorage.getItem("minimal_todo_gas_url") || "";
+    // 2. Muat endpoint Google Apps Script (Default URL tertanam otomatis)
+    const savedGasUrl = localStorage.getItem("minimal_todo_gas_url");
+    this.gasEndpoint = (savedGasUrl && savedGasUrl.trim()) ? savedGasUrl.trim() : DEFAULT_GAS_URL;
+
+    // 3. Muat habits dengan perlindungan data lama (Preservasi Data)
+    const legacyHabits = localStorage.getItem("minimal_todo_habits_clean");
+    let userHabitsKey = this.currentUser ? `minimal_todo_habits_${this.currentUser.username}` : "minimal_todo_habits_clean";
+    let savedHabits = localStorage.getItem(userHabitsKey);
+
+    // Jika user baru login tapi data user belum pernah tersimpan, wariskan data lama yang sudah diinput agar TIDAK HILANG!
+    if (!savedHabits && legacyHabits) {
+      savedHabits = legacyHabits;
+      if (this.currentUser) {
+        localStorage.setItem(userHabitsKey, legacyHabits);
+      }
+    }
 
     if (savedHabits) {
       try {
@@ -347,6 +376,18 @@ const App = {
       this.habits = [];
     }
 
+    // 4. Muat catatan syukur / jurnal
+    const legacyJournal = localStorage.getItem("minimal_todo_journal_clean");
+    let userJournalKey = this.currentUser ? `minimal_todo_journal_${this.currentUser.username}` : "minimal_todo_journal_clean";
+    let savedJournal = localStorage.getItem(userJournalKey);
+
+    if (!savedJournal && legacyJournal) {
+      savedJournal = legacyJournal;
+      if (this.currentUser) {
+        localStorage.setItem(userJournalKey, legacyJournal);
+      }
+    }
+
     if (savedJournal) {
       try {
         this.journalList = JSON.parse(savedJournal);
@@ -355,6 +396,18 @@ const App = {
       }
     } else {
       this.journalList = [];
+    }
+
+    // 5. Muat history streak
+    const legacyHistory = localStorage.getItem("minimal_todo_history_clean");
+    let userHistKey = this.currentUser ? `minimal_todo_history_${this.currentUser.username}` : "minimal_todo_history_clean";
+    let savedHistory = localStorage.getItem(userHistKey);
+
+    if (!savedHistory && legacyHistory) {
+      savedHistory = legacyHistory;
+      if (this.currentUser) {
+        localStorage.setItem(userHistKey, legacyHistory);
+      }
     }
 
     if (savedHistory) {
@@ -369,14 +422,21 @@ const App = {
   },
 
   saveLocal() {
+    const key = this.currentUser ? `minimal_todo_habits_${this.currentUser.username}` : "minimal_todo_habits_clean";
+    localStorage.setItem(key, JSON.stringify(this.habits));
+    // Cadangan aman agar tidak pernah hilang
     localStorage.setItem("minimal_todo_habits_clean", JSON.stringify(this.habits));
   },
 
   saveJournalLocal() {
+    const key = this.currentUser ? `minimal_todo_journal_${this.currentUser.username}` : "minimal_todo_journal_clean";
+    localStorage.setItem(key, JSON.stringify(this.journalList));
     localStorage.setItem("minimal_todo_journal_clean", JSON.stringify(this.journalList));
   },
 
   saveHistoryLocal() {
+    const key = this.currentUser ? `minimal_todo_history_${this.currentUser.username}` : "minimal_todo_history_clean";
+    localStorage.setItem(key, JSON.stringify(this.history));
     localStorage.setItem("minimal_todo_history_clean", JSON.stringify(this.history));
   },
 
@@ -1988,6 +2048,10 @@ const App = {
     try {
       const url = new URL(this.gasEndpoint);
       url.searchParams.set("action", "get_all");
+      if (this.currentUser && this.currentUser.username) {
+        url.searchParams.set("username", this.currentUser.username);
+        url.searchParams.set("userId", this.currentUser.username);
+      }
       url.searchParams.set("_t", Date.now());
 
       const response = await fetch(url.toString(), {
@@ -2015,12 +2079,14 @@ const App = {
         this.renderBentoCards();
         this.updateProgressRing();
         this.renderHeaderAndLiveCalendar();
+        this.updateProfileModalStats();
 
         const timeNow = new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
         this.updateSyncStatusLabel(`Tersinkron: ${data.habits.length} target (${timeNow} WIB)`, true);
 
         if (showNotification) {
-          this.showToast(`Berhasil menarik ${data.habits.length} target dari Google Sheets!`, "success");
+          const userGreet = this.currentUser ? ` untuk @${this.currentUser.username}` : "";
+          this.showToast(`Berhasil menarik ${data.habits.length} target${userGreet} dari Cloud!`, "success");
         }
         return true;
       } else {
@@ -2045,12 +2111,20 @@ const App = {
     this.updateSyncStatusLabel("Mengirim data ke Google Sheets...", true);
 
     try {
+      const targetUser = this.currentUser ? this.currentUser.username : "";
+      const taggedHabits = this.habits.map(h => ({
+        ...h,
+        username: h.username || targetUser
+      }));
+
       await fetch(this.gasEndpoint, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
           action: "sync_habits",
-          habits: this.habits
+          username: targetUser,
+          userId: targetUser,
+          habits: taggedHabits
         })
       });
 
@@ -2058,7 +2132,7 @@ const App = {
       this.updateSyncStatusLabel(`Data terkirim ke Cloud (${timeNow} WIB)`, true);
 
       if (showNotification) {
-        this.showToast("Data berhasil dikirim ke Google Sheets!", "success");
+        this.showToast("Data target berhasil dikirim ke Google Sheets!", "success");
       }
       return true;
     } catch (e) {
@@ -2225,6 +2299,291 @@ const App = {
         splash.style.display = "none";
       }, 500);
     }, 1900);
+  },
+
+  // ==========================================================
+  // 14. BENTO MULTI-USER CLOUD AUTHENTICATION & PROFILE ENGINE
+  // ==========================================================
+  openAuthModal() {
+    const modal = document.getElementById("modal-auth");
+    if (!modal) return;
+
+    const loggedView = document.getElementById("auth-logged-view");
+    const formView = document.getElementById("auth-form-view");
+
+    if (this.currentUser) {
+      if (loggedView) loggedView.style.display = "block";
+      if (formView) formView.style.display = "none";
+      this.updateProfileModalStats();
+    } else {
+      if (loggedView) loggedView.style.display = "none";
+      if (formView) formView.style.display = "block";
+      this.switchAuthTab("login");
+    }
+
+    modal.classList.add("open");
+  },
+
+  showSwitchAccountForm() {
+    const loggedView = document.getElementById("auth-logged-view");
+    const formView = document.getElementById("auth-form-view");
+    if (loggedView) loggedView.style.display = "none";
+    if (formView) formView.style.display = "block";
+    this.switchAuthTab("login");
+  },
+
+  switchAuthTab(tab) {
+    const btnLogin = document.getElementById("tab-btn-login");
+    const btnReg = document.getElementById("tab-btn-register");
+    const formLogin = document.getElementById("form-auth-login");
+    const formReg = document.getElementById("form-auth-register");
+    const hint = document.getElementById("auth-tab-hint");
+
+    if (tab === "register") {
+      if (btnLogin) btnLogin.classList.remove("active");
+      if (btnReg) btnReg.classList.add("active");
+      if (formLogin) formLogin.style.display = "none";
+      if (formReg) formReg.style.display = "block";
+      if (hint) hint.textContent = "Daftarkan username unik Anda untuk membuat ruang target pribadi yang tersimpan terpisah di Google Sheets.";
+    } else {
+      if (btnLogin) btnLogin.classList.add("active");
+      if (btnReg) btnReg.classList.remove("active");
+      if (formLogin) formLogin.style.display = "block";
+      if (formReg) formReg.style.display = "none";
+      if (hint) hint.textContent = "Masukkan username Anda untuk membuka target dan catatan harian pribadi yang tersinkron ke cloud.";
+    }
+  },
+
+  async handleLogin(event) {
+    event.preventDefault();
+    const usernameInput = document.getElementById("login-username");
+    const pinInput = document.getElementById("login-pin");
+    if (!usernameInput) return;
+
+    const rawUsername = usernameInput.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
+    const rawPin = pinInput ? pinInput.value.trim() : "";
+
+    if (!rawUsername || rawUsername.length < 3) {
+      this.showToast("Username minimal 3 karakter (huruf, angka, _)", "warning");
+      return;
+    }
+
+    const submitBtn = document.getElementById("btn-submit-login");
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = "0.7";
+    }
+
+    this.showToast("Menghubungkan ke profil @" + rawUsername + "...", "info");
+
+    const userObj = {
+      username: rawUsername,
+      fullName: rawUsername.charAt(0).toUpperCase() + rawUsername.slice(1),
+      pin: rawPin,
+      loggedInAt: new Date().toISOString()
+    };
+
+    // Migrasi aman: Jika user baru login dan belum ada file data terpisah, hubungkan data lokal yang ada agar TIDAK HILANG
+    const userKey = `minimal_todo_habits_${rawUsername}`;
+    const existingUserData = localStorage.getItem(userKey);
+    if (!existingUserData && this.habits.length > 0) {
+      this.habits.forEach(h => { h.username = rawUsername; });
+      localStorage.setItem(userKey, JSON.stringify(this.habits));
+    } else if (existingUserData) {
+      try {
+        this.habits = JSON.parse(existingUserData);
+      } catch (e) {}
+    }
+
+    this.currentUser = userObj;
+    localStorage.setItem("minimal_todo_user", JSON.stringify(userObj));
+
+    this.updateUserProfileUI();
+    this.closeModal("modal-auth");
+
+    // Sinkronisasi otomatis ke Google Apps Script di background
+    if (this.gasEndpoint) {
+      try {
+        fetch(this.gasEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "login_user",
+            username: rawUsername,
+            pin: rawPin,
+            fullName: userObj.fullName
+          })
+        }).catch(() => {});
+      } catch (e) {}
+
+      await this.pullFromGoogleSheets(true);
+    } else {
+      this.showToast("Selamat datang, " + userObj.fullName + "!", "success");
+    }
+
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = "1";
+    }
+
+    this.renderBentoCards();
+    this.updateProgressRing();
+    this.renderHeaderAndLiveCalendar();
+  },
+
+  async handleRegister(event) {
+    event.preventDefault();
+    const nameInput = document.getElementById("reg-fullname");
+    const usernameInput = document.getElementById("reg-username");
+    const pinInput = document.getElementById("reg-pin");
+
+    if (!usernameInput) return;
+
+    const rawName = nameInput ? nameInput.value.trim() : "";
+    const rawUsername = usernameInput.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
+    const rawPin = pinInput ? pinInput.value.trim() : "";
+
+    if (!rawUsername || rawUsername.length < 3) {
+      this.showToast("Username minimal 3 karakter (hanya huruf, angka, _)", "warning");
+      return;
+    }
+
+    const submitBtn = document.getElementById("btn-submit-register");
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = "0.7";
+    }
+
+    this.showToast("Mendaftarkan akun @" + rawUsername + "...", "info");
+
+    const userObj = {
+      username: rawUsername,
+      fullName: rawName || (rawUsername.charAt(0).toUpperCase() + rawUsername.slice(1)),
+      pin: rawPin,
+      registeredAt: new Date().toISOString()
+    };
+
+    // Migrasi aman: Hubungkan semua target lokal yang sudah dibuat ke akun baru ini agar TIDAK ADA YANG HILANG
+    const userKey = `minimal_todo_habits_${rawUsername}`;
+    this.habits.forEach(h => { h.username = rawUsername; });
+    localStorage.setItem(userKey, JSON.stringify(this.habits));
+
+    this.currentUser = userObj;
+    localStorage.setItem("minimal_todo_user", JSON.stringify(userObj));
+
+    this.updateUserProfileUI();
+    this.closeModal("modal-auth");
+
+    // Daftarkan ke Google Apps Script Cloud
+    if (this.gasEndpoint) {
+      try {
+        await fetch(this.gasEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "register_user",
+            username: rawUsername,
+            fullName: userObj.fullName,
+            pin: rawPin
+          })
+        });
+      } catch (e) {}
+
+      // Kirim habits yang sudah ada ke spreadsheet di bawah akun baru ini
+      await this.pushToGoogleSheets(false);
+      await this.pullFromGoogleSheets(false);
+    }
+
+    this.showToast("Akun @" + rawUsername + " aktif! Terhubung ke Google Sheet.", "success");
+
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = "1";
+    }
+
+    this.renderBentoCards();
+    this.updateProgressRing();
+    this.renderHeaderAndLiveCalendar();
+  },
+
+  handleLogout() {
+    this.confirmAction(
+      "Keluar dari Akun?",
+      "Target pribadi Anda tetap tersimpan aman di Google Sheet dan HP ini. Anda bisa masuk kembali kapan saja.",
+      () => {
+        const oldUser = this.currentUser ? this.currentUser.username : "";
+        if (oldUser) {
+          localStorage.setItem(`minimal_todo_habits_${oldUser}`, JSON.stringify(this.habits));
+        }
+        this.currentUser = null;
+        localStorage.removeItem("minimal_todo_user");
+
+        this.updateUserProfileUI();
+        this.closeModal("modal-auth");
+        this.showToast("Berhasil keluar dari akun.", "info");
+
+        // Buka form login lagi agar user berikutnya bisa masuk
+        setTimeout(() => this.openAuthModal(), 400);
+      }
+    );
+  },
+
+  updateUserProfileUI() {
+    const barName = document.getElementById("user-account-name");
+    const barStatus = document.getElementById("user-account-status-pill");
+    const avatarBadge = document.getElementById("user-avatar-badge");
+    const settingsBadge = document.getElementById("settings-user-badge");
+    const settingsName = document.getElementById("settings-account-name");
+    const settingsHandle = document.getElementById("settings-account-handle");
+    const settingsAvatar = document.getElementById("settings-avatar-badge");
+
+    if (this.currentUser) {
+      const initial = (this.currentUser.fullName || this.currentUser.username || "U").charAt(0).toUpperCase();
+      const displayName = this.currentUser.fullName || this.currentUser.username;
+      const handle = "@" + this.currentUser.username;
+
+      if (barName) barName.textContent = `${displayName} (${handle})`;
+      if (barStatus) {
+        barStatus.textContent = "Aktif";
+        barStatus.className = "user-account-status-pill logged-in";
+      }
+      if (avatarBadge) avatarBadge.textContent = initial;
+
+      if (settingsBadge) settingsBadge.textContent = "Aktif";
+      if (settingsName) settingsName.textContent = displayName;
+      if (settingsHandle) settingsHandle.textContent = handle;
+      if (settingsAvatar) settingsAvatar.textContent = initial;
+    } else {
+      if (barName) barName.textContent = "Masuk / Daftar Akun";
+      if (barStatus) {
+        barStatus.textContent = "Tamu";
+        barStatus.className = "user-account-status-pill";
+      }
+      if (avatarBadge) {
+        avatarBadge.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+      }
+
+      if (settingsBadge) settingsBadge.textContent = "Tamu";
+      if (settingsName) settingsName.textContent = "Belum Masuk Akun";
+      if (settingsHandle) settingsHandle.textContent = "Klik untuk login atau daftar";
+      if (settingsAvatar) {
+        settingsAvatar.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+      }
+    }
+  },
+
+  updateProfileModalStats() {
+    if (!this.currentUser) return;
+    const largeAvatar = document.getElementById("profile-large-avatar");
+    const fullname = document.getElementById("profile-fullname");
+    const handle = document.getElementById("profile-handle");
+    const countEl = document.getElementById("profile-habit-count");
+
+    const initial = (this.currentUser.fullName || this.currentUser.username || "U").charAt(0).toUpperCase();
+    if (largeAvatar) largeAvatar.textContent = initial;
+    if (fullname) fullname.textContent = this.currentUser.fullName || this.currentUser.username;
+    if (handle) handle.textContent = "@" + this.currentUser.username;
+    if (countEl) countEl.textContent = this.habits.length;
   }
 };
 

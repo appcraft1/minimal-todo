@@ -2607,3 +2607,246 @@ body {
   border-color: rgba(253, 224, 71, 0.4);
 }
 
+/* ==========================================================
+   14. BENTO MULTI-USER AUTHENTICATION & PROFILE SYSTEM
+   ========================================================== */
+
+/* Top Quick User Bar */
+.user-account-bar {
+  background: #17191E;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-spring);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  margin-bottom: 2px;
+}
+
+.user-account-bar:hover {
+  background: #1B1E24;
+  border-color: rgba(253, 224, 71, 0.3);
+}
+
+.user-account-bar:active {
+  transform: scale(0.98);
+}
+
+.user-account-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-avatar-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: rgba(253, 224, 71, 0.14);
+  color: #FDE047;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  border: 1px solid rgba(253, 224, 71, 0.25);
+  flex-shrink: 0;
+}
+
+.user-account-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.user-account-tag {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: #9CA3AF;
+  text-transform: uppercase;
+}
+
+.user-account-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.user-account-action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #9CA3AF;
+}
+
+.user-account-status-pill {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: rgba(156, 163, 175, 0.15);
+  color: #9CA3AF;
+  letter-spacing: 0.3px;
+}
+
+.user-account-status-pill.logged-in {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22C55E;
+}
+
+/* Auth Modal Specifics */
+.auth-sheet {
+  max-width: 414px;
+}
+
+.input-with-icon-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.input-prefix-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #9CA3AF;
+}
+
+.auth-info-bento {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(253, 224, 71, 0.06);
+  border: 1px solid rgba(253, 224, 71, 0.16);
+  border-radius: 14px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.auth-info-icon {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.auth-info-desc {
+  font-size: 11.5px;
+  color: #D1D5DB;
+  line-height: 1.45;
+}
+
+.auth-preservation-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.22);
+  border-radius: 12px;
+  padding: 9px 12px;
+  margin-bottom: 12px;
+  font-size: 11px;
+  color: #86EFAC;
+  line-height: 1.35;
+}
+
+.auth-preservation-notice svg {
+  flex-shrink: 0;
+}
+
+.btn-danger-subtle {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #EF4444;
+  font-weight: 700;
+  font-size: 12.5px;
+  border-radius: 14px;
+  padding: 12px 16px;
+  width: 100%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-danger-subtle:active {
+  background: rgba(239, 68, 68, 0.2);
+  transform: scale(0.98);
+}
+
+.user-card-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.user-profile-avatar-large {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #FDE047 0%, #EAB308 100%);
+  color: #121316;
+  font-size: 22px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(253, 224, 71, 0.35);
+  flex-shrink: 0;
+}
+
+.user-profile-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-profile-fullname {
+  font-size: 16px;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.3px;
+}
+
+.user-profile-handle {
+  font-size: 12px;
+  font-weight: 700;
+  color: #FDE047;
+  margin-top: 1px;
+}
+
+.user-cloud-status-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #9CA3AF;
+  margin-top: 4px;
+}
+
+.user-stat-card {
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-stat-val {
+  font-size: 16px;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+.user-stat-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #9CA3AF;
+  margin-top: 2px;
+}
+
+

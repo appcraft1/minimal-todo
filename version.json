@@ -1,11 +1,11 @@
 {
   "appName": "Minimal Todo",
   "appId": "com.appcraft.minimaltodo",
-  "version": "1.0.3",
-  "versionCode": 4,
-  "releaseDate": "2026-10-07",
+  "version": "1.0.4",
+  "versionCode": 5,
+  "releaseDate": "2026-10-08",
   "apkFileName": "Minimal Todo.apk",
-  "changeLog": "Pembaruan v2.1: Sinkronisasi Google Sheets 2-Arah (Pull & Push), kalender agenda tanggal tertentu, perbaikan layout kartu Bento, dan 100% SVG murni.",
+  "changeLog": "Pembaruan v2.2: Multi-User Cloud Google Sheets! Form Daftar & Login dengan isolasi data masing-masing pengguna, tanpa perlu input link /exec lagi.",
   "otaUpdateUrl": "https://appcraft1.github.io/minimal-todo/",
   "backendSheetTab": "DB_Habits"
 }
