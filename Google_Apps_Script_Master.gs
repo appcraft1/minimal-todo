@@ -1,23 +1,25 @@
 /**
  * ==============================================================================
- * MINIMAL TODO — MASTER GOOGLE APPS SCRIPT BACKEND (v2.2)
- * Database Engine, Multi-User Cloud Isolation, Auto-Setup, Cloud OTA & Firebase
+ * MINIMAL TODO — MASTER GOOGLE APPS SCRIPT BACKEND (v2.3)
+ * Database Engine, Multi-User Cloud Isolation, Settings Password Protection,
+ * Anti-1899 Time Normalizer, Auto-Setup, Cloud OTA & Firebase
  * ==============================================================================
  *
- * FITUR MULTI-USER CLOUD (v2.2):
- * 1. Satu Google Sheet untuk semua pengguna aplikasi.
- * 2. Data terisolasi otomatis berdasarkan Username masing-masing.
- * 3. Menjaga dan TIDAK MENGHAPUS data lama yang sudah pernah diinput sebelumnya.
- * 4. Endpoint Web App permanen untuk seluruh instalasi APK tanpa perlu sinkron ulang.
+ * FITUR TERBARU (v2.3):
+ * 1. Proteksi Password Menu Pengaturan (SETTINGS_PASSWORD) yang diatur dari Google Sheet.
+ * 2. Time Normalizer (Anti-1899 Date bug) yang memastikan format jam selalu HH:mm (misal: 09:00).
+ * 3. Satu Google Sheet untuk semua pengguna aplikasi dengan isolasi Username masing-masing.
+ * 4. Menjaga dan TIDAK MENGHAPUS data lama yang sudah pernah diinput sebelumnya.
+ * 5. Endpoint Web App permanen untuk seluruh instalasi APK tanpa perlu sinkron ulang.
  *
  * CARA PAKAI:
  * 1. Buka Spreadsheet Google Anda di https://sheets.new (atau spreadsheet yang sudah ada).
  * 2. Buka menu: Extensions > Apps Script (Ekstensi > Apps Script).
  * 3. Hapus seluruh isi Code.gs, lalu PASTE SELURUH KODE DI BAWAH INI.
  * 4. Pada dropdown fungsi di atas toolbar, pilih "setupDatabase" lalu klik "Run".
- *    -> Script akan OTOMATIS membuat/memperbarui seluruh tab & kolom Username tanpa menghapus data!
+ *    -> Script akan OTOMATIS membuat/memperbarui seluruh tab & kolom tanpa menghapus data!
  * 5. Klik tombol biru "Deploy" > "Manage deployments" (atau "New deployment") > Web app:
- *    - Description: Minimal Todo API v2.2 Multi-User
+ *    - Description: Minimal Todo API v2.3 Multi-User & Password Protection
  *    - Execute as: Me (email Anda)
  *    - Who has access: Anyone (Siapa saja)  <-- WAJIB PILIH "ANYONE"!
  * ==============================================================================
@@ -25,8 +27,9 @@
 
 // KONFIGURASI GLOBAL
 const APP_NAME = "Minimal Todo";
-const CURRENT_VERSION = "1.0.5";
-const CURRENT_VERSION_CODE = 6;
+const CURRENT_VERSION = "1.0.6";
+const CURRENT_VERSION_CODE = 7;
+const DEFAULT_SETTINGS_PASS = "1234"; // Default PIN/Password untuk menu Pengaturan (bisa diubah di tab DB_Settings)
 
 /**
  * 1. SETUP / UPGRADE OTOMATIS DATABASE GOOGLE SHEETS
@@ -39,7 +42,7 @@ function setupDatabase() {
   const HEADER_BG = "#121316";      // Dark Bento Matte
   const HEADER_TEXT = "#FDE047";    // Lemon Yellow
   
-  // Definisi Seluruh Tab Beserta Kolomnya (Termasuk Multi-User kolom Username)
+  // Definisi Seluruh Tab Beserta Kolomnya
   const schemas = [
     {
       name: "DB_Users",
@@ -78,9 +81,10 @@ function setupDatabase() {
     {
       name: "DB_Settings",
       columns: ["ConfigKey", "ConfigValue", "Description", "LastUpdated"],
-      widths: [160, 220, 280, 180],
+      widths: [180, 220, 320, 180],
       starters: [
         ["APP_NAME", APP_NAME, "Nama Resmi Aplikasi", new Date().toISOString()],
+        ["SETTINGS_PASSWORD", DEFAULT_SETTINGS_PASS, "Password proteksi akses menu Pengaturan aplikasi", new Date().toISOString()],
         ["REMINDER_MORNING_TIME", "07:00", "Jadwal push notifikasi pagi (WIB)", new Date().toISOString()],
         ["REMINDER_EVENING_TIME", "20:00", "Jadwal push notifikasi evaluasi malam (WIB)", new Date().toISOString()],
         ["FCM_SERVER_KEY", "", "Firebase Server Key / OAuth token untuk notifikasi", new Date().toISOString()]
@@ -94,7 +98,7 @@ function setupDatabase() {
         [
           APP_NAME, CURRENT_VERSION_CODE, CURRENT_VERSION, 
           getTodayDateString(), "", 
-          "Rilis Minimal Todo v2.2: Multi-User Cloud Google Sheets! Pemisahan data per username dan form autentikasi Bento premium."
+          "Rilis Minimal Todo v2.3: Proteksi Password Pengaturan dari Google Sheet, Fix Format Waktu Jam & Performa Kalender."
         ]
       ]
     }
@@ -153,13 +157,13 @@ function setupDatabase() {
     try { ss.deleteSheet(defaultSheet); } catch (e) {}
   }
 
-  Logger.log("✅ Database Minimal Todo v2.2 Multi-User siap digunakan!");
+  Logger.log("[OK] Database Minimal Todo v2.3 siap digunakan!");
   return "Database Setup & Migration Selesai!";
 }
 
 /**
  * 2. ENDPOINT REST API (doGet)
- * Dipanggil oleh APK untuk cek versi, download habits sesuai user, atau membaca journal & history.
+ * Dipanggil oleh APK untuk cek versi, download habits sesuai user, membaca journal, history & settings.
  */
 function doGet(e) {
   const params = e ? e.parameter : {};
@@ -210,7 +214,18 @@ function doGet(e) {
       return jsonResponse({ exists: false });
     }
 
-    // C. Ambil Seluruh Data Habits, Journal, & History (TERISOLASI PER USERNAME)
+    // C. Ambil Password / Konfigurasi Pengaturan
+    if (action === "get_settings") {
+      const settingsPass = getSettingValue(ss, "SETTINGS_PASSWORD", DEFAULT_SETTINGS_PASS);
+      return jsonResponse({
+        success: true,
+        settingsPassword: settingsPass,
+        hasPassword: Boolean(settingsPass),
+        appName: getSettingValue(ss, "APP_NAME", APP_NAME)
+      });
+    }
+
+    // D. Ambil Seluruh Data Habits, Journal, & History (TERISOLASI PER USERNAME)
     if (action === "get_habits" || action === "get_all") {
       const sheet = ss.getSheetByName("DB_Habits");
       const habits = [];
@@ -246,7 +261,6 @@ function doGet(e) {
             const rawUser = (idxUsername >= 0 && r[idxUsername]) ? String(r[idxUsername]).trim().toLowerCase() : "";
 
             // ISOLASI DATA MULTI-USER:
-            // Jika ada targetUsername, hanya ambil baris yang username-nya cocok (atau baris warisan lama tanpa username jika user adalah akun pertama)
             if (targetUsername) {
               if (rawUser && rawUser !== targetUsername) {
                 continue; // Milik user lain, abaikan!
@@ -263,6 +277,7 @@ function doGet(e) {
 
               const rawCompleted = (idxCompleted >= 0 && r[idxCompleted]) ? String(r[idxCompleted]).toUpperCase() : "NO";
               const rawReminderEnabled = (idxReminderEnabled >= 0 && r[idxReminderEnabled]) ? String(r[idxReminderEnabled]).toUpperCase() : "NO";
+              const cleanReminderTime = (idxReminderTime >= 0) ? formatTimeCell(r[idxReminderTime]) : "20:30";
 
               habits.push({
                 id: rawId,
@@ -279,7 +294,7 @@ function doGet(e) {
                 scheduleType: rawSchedule,
                 targetDate: rawDate,
                 reminderEnabled: rawReminderEnabled === "YES" || rawReminderEnabled === "TRUE" || rawReminderEnabled === "1",
-                reminderTime: (idxReminderTime >= 0 && r[idxReminderTime]) ? String(r[idxReminderTime]).trim() : "20:30",
+                reminderTime: cleanReminderTime,
                 lastUpdated: (idxLastUpdated >= 0 && r[idxLastUpdated]) ? formatDateCell(r[idxLastUpdated]) : new Date().toISOString(),
                 username: rawUser || targetUsername || ""
               });
@@ -288,7 +303,7 @@ function doGet(e) {
         }
       }
 
-      // Ambil juga data jurnal terisolasi sesuai user
+      // Ambil data jurnal terisolasi sesuai user
       const journalSheet = ss.getSheetByName("DB_Journal");
       const journalList = [];
       if (journalSheet) {
@@ -318,9 +333,14 @@ function doGet(e) {
         }
       }
 
+      // Ambil Password Pengaturan dari DB_Settings
+      const settingsPass = getSettingValue(ss, "SETTINGS_PASSWORD", DEFAULT_SETTINGS_PASS);
+
       return jsonResponse({
         success: true,
         username: targetUsername,
+        settingsPassword: settingsPass,
+        hasSettingsPassword: Boolean(settingsPass),
         habits: habits,
         journal: journalList,
         count: habits.length,
@@ -328,7 +348,7 @@ function doGet(e) {
       });
     }
 
-    return jsonResponse({ success: true, message: "Minimal Todo API v2.2 Multi-User siap digunakan." });
+    return jsonResponse({ success: true, message: "Minimal Todo API v2.3 siap digunakan." });
   } catch (err) {
     return jsonResponse({ error: err.toString() });
   }
@@ -336,7 +356,7 @@ function doGet(e) {
 
 /**
  * 3. ENDPOINT REST API (doPost)
- * Dipanggil oleh APK untuk pendaftaran/login user, sinkronisasi habits, simpan jurnal, simpan history.
+ * Dipanggil oleh APK untuk autentikasi, sinkronisasi habits, simpan jurnal, simpan history, ubah password.
  */
 function doPost(e) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -382,7 +402,6 @@ function doPost(e) {
 
       const nowStr = new Date().toISOString();
       if (foundIndex > 0) {
-        // Username sudah terdaftar sebelumnya: perbarui data login
         const existingPin = String(users[foundIndex - 1][2] || "").trim();
         if (existingPin && pin && existingPin !== pin) {
           return jsonResponse({ success: false, message: "Username ini sudah terdaftar dengan PIN berbeda. Silakan masuk (Login)." });
@@ -392,7 +411,6 @@ function doPost(e) {
         sheet.getRange(foundIndex, 5).setValue(nowStr);
         return jsonResponse({ success: true, message: "Akun siap digunakan!", isNew: false, user: { username: uname, fullName: fname } });
       } else {
-        // Buat user baru di DB_Users
         sheet.appendRow([uname, fname, pin, nowStr, nowStr, 0]);
         return jsonResponse({ success: true, message: "Akun baru berhasil didaftarkan!", isNew: true, user: { username: uname, fullName: fname } });
       }
@@ -420,20 +438,17 @@ function doPost(e) {
       }
 
       if (!matched) {
-        // Jika belum ada di list users tapi login, buat otomatis agar seamless
         const fname = String(payload.fullName || uname).trim();
         const nowStr = new Date().toISOString();
         sheet.appendRow([uname, fname, pin, nowStr, nowStr, 0]);
         return jsonResponse({ success: true, message: "Selamat datang! Akun Anda aktif.", user: { username: uname, fullName: fname } });
       }
 
-      // Validasi PIN jika disetel
       const existingPin = String(matched[2] || "").trim();
       if (existingPin && pin && existingPin !== pin) {
         return jsonResponse({ success: false, message: "PIN yang Anda masukkan salah." });
       }
 
-      // Perbarui waktu login
       sheet.getRange(matchedRow, 5).setValue(new Date().toISOString());
       return jsonResponse({
         success: true,
@@ -480,7 +495,6 @@ function doPost(e) {
           const rowId = idxId >= 0 ? String(existingData[r][idxId]).trim() : "";
           const rowUser = idxUsername >= 0 ? String(existingData[r][idxUsername]).trim().toLowerCase() : "";
 
-          // Cocok jika ID sama DAN (User sama atau baris belum memiliki Username)
           if (rowId === String(h.id).trim()) {
             if (!rowUser || !itemUser || rowUser === itemUser) {
               foundRow = r + 1;
@@ -492,7 +506,6 @@ function doPost(e) {
         const numCols = Math.max(headerRow.length, 17);
         const rowValues = new Array(numCols).fill("");
 
-        // Petakan tiap kolom secara presisi berdasarkan posisi header riil di Google Sheet
         if (idxId >= 0) rowValues[idxId] = h.id || ("habit_" + Date.now());
         if (idxTitle >= 0) rowValues[idxTitle] = h.title || "";
         if (idxSubtitle >= 0) rowValues[idxSubtitle] = h.subtitle || "";
@@ -507,7 +520,7 @@ function doPost(e) {
         if (idxScheduleType >= 0) rowValues[idxScheduleType] = h.scheduleType || "daily";
         if (idxTargetDate >= 0) rowValues[idxTargetDate] = h.targetDate || "";
         if (idxReminderEnabled >= 0) rowValues[idxReminderEnabled] = h.reminderEnabled ? "YES" : "NO";
-        if (idxReminderTime >= 0) rowValues[idxReminderTime] = h.reminderTime || "20:30";
+        if (idxReminderTime >= 0) rowValues[idxReminderTime] = formatTimeCell(h.reminderTime || "20:30");
         if (idxLastUpdated >= 0) rowValues[idxLastUpdated] = new Date().toISOString();
         if (idxUsername >= 0) rowValues[idxUsername] = itemUser || targetUsername || "";
 
@@ -518,7 +531,6 @@ function doPost(e) {
         }
       });
 
-      // Update counter total habits di DB_Users
       if (targetUsername) {
         updateUserHabitCount(ss, targetUsername, habitsList.length);
       }
@@ -624,6 +636,28 @@ function doPost(e) {
       return jsonResponse({ success: true, message: "Token FCM tersimpan!" });
     }
 
+    // ==========================================
+    // G. UPDATE / VERIFIKASI PASSWORD PENGATURAN
+    // ==========================================
+    if (action === "update_settings_password") {
+      const newPass = String(payload.password || "").trim();
+      setSettingValue(ss, "SETTINGS_PASSWORD", newPass, "Password proteksi akses menu Pengaturan aplikasi");
+      return jsonResponse({
+        success: true,
+        message: newPass ? "Password pengaturan berhasil diperbarui di Google Sheet!" : "Proteksi password pengaturan dinonaktifkan."
+      });
+    }
+
+    if (action === "verify_settings_password") {
+      const inputPass = String(payload.password || "").trim();
+      const actualPass = getSettingValue(ss, "SETTINGS_PASSWORD", DEFAULT_SETTINGS_PASS);
+      const isValid = (!actualPass) || (inputPass === actualPass);
+      return jsonResponse({
+        success: isValid,
+        message: isValid ? "Password benar." : "Password pengaturan salah."
+      });
+    }
+
     return jsonResponse({ success: false, message: "Action tidak dikenal: " + action });
   } catch (err) {
     return jsonResponse({ error: err.toString() });
@@ -631,7 +665,7 @@ function doPost(e) {
 }
 
 /**
- * Pastikan kolom Username dan kolom jadwal ada di seluruh tab tanpa mengubah data lama
+ * Pastikan kolom dan tabel yang dibutuhkan ada tanpa merusak data lama
  */
 function ensureDatabaseColumns(ss) {
   const HEADER_BG = "#121316";
@@ -706,6 +740,68 @@ function ensureDatabaseColumns(ss) {
       }
     }
   }
+
+  // 5. Periksa DB_Settings
+  let settingsSheet = ss.getSheetByName("DB_Settings");
+  if (!settingsSheet) {
+    settingsSheet = ss.insertSheet("DB_Settings");
+    const sHeaders = ["ConfigKey", "ConfigValue", "Description", "LastUpdated"];
+    settingsSheet.getRange(1, 1, 1, sHeaders.length).setValues([sHeaders])
+      .setBackground(HEADER_BG).setFontColor(HEADER_TEXT).setFontWeight("bold").setHorizontalAlignment("center");
+    settingsSheet.setRowHeight(1, 36);
+    settingsSheet.setFrozenRows(1);
+    settingsSheet.appendRow(["APP_NAME", APP_NAME, "Nama Resmi Aplikasi", new Date().toISOString()]);
+    settingsSheet.appendRow(["SETTINGS_PASSWORD", DEFAULT_SETTINGS_PASS, "Password proteksi akses menu Pengaturan aplikasi", new Date().toISOString()]);
+  } else {
+    // Pastikan key SETTINGS_PASSWORD ada
+    const sData = settingsSheet.getDataRange().getValues();
+    let hasPassKey = false;
+    for (let s = 1; s < sData.length; s++) {
+      if (String(sData[s][0]).trim().toUpperCase() === "SETTINGS_PASSWORD") {
+        hasPassKey = true;
+        break;
+      }
+    }
+    if (!hasPassKey) {
+      settingsSheet.appendRow(["SETTINGS_PASSWORD", DEFAULT_SETTINGS_PASS, "Password proteksi akses menu Pengaturan aplikasi", new Date().toISOString()]);
+    }
+  }
+}
+
+// Helper: Ambil Value dari DB_Settings
+function getSettingValue(ss, key, defaultVal) {
+  try {
+    const sheet = ss.getSheetByName("DB_Settings");
+    if (!sheet) return defaultVal || "";
+    const data = sheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim().toUpperCase() === String(key).trim().toUpperCase()) {
+        const val = data[i][1];
+        return (val !== undefined && val !== null && String(val).trim() !== "") ? String(val).trim() : (defaultVal || "");
+      }
+    }
+  } catch (e) {}
+  return defaultVal || "";
+}
+
+// Helper: Set Value di DB_Settings
+function setSettingValue(ss, key, val, desc) {
+  try {
+    const sheet = ss.getSheetByName("DB_Settings");
+    if (!sheet) return false;
+    const data = sheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim().toUpperCase() === String(key).trim().toUpperCase()) {
+        sheet.getRange(i + 1, 2).setValue(val);
+        sheet.getRange(i + 1, 4).setValue(new Date().toISOString());
+        return true;
+      }
+    }
+    sheet.appendRow([key, val, desc || key, new Date().toISOString()]);
+    return true;
+  } catch (e) {
+    return false;
+  }
 }
 
 // Helper: Perbarui total habits milik user di DB_Users
@@ -723,6 +819,24 @@ function updateUserHabitCount(ss, username, count) {
   } catch (e) {}
 }
 
+// Helper: Format Cell Waktu ke HH:mm (Anti-1899 Date bug)
+function formatTimeCell(val) {
+  if (!val) return "20:30";
+  if (val instanceof Date) {
+    const hh = String(val.getHours()).padStart(2, '0');
+    const mm = String(val.getMinutes()).padStart(2, '0');
+    return `${hh}:${mm}`;
+  }
+  const str = String(val).trim();
+  if (str.includes("1899") || str.includes("GMT") || str.includes(":")) {
+    const match = str.match(/(\d{1,2}):(\d{2})/);
+    if (match) {
+      return `${match[1].padStart(2, '0')}:${match[2]}`;
+    }
+  }
+  return str || "20:30";
+}
+
 // Helper: Format Cell Tanggal ke YYYY-MM-DD
 function formatDateCell(val) {
   if (!val) return "";
@@ -732,7 +846,18 @@ function formatDateCell(val) {
     const d = String(val.getDate()).padStart(2, '0');
     return `${y}-${m}-${d}`;
   }
-  return String(val).trim();
+  const str = String(val).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+  if (str.includes("T") || str.includes("GMT") || str.includes(" ")) {
+    const dObj = new Date(str);
+    if (!isNaN(dObj.getTime())) {
+      const y = dObj.getFullYear();
+      const m = String(dObj.getMonth() + 1).padStart(2, '0');
+      const d = String(dObj.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+  }
+  return str;
 }
 
 // Helper: Tanggal Hari Ini YYYY-MM-DD

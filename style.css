@@ -1426,6 +1426,10 @@ body {
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
   text-align: center;
   transition: all 0.15s ease;
 }
@@ -1592,6 +1596,10 @@ body {
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
   text-align: center;
   transition: all 0.15s ease;
 }
@@ -2698,6 +2706,46 @@ body {
   color: #22C55E;
 }
 
+.btn-quick-logout {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #EF4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-quick-logout:hover {
+  background: rgba(239, 68, 68, 0.25);
+  transform: scale(1.06);
+}
+
+.btn-quick-logout:active {
+  transform: scale(0.92);
+}
+
+.btn-toggle-eye {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9CA3AF;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.btn-toggle-eye:hover {
+  color: #FDE047;
+}
+
 /* Auth Modal Specifics */
 .auth-sheet {
   max-width: 414px;
@@ -3096,7 +3144,7 @@ body {
   border-radius: 12px;
   background: #17191E;
   border: 1.5px solid transparent;
-  font-size: 18px;
+  color: #9CA3AF;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3106,12 +3154,14 @@ body {
 
 .cute-avatar-btn:hover {
   transform: scale(1.1);
+  color: #FFFFFF;
   background: rgba(253, 224, 71, 0.12);
 }
 
 .cute-avatar-btn.active {
   background: rgba(253, 224, 71, 0.22);
   border-color: #FDE047;
+  color: #FDE047;
   transform: scale(1.15);
   box-shadow: 0 4px 12px rgba(253, 224, 71, 0.35);
 }

@@ -123,6 +123,8 @@ const App = {
   history: {},
   gasEndpoint: "",
   currentUser: null, // { username, fullName, pin, loggedInAt }
+  settingsPassword: "1234",
+  isSettingsUnlocked: false,
   activeTimers: {},
   calendarViewDate: new Date(),
   formCalendarDate: new Date(),
@@ -134,6 +136,25 @@ const App = {
   longPressTriggered: false,
   currentQuickCardId: null,
   debouncePushTimer: null,
+
+  // Helper: Pembersih & Penstandar Format Jam (Anti-1899 Date bug)
+  cleanTimeStr(val) {
+    if (!val) return "20:30";
+    if (val instanceof Date) {
+      if (isNaN(val.getTime())) return "20:30";
+      const hh = String(val.getHours()).padStart(2, "0");
+      const mm = String(val.getMinutes()).padStart(2, "0");
+      return `${hh}:${mm}`;
+    }
+    const str = String(val).trim();
+    if (str.includes("1899") || str.includes("GMT") || str.includes(":") || str.includes(".")) {
+      const match = str.match(/(\d{1,2})[:.](\d{2})/);
+      if (match) {
+        return `${match[1].padStart(2, "0")}:${match[2]}`;
+      }
+    }
+    return str || "20:30";
+  },
 
   debouncedPushToGoogleSheets(delay = 1000) {
     if (!this.gasEndpoint) return;
@@ -160,10 +181,8 @@ const App = {
     this.initReminderEngine();
     this.initPullToRefresh();
 
-    // Urutan Startup Sesuai Permintaan:
-    // "posisinya tepat sebelum loading screen, jadi setelah login baru loading screen muncul dan diarahkan ke isi APK"
+    // Urutan Startup:
     if (!this.currentUser) {
-      // Jika belum login, sembunyikan loading/splash screen seketika & tampilkan login full-page yang lucu
       const splash = document.getElementById("app-splash-screen");
       if (splash) {
         splash.style.display = "none";
@@ -171,7 +190,6 @@ const App = {
       }
       this.showFullPageAuth();
     } else {
-      // Jika sudah login, sembunyikan auth dan jalankan loading screen sebelum masuk ke isi APK
       this.hideFullPageAuth();
       this.showSplashScreen();
       if (this.gasEndpoint) {
@@ -182,12 +200,23 @@ const App = {
 
   formatDateKey(date) {
     if (!date) return "";
-    if (typeof date === "string" && !date.includes("T")) return date;
-    const dObj = (date instanceof Date) ? date : new Date(date);
-    const y = dObj.getFullYear();
-    const m = String(dObj.getMonth() + 1).padStart(2, "0");
-    const d = String(dObj.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
+    if (date instanceof Date) {
+      if (isNaN(date.getTime())) return "";
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+    const str = String(date).trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+    const dObj = new Date(str);
+    if (!isNaN(dObj.getTime())) {
+      const y = dObj.getFullYear();
+      const m = String(dObj.getMonth() + 1).padStart(2, "0");
+      const d = String(dObj.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+    return str;
   },
 
   getTodayKey() {
@@ -385,6 +414,15 @@ const App = {
       this.habits = [];
     }
 
+    // Bersihkan seluruh format reminderTime agar tidak ada bug 1899 yang tersisa
+    this.habits.forEach(h => {
+      if (h.reminderTime) h.reminderTime = this.cleanTimeStr(h.reminderTime);
+    });
+
+    // Muat password proteksi pengaturan (default: 1234)
+    this.settingsPassword = localStorage.getItem("minimal_todo_settings_password") || "1234";
+    this.isSettingsUnlocked = false;
+
     // 4. Muat catatan syukur / jurnal
     const legacyJournal = localStorage.getItem("minimal_todo_journal_clean");
     let userJournalKey = this.currentUser ? `minimal_todo_journal_${this.currentUser.username}` : "minimal_todo_journal_clean";
@@ -533,9 +571,9 @@ const App = {
             <div class="card-footer-tags">
               ${scheduleBadge}
               ${habit.reminderEnabled && habit.reminderTime ? `
-              <span class="card-badge badge-reminder" title="Alarm ${habit.reminderTime}">
+              <span class="card-badge badge-reminder" title="Alarm ${this.cleanTimeStr(habit.reminderTime)}">
                 <span class="badge-icon">${SVG_ICONS.bell}</span>
-                <span>${habit.reminderTime}</span>
+                <span>${this.cleanTimeStr(habit.reminderTime)}</span>
               </span>` : ''}
             </div>
             <span class="card-type-tag">${habit.cardType}</span>
@@ -1312,21 +1350,22 @@ const App = {
   },
 
   setReminderTime(timeStr) {
+    const cleanTime = this.cleanTimeStr(timeStr);
     const hidden = document.getElementById("habit-reminder-time");
-    if (hidden) hidden.value = timeStr;
+    if (hidden) hidden.value = cleanTime;
 
-    const [h, m] = timeStr.split(":");
+    const [h, m] = cleanTime.split(":");
     const hourInput = document.getElementById("reminder-hour-input");
     const minInput = document.getElementById("reminder-minute-input");
-    if (hourInput) hourInput.value = h;
-    if (minInput) minInput.value = m;
+    if (hourInput) hourInput.value = h || "20";
+    if (minInput) minInput.value = m || "30";
 
     document.querySelectorAll(".btn-time-chip").forEach(b => {
-      b.classList.toggle("active", b.textContent.includes(timeStr));
+      b.classList.toggle("active", b.textContent.includes(cleanTime));
     });
 
-    const pill = document.getElementById("reminder-summary-pill");
-    if (pill) pill.textContent = `🔔 Aktif: Jam ${timeStr}`;
+    const pill = document.getElementById("reminder-summary-text");
+    if (pill) pill.textContent = `Aktif: Jam ${cleanTime}`;
   },
 
   adjustReminderHour(delta) {
@@ -1378,8 +1417,8 @@ const App = {
   updateReminderTimeFromInputs(hStr, mStr) {
     const timeStr = `${hStr}:${mStr}`;
     document.getElementById("habit-reminder-time").value = timeStr;
-    const pill = document.getElementById("reminder-summary-pill");
-    if (pill) pill.textContent = `🔔 Aktif: Jam ${timeStr}`;
+    const pill = document.getElementById("reminder-summary-text");
+    if (pill) pill.textContent = `Aktif: Jam ${timeStr}`;
 
     document.querySelectorAll(".btn-time-chip").forEach(b => {
       b.classList.toggle("active", b.textContent.includes(timeStr));
@@ -1404,7 +1443,7 @@ const App = {
     }
 
     this.playVictoryChord();
-    this.showToast(`🔔 Tes Notifikasi: Alarm jam ${timeStr} berbunyi & bergetar!`, "success", 4000);
+    this.showToast(`Tes Notifikasi: Alarm jam ${timeStr} berbunyi & bergetar!`, "success", 4000);
   },
 
   // ==========================================================
@@ -1459,7 +1498,7 @@ const App = {
 
     // 3. Audio & In-App Toast
     this.playVictoryChord();
-    this.showToast(`🔔 ${title}: ${message}`, "info", 5000);
+    this.showToast(`${title}: ${message}`, "info", 5000);
   },
 
   selectCardType(type) {
@@ -1824,7 +1863,7 @@ const App = {
 
     this.renderBentoCards();
     this.closeModal("modal-journal");
-    this.showToast("Catatan syukur tersimpan! ✨", "success");
+    this.showToast("Catatan syukur tersimpan!", "success");
     
     // Sync journal to Google Sheets
     if (this.gasEndpoint) {
@@ -1892,6 +1931,8 @@ const App = {
   },
 
   openCalendarModal() {
+    this.calendarViewDate = new Date();
+    this.calendarModalSelectedDayKey = this.selectedDateKey || this.getTodayKey();
     this.renderCalendarMonth();
     document.getElementById("modal-calendar").classList.add("open");
   },
@@ -1976,6 +2017,7 @@ const App = {
 
       html += `
         <div class="${cellClasses.join(' ')}" 
+             data-day-key="${dayKey}"
              onclick="App.selectCalendarModalDay(${y}, ${m}, ${day})"
              ondblclick="App.openSelectedCalendarDateOnBoard()">
           <span>${day}</span>
@@ -2000,7 +2042,9 @@ const App = {
     if (!this.journalList || this.journalList.length === 0) {
       journalWrap.innerHTML = `
         <div class="empty-journal-state" style="padding: 24px 12px; text-align: center; color: #9CA3AF; font-size: 13px;">
-          <div style="font-size: 28px; margin-bottom: 6px;">✨</div>
+          <div style="display: flex; justify-content: center; margin-bottom: 8px; color: #FDE047;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+          </div>
           <p style="margin: 0; font-weight: 700; color: #E5E7EB;">Belum ada arsip catatan syukur</p>
           <p style="margin: 4px 0 0; font-size: 11.5px; color: #71717A;">Tuliskan rasa syukurmu hari ini untuk mengabadikan momen bahagia.</p>
         </div>
@@ -2083,8 +2127,21 @@ const App = {
 
   selectCalendarModalDay(y, m, day) {
     const d = new Date(y, m, day);
-    this.calendarModalSelectedDayKey = this.formatDateKey(d);
-    this.renderCalendarMonth();
+    const dayKey = this.formatDateKey(d);
+    this.calendarModalSelectedDayKey = dayKey;
+    
+    // Perbarui styling cell aktif langsung di DOM secara mulus
+    const cells = document.querySelectorAll("#calendar-matrix-container .calendar-day-cell");
+    cells.forEach(c => {
+      if (c.getAttribute("data-day-key") === dayKey) {
+        c.classList.add("selected-cal-day");
+      } else {
+        c.classList.remove("selected-cal-day");
+      }
+    });
+
+    // Render agenda untuk tanggal yang dipilih tanpa flicker
+    this.renderCalendarModalAgenda();
   },
 
   renderCalendarModalAgenda() {
@@ -2137,7 +2194,7 @@ const App = {
                 ${h.reminderEnabled && h.reminderTime ? `
                 <span class="card-badge badge-reminder">
                   <span class="badge-icon">${SVG_ICONS.bell}</span>
-                  <span>${h.reminderTime}</span>
+                  <span>${this.cleanTimeStr(h.reminderTime)}</span>
                 </span>` : ''}
               </div>
             </div>
@@ -2165,9 +2222,78 @@ const App = {
   // 13. CLOUD GOOGLE SHEETS & FIREBASE SYNC (TWO-WAY ENGINE)
   // ==========================================================
   openSyncSettings() {
+    // Jika proteksi password aktif dan sesi belum terbuka
+    const hasPass = Boolean(this.settingsPassword);
+    if (hasPass && !this.isSettingsUnlocked) {
+      const verifyInput = document.getElementById("settings-verify-input");
+      if (verifyInput) verifyInput.value = "";
+      document.getElementById("modal-settings-auth").classList.add("open");
+      setTimeout(() => { if (verifyInput) verifyInput.focus(); }, 200);
+      return;
+    }
+
     document.getElementById("input-gas-url").value = this.gasEndpoint;
+    const passInput = document.getElementById("input-settings-password");
+    if (passInput) passInput.value = this.settingsPassword || "";
     this.updateSyncStatusLabel();
     document.getElementById("modal-settings").classList.add("open");
+  },
+
+  submitSettingsPassword(event) {
+    if (event) event.preventDefault();
+    const input = document.getElementById("settings-verify-input");
+    const entered = input ? input.value.trim() : "";
+    const expected = this.settingsPassword || "1234";
+
+    if (entered === expected || !expected) {
+      this.isSettingsUnlocked = true;
+      this.closeModal("modal-settings-auth");
+      this.showToast("Akses Pengaturan Terbuka", "success");
+      this.openSyncSettings();
+    } else {
+      this.showToast("Password Pengaturan salah! Silakan coba lagi.", "danger");
+      if (input) {
+        input.value = "";
+        input.focus();
+      }
+    }
+  },
+
+  async saveSettingsPassword() {
+    const input = document.getElementById("input-settings-password");
+    const newPass = input ? input.value.trim() : "";
+    this.settingsPassword = newPass;
+    localStorage.setItem("minimal_todo_settings_password", newPass);
+
+    if (this.gasEndpoint) {
+      try {
+        this.showToast("Menyimpan password ke Google Sheet...", "info");
+        await fetch(this.gasEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "update_settings_password",
+            password: newPass
+          })
+        });
+      } catch (e) {
+        console.warn("Gagal simpan password ke cloud:", e);
+      }
+    }
+
+    this.showToast(newPass ? "Password pengaturan berhasil disimpan!" : "Proteksi password dinonaktifkan.", "success");
+  },
+
+  lockSettingsNow() {
+    this.isSettingsUnlocked = false;
+    this.closeModal("modal-settings");
+    this.showToast("Menu Pengaturan dikunci kembali.", "info");
+  },
+
+  togglePasswordVisibility(inputId) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    input.type = (input.type === "password") ? "text" : "password";
   },
 
   saveGasUrl() {
@@ -2217,6 +2343,11 @@ const App = {
       const data = await response.json();
 
       if (data && data.success && Array.isArray(data.habits)) {
+        if (data.settingsPassword) {
+          this.settingsPassword = data.settingsPassword;
+          localStorage.setItem("minimal_todo_settings_password", data.settingsPassword);
+        }
+
         this.mergeHabitsFromRemote(data.habits);
         
         // Merge jurnal jika ada
@@ -2268,6 +2399,7 @@ const App = {
       const targetUser = this.currentUser ? this.currentUser.username : "";
       const taggedHabits = this.habits.map(h => ({
         ...h,
+        reminderTime: this.cleanTimeStr(h.reminderTime || "20:30"),
         username: h.username || targetUser
       }));
 
@@ -2357,7 +2489,7 @@ const App = {
         existing.unit = rh.unit !== undefined ? rh.unit : existing.unit;
         existing.streak = (rh.streak !== undefined && !isNaN(Number(rh.streak))) ? Number(rh.streak) : existing.streak;
         existing.reminderEnabled = Boolean(rh.reminderEnabled !== undefined ? rh.reminderEnabled : existing.reminderEnabled);
-        existing.reminderTime = rh.reminderTime || existing.reminderTime;
+        existing.reminderTime = this.cleanTimeStr(rh.reminderTime || existing.reminderTime);
       } else {
         // Habit baru dari Google Sheets
         this.habits.push({
@@ -2368,7 +2500,7 @@ const App = {
           scheduleType: rh.scheduleType || (rh.targetDate ? "specific" : "daily"),
           targetDate: rh.targetDate || null,
           reminderEnabled: Boolean(rh.reminderEnabled),
-          reminderTime: rh.reminderTime || "20:30",
+          reminderTime: this.cleanTimeStr(rh.reminderTime || "20:30"),
           lastNotifiedDate: null,
           currentProgress: Number(rh.currentProgress) || 0,
           targetGoal: Number(rh.targetGoal) || 1,
@@ -2488,14 +2620,14 @@ const App = {
       if (tabReg) tabReg.classList.add("active");
       if (formLogin) formLogin.style.display = "none";
       if (formReg) formReg.style.display = "block";
-      if (title) title.textContent = "Yuk Berteman! 🌱";
+      if (title) title.textContent = "Daftar Akun Baru";
       if (desc) desc.textContent = "Buat akun barumu agar target dan catatan syukurmu tersimpan rapi & terpisah di Google Sheets!";
     } else {
       if (tabLogin) tabLogin.classList.add("active");
       if (tabReg) tabReg.classList.remove("active");
       if (formLogin) formLogin.style.display = "block";
       if (formReg) formReg.style.display = "none";
-      if (title) title.textContent = "Halo Sahabat! 👋";
+      if (title) title.textContent = "Selamat Datang";
       if (desc) desc.textContent = "Masuk dan mulai harimu dengan penuh semangat & target yang tercapai!";
     }
   },
@@ -2945,26 +3077,42 @@ const App = {
     this.renderHeaderAndLiveCalendar();
   },
 
-  handleLogout() {
-    this.confirmAction(
+  confirmAction(title, desc, onConfirm) {
+    this.showConfirm(title, desc, onConfirm);
+  },
+
+  promptLogout() {
+    const uname = this.currentUser ? (this.currentUser.fullName || this.currentUser.username) : "akun ini";
+    this.showConfirm(
       "Keluar dari Akun?",
-      "Target pribadi Anda tetap tersimpan aman di Google Sheet dan HP ini. Anda bisa masuk kembali kapan saja.",
+      `Apakah Anda yakin ingin keluar dari akun ${uname}? Data pribadi Anda tetap tersimpan aman di Google Sheet.`,
       () => {
-        const oldUser = this.currentUser ? this.currentUser.username : "";
-        if (oldUser) {
-          localStorage.setItem(`minimal_todo_habits_${oldUser}`, JSON.stringify(this.habits));
-        }
-        this.currentUser = null;
-        localStorage.removeItem("minimal_todo_user");
-
-        this.updateUserProfileUI();
-        this.closeModal("modal-auth");
-        this.showToast("Berhasil keluar dari akun.", "info");
-
-        // Langsung arahkan kembali ke Full Page Onboarding/Login berdesain lucu
-        setTimeout(() => this.showFullPageAuth(), 350);
+        this.executeLogout();
       }
     );
+  },
+
+  handleLogout() {
+    this.promptLogout();
+  },
+
+  executeLogout() {
+    const oldUser = this.currentUser ? this.currentUser.username : "";
+    if (oldUser) {
+      localStorage.setItem(`minimal_todo_habits_${oldUser}`, JSON.stringify(this.habits));
+    }
+    this.currentUser = null;
+    localStorage.removeItem("minimal_todo_user");
+
+    this.updateUserProfileUI();
+    this.closeModal("modal-auth");
+    this.renderHeaderAndLiveCalendar();
+    this.renderBentoCards();
+    this.updateProgressRing();
+    this.showToast("Berhasil keluar dari akun.", "info");
+
+    // Langsung arahkan kembali ke Full Page Onboarding/Login
+    setTimeout(() => this.showFullPageAuth(), 350);
   },
 
   updateUserProfileUI() {
@@ -2975,6 +3123,8 @@ const App = {
     const settingsName = document.getElementById("settings-account-name");
     const settingsHandle = document.getElementById("settings-account-handle");
     const settingsAvatar = document.getElementById("settings-avatar-badge");
+    const quickLogoutBtn = document.getElementById("btn-quick-logout");
+    const chevronAccount = document.getElementById("chevron-account");
 
     if (this.currentUser) {
       const initial = (this.currentUser.fullName || this.currentUser.username || "U").charAt(0).toUpperCase();
@@ -2992,6 +3142,9 @@ const App = {
       if (settingsName) settingsName.textContent = displayName;
       if (settingsHandle) settingsHandle.textContent = handle;
       if (settingsAvatar) settingsAvatar.textContent = initial;
+
+      if (quickLogoutBtn) quickLogoutBtn.style.display = "flex";
+      if (chevronAccount) chevronAccount.style.display = "none";
     } else {
       if (barName) barName.textContent = "Masuk / Daftar Akun";
       if (barStatus) {
@@ -3008,6 +3161,9 @@ const App = {
       if (settingsAvatar) {
         settingsAvatar.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
       }
+
+      if (quickLogoutBtn) quickLogoutBtn.style.display = "none";
+      if (chevronAccount) chevronAccount.style.display = "block";
     }
   },
 
