@@ -1,0 +1,5250 @@
+/* ==========================================================
+   MINIMAL TODO — MASTER STYLING (v2.0)
+   Palet: Deep Matte Dark (#121316) + Yellow Bento + Terracotta + Soft Blue + Emerald
+   Anti-Browser UI: Zero native dropdowns, alerts, confirms, or datepickers.
+   ========================================================== */
+
+:root {
+  --bg-app: #121316;
+  --bg-dock: #1E2024;
+  --bg-card-empty: #1A1C20;
+  --bg-sheet: #181A1F;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-dashed: #374151;
+  
+  /* Bento Colors from Photo */
+  --card-yellow: #FDE047;
+  --card-yellow-text: #121316;
+  --card-terracotta: #7C2D12;
+  --card-terracotta-text: #FFFFFF;
+  --card-softblue: #93C5FD;
+  --card-softblue-text: #121316;
+  --card-emerald: #059669;
+  --card-emerald-text: #FFFFFF;
+  --card-purple: #8B5CF6;
+  --card-purple-text: #FFFFFF;
+  
+  --green-check: #22C55E;
+  --blue-active: #3B82F6;
+  --gray-empty: #26272B;
+  
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+body {
+  background-color: #08090A;
+  color: #FFFFFF;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* ==========================================================
+   0. CONFETTI FULLSCREEN CANVAS
+   ========================================================== */
+.confetti-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9999999;
+}
+
+/* ==========================================================
+   1. BESPOKE TOAST NOTIFICATION ENGINE (ANTI-ALERT)
+   ========================================================== */
+.toast-container {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 24px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: calc(100% - 36px);
+  max-width: 380px;
+  pointer-events: none;
+}
+
+.toast-item {
+  pointer-events: auto;
+  background: #1E2024;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  animation: toastSlideDown 0.35s var(--ease-spring);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.toast-item.toast-success { border-color: #22C55E; }
+.toast-item.toast-warning { border-color: #FACC15; }
+.toast-item.toast-error { border-color: #EF4444; }
+
+.toast-icon {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.toast-success .toast-icon { color: #22C55E; background: rgba(34, 197, 94, 0.15); }
+.toast-warning .toast-icon { color: #FACC15; background: rgba(250, 204, 21, 0.15); }
+.toast-error .toast-icon { color: #EF4444; background: rgba(239, 68, 68, 0.15); }
+
+.toast-message {
+  font-size: 13px;
+  font-weight: 600;
+  color: #FFFFFF;
+  line-height: 1.4;
+  flex: 1;
+}
+
+@keyframes toastSlideDown {
+  from { transform: translateY(-40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ==========================================================
+   2. BRANDED SPLASH SCREEN
+   ========================================================== */
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 99999999;
+  background: #121316;
+  background-image: radial-gradient(circle at 50% 40%, rgba(253, 224, 71, 0.08) 0%, transparent 65%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.5s ease;
+  transform: scale(1);
+  opacity: 1;
+  visibility: visible;
+}
+
+.splash-screen.fade-out {
+  opacity: 0;
+  transform: scale(1.05);
+  pointer-events: none;
+}
+
+.splash-screen.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  display: none !important;
+}
+
+.splash-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: splashPop 0.7s var(--ease-spring);
+}
+
+@keyframes splashPop {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.splash-logo-container {
+  box-shadow: 0 16px 48px rgba(253, 224, 71, 0.32);
+  border-radius: 20px;
+  animation: logoPulse 2.4s infinite ease-in-out;
+}
+
+@keyframes logoPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+.splash-title {
+  margin-top: 22px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: #FFFFFF;
+}
+
+.splash-subtitle {
+  font-size: 13px;
+  color: #9CA3AF;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+.splash-loader-bar {
+  width: 170px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  margin-top: 32px;
+  overflow: hidden;
+  position: relative;
+}
+
+.splash-loader-fill {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #FDE047, #F59E0B);
+  border-radius: 9999px;
+  animation: fillProgress 1.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes fillProgress {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(0); }
+}
+
+.splash-status-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9CA3AF;
+  margin-top: 12px;
+  letter-spacing: 0.2px;
+  transition: opacity 0.2s ease;
+}
+
+/* ==========================================================
+   3. APP VIEWPORT SHELL (IPHONE FORMAT)
+   ========================================================== */
+.app-viewport {
+  width: 100%;
+  max-width: 414px;
+  height: 100vh;
+  max-height: 896px;
+  background: var(--bg-app);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 18px 18px;
+  border-radius: 44px;
+  border: 4px solid #23252A;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+@media (max-width: 500px) {
+  body {
+    align-items: flex-start;
+    background: var(--bg-app);
+  }
+  .app-viewport {
+    max-width: 100%;
+    height: 100vh;
+    max-height: none;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+  }
+}
+
+/* ==========================================================
+   4. MAIN SCROLLABLE CONTENT & GREETING
+   ========================================================== */
+.main-content-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: calc(env(safe-area-inset-top, 0px) + 54px) 20px 125px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  scrollbar-width: none;
+}
+
+.main-content-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* App Header Unified Container */
+.app-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+}
+
+/* Dynamic Greeting Section */
+.dynamic-greeting-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 4px 6px;
+  margin: 0;
+}
+
+.greeting-date {
+  font-size: 10px;
+  font-weight: 800;
+  color: #9CA3AF;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.greeting-heading {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  color: #FFFFFF;
+  margin-top: 2px;
+}
+
+.greeting-subtitle {
+  font-size: 11px;
+  color: #6B7280;
+  margin-top: 3px;
+  max-width: 250px;
+  line-height: 1.35;
+}
+
+/* Circular Progress Ring */
+.progress-ring-wrap {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s var(--ease-spring);
+}
+
+.progress-ring-wrap:active {
+  transform: scale(0.92);
+}
+
+.progress-ring-svg {
+  transform: rotate(-90deg);
+}
+
+.ring-bg {
+  fill: none;
+  stroke: #26272B;
+}
+
+.ring-fill {
+  fill: none;
+  stroke: #FDE047;
+  stroke-linecap: round;
+  stroke-dasharray: 144.5;
+  stroke-dashoffset: 144.5;
+  transition: stroke-dashoffset 0.6s var(--ease-spring);
+}
+
+.ring-percentage {
+  position: absolute;
+  font-size: 11px;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+/* Weekly Days Row (M T W T F S S) */
+.weekly-streak-section {
+  width: 100%;
+}
+
+.weekly-days-grid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.day-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+
+.day-letter {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6B7280;
+  text-transform: uppercase;
+}
+
+.day-status-pill {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--gray-empty);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s var(--ease-spring);
+  cursor: pointer;
+}
+
+.day-status-pill.completed {
+  background: var(--green-check);
+  color: #000000;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.35);
+}
+
+.day-status-pill.active-today {
+  border: 1.5px solid #FDE047;
+}
+
+.day-status-pill.active-today::after {
+  content: '';
+  width: 7px;
+  height: 7px;
+  background: #FDE047;
+  border-radius: 50%;
+}
+
+.day-status-pill.completed.active-today::after {
+  display: none;
+}
+
+/* ==========================================================
+   5. BENTO CARDS GRID & CARD VARIANTS
+   ========================================================== */
+.bento-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin: 0;
+}
+
+/* Empty Habits State */
+.empty-habits-container {
+  grid-column: 1 / -1;
+  background: #181A1F;
+  border: 1.5px dashed rgba(255, 255, 255, 0.14);
+  border-radius: 24px;
+  padding: 30px 18px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.25s var(--ease-spring);
+}
+
+.empty-habits-container:hover {
+  border-color: rgba(253, 224, 71, 0.5);
+  background: #1D1F24;
+  transform: translateY(-2px);
+}
+
+.empty-icon-wrap {
+  width: 60px;
+  height: 60px;
+  border-radius: 20px;
+  background: rgba(253, 224, 71, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(253, 224, 71, 0.18);
+}
+
+.empty-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+.empty-desc {
+  font-size: 13px;
+  color: #9CA3AF;
+  max-width: 280px;
+  line-height: 1.45;
+}
+
+.btn-empty-create {
+  margin-top: 6px;
+  background: #FDE047;
+  color: #121316;
+  font-size: 13px;
+  font-weight: 800;
+  border: none;
+  border-radius: 9999px;
+  padding: 12px 24px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 18px rgba(253, 224, 71, 0.35);
+}
+
+.btn-empty-create:active {
+  transform: scale(0.96);
+}
+
+.bento-card {
+  border-radius: 26px;
+  padding: 16px 14px 14px;
+  min-height: 195px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.2s var(--ease-spring), box-shadow 0.2s ease, border-color 0.2s ease;
+  overflow: hidden;
+  border: 2px solid transparent;
+}
+
+.bento-card:active {
+  transform: scale(0.96);
+}
+
+/* Bento Themes */
+.bento-card.theme-yellow {
+  background: var(--card-yellow);
+  color: var(--card-yellow-text);
+  box-shadow: 0 10px 24px rgba(250, 204, 21, 0.22);
+}
+
+.bento-card.theme-terracotta {
+  background: var(--card-terracotta);
+  color: var(--card-terracotta-text);
+  box-shadow: 0 10px 24px rgba(124, 45, 18, 0.35);
+}
+
+.bento-card.theme-softblue {
+  background: var(--card-softblue);
+  color: var(--card-softblue-text);
+  box-shadow: 0 10px 24px rgba(147, 197, 253, 0.25);
+}
+
+.bento-card.theme-emerald {
+  background: var(--card-emerald);
+  color: var(--card-emerald-text);
+  box-shadow: 0 10px 24px rgba(5, 150, 105, 0.28);
+}
+
+.bento-card.theme-purple {
+  background: var(--card-purple);
+  color: var(--card-purple-text);
+  box-shadow: 0 10px 24px rgba(139, 92, 246, 0.28);
+}
+
+/* Card Header & SVG Icons */
+.card-header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.icon-visual-svg {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-visual-svg svg {
+  width: 28px;
+  height: 28px;
+}
+
+.card-check-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.theme-terracotta .card-check-badge,
+.theme-emerald .card-check-badge,
+.theme-purple .card-check-badge {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.card-check-badge.checked {
+  background: #FFFFFF;
+  color: #121316;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.card-body {
+  flex: 1;
+}
+
+.card-title {
+  font-size: 14.5px;
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.3px;
+  margin-bottom: 6px;
+}
+
+.card-subtitle {
+  font-size: 10px;
+  line-height: 1.35;
+  opacity: 0.82;
+  font-weight: 500;
+}
+
+.bento-card.is-completed {
+  opacity: 0.88;
+}
+
+.bento-card.is-completed .card-title {
+  text-decoration: line-through;
+  opacity: 0.8;
+}
+
+.card-footer {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.card-footer-tags {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.card-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 3.5px 8px;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.14);
+  color: inherit;
+  letter-spacing: 0.3px;
+  line-height: 1;
+  backdrop-filter: blur(4px);
+}
+
+.theme-terracotta .card-badge,
+.theme-emerald .card-badge,
+.theme-purple .card-badge {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.card-badge .badge-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-badge .badge-icon svg {
+  width: 11px;
+  height: 11px;
+  stroke-width: 2.2;
+}
+
+.card-type-tag {
+  font-size: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 2.5px 6.5px;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.12);
+  letter-spacing: 0.4px;
+  line-height: 1;
+}
+
+.theme-terracotta .card-type-tag,
+.theme-emerald .card-type-tag,
+.theme-purple .card-type-tag {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* Card Type 2: Progressive Goal Stepper */
+.progressive-progress-wrap {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.progressive-bar-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.theme-terracotta .progressive-bar-track,
+.theme-emerald .progressive-bar-track,
+.theme-purple .progressive-bar-track {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.progressive-bar-fill {
+  height: 100%;
+  background: currentColor;
+  border-radius: 9999px;
+  transition: width 0.3s var(--ease-spring);
+}
+
+.progressive-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.stepper-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.12);
+  border: none;
+  color: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.theme-terracotta .stepper-btn,
+.theme-emerald .stepper-btn,
+.theme-purple .stepper-btn {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.stepper-btn:active {
+  transform: scale(0.85);
+}
+
+.stepper-status-label {
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* Card Type 3: Bento Focus Timer */
+.focus-timer-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin: 6px 0;
+}
+
+.timer-countdown-display {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.btn-timer-toggle {
+  margin-top: 8px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.15);
+  border: none;
+  color: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.theme-terracotta .btn-timer-toggle,
+.theme-emerald .btn-timer-toggle,
+.theme-purple .btn-timer-toggle {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.btn-timer-toggle:active {
+  transform: scale(0.9);
+}
+
+/* Card Type 4: One-Line Journal Bento Card */
+.bento-card.card-journal-banner {
+  grid-column: span 2;
+  min-height: auto;
+  padding: 14px 18px;
+  background: #1E2024;
+  border: 1px solid var(--border-subtle);
+  color: #FFFFFF;
+}
+
+.journal-banner-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.journal-banner-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: #FDE047;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.journal-banner-text {
+  font-size: 12.5px;
+  font-weight: 600;
+  font-style: italic;
+  color: #E5E7EB;
+  line-height: 1.4;
+}
+
+/* Card: Add New Slot */
+.bento-card.card-add-new {
+  background: var(--bg-card-empty);
+  border: 2px dashed var(--border-dashed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9CA3AF;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bento-card.card-add-new:hover {
+  border-color: #FDE047;
+  color: #FDE047;
+  background: rgba(253, 224, 71, 0.04);
+}
+
+.plus-symbol {
+  font-size: 34px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+/* Cloud Sync & Discipline Badge */
+.cloud-sync-chip {
+  align-self: center;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  border-radius: 9999px;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: background 0.2s ease;
+}
+
+.cloud-sync-chip:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sync-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22C55E;
+}
+
+.sync-dot.pulse {
+  animation: dotGlow 1.5s infinite;
+}
+
+@keyframes dotGlow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; box-shadow: 0 0 8px #22C55E; }
+}
+
+.sync-label {
+  font-size: 10px;
+  color: #9CA3AF;
+  font-weight: 600;
+}
+
+.discipline-badge {
+  font-size: 10px;
+  font-weight: 800;
+  color: #FDE047;
+  background: rgba(253, 224, 71, 0.12);
+  padding: 2px 8px;
+  border-radius: 9999px;
+  margin-left: 4px;
+}
+
+/* ==========================================================
+   6. FLOATING CAPSULE BOTTOM NAVIGATION DOCK
+   ========================================================== */
+.floating-bottom-dock {
+  position: absolute;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 40px);
+  max-width: 330px;
+  height: 56px;
+  background: var(--bg-dock);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 6px;
+  z-index: 90;
+}
+
+.dock-btn {
+  background: transparent;
+  border: none;
+  color: #9CA3AF;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-spring);
+}
+
+.dock-btn:active {
+  transform: scale(0.88);
+}
+
+.dock-btn.active {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dock-btn:hover {
+  color: #FFFFFF;
+}
+
+/* ==========================================================
+   7. BESPOKE SHEET MODALS (ANTI-NATIVE DIALOG)
+   ========================================================== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 999;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal-backdrop.open {
+  display: flex;
+}
+
+.modal-sheet-panel {
+  width: 100%;
+  max-width: 414px;
+  background: var(--bg-sheet);
+  border-radius: 32px 32px 0 0;
+  padding: 16px 20px 36px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6);
+  animation: slideUp 0.3s var(--ease-spring);
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.sheet-handle {
+  width: 40px;
+  height: 4px;
+  background: #374151;
+  border-radius: 9999px;
+  margin: 0 auto 16px;
+}
+
+.sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.sheet-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sheet-title-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(253, 224, 71, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sheet-header h2 {
+  font-size: 17px;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.3px;
+}
+
+.btn-close-modal {
+  background: #23252B;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #9CA3AF;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-close-modal:active {
+  transform: scale(0.9);
+  background: #33363F;
+}
+
+/* ==========================================================
+   BENTO FORM CARDS ARCHITECTURE (SCULPTED INSET CONTAINERS)
+   ========================================================== */
+.bento-form-card {
+  background: #17191E;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 20px;
+  padding: 14px 15px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bento-form-card:focus-within {
+  border-color: rgba(253, 224, 71, 0.35);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+}
+
+.bento-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.bento-card-title {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #9CA3AF;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bento-card-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #FDE047;
+  background: rgba(253, 224, 71, 0.12);
+  padding: 2px 8px;
+  border-radius: 9999px;
+  letter-spacing: 0.2px;
+}
+
+.bento-card-desc {
+  font-size: 12px;
+  color: #9CA3AF;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+/* Inset Input Box (iOS/Linear Grouped Field) */
+.bento-input-box {
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.bento-input-row {
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.bento-input-row label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.bento-input-row input,
+.bento-input-row textarea {
+  background: transparent !important;
+  border: none !important;
+  color: #FFFFFF !important;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  outline: none !important;
+  box-shadow: none !important;
+  padding: 2px 0;
+  width: 100%;
+  resize: none;
+}
+
+.bento-input-row input::placeholder,
+.bento-input-row textarea::placeholder {
+  color: #4B5563;
+  font-weight: 500;
+}
+
+.bento-divider-line {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.05);
+  margin: 0 14px;
+}
+
+/* Segmented Controls (Card Type & Schedule) */
+.segmented-control,
+.schedule-selector-segmented {
+  display: flex;
+  background: #101114;
+  padding: 4px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 4px;
+}
+
+.segment-btn,
+.btn-schedule-type {
+  flex: 1;
+  padding: 9px 8px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: #9CA3AF;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s var(--ease-spring);
+}
+
+.segment-btn:active,
+.btn-schedule-type:active {
+  transform: scale(0.97);
+}
+
+.segment-btn.active,
+.btn-schedule-type.active {
+  background: #23252C;
+  color: #FDE047;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+/* Specific Date Inset Drawer */
+.specific-date-box {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quick-date-chips {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-date-chip {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #D1D5DB;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-date-chip.active {
+  background: #FDE047;
+  color: #121316;
+  border-color: #FDE047;
+  box-shadow: 0 2px 8px rgba(253, 224, 71, 0.25);
+}
+
+/* ========================================================== */
+/* BENTO MINI CALENDAR (ZERO BROWSER DATEPICKER)              */
+/* ========================================================== */
+.bento-mini-calendar {
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mini-cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.mini-cal-month-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #F3F4F6;
+  letter-spacing: -0.2px;
+}
+
+.mini-cal-nav-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #1B1D22;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #D1D5DB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mini-cal-nav-btn:hover,
+.mini-cal-nav-btn:active {
+  background: #FDE047;
+  color: #121316;
+  border-color: #FDE047;
+}
+
+.mini-cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mini-cal-days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.mini-cal-day-cell {
+  height: 32px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #D1D5DB;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s var(--ease-spring);
+}
+
+.mini-cal-day-cell:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.mini-cal-day-cell.is-today::after {
+  content: '';
+  position: absolute;
+  bottom: 3px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #FDE047;
+}
+
+.mini-cal-day-cell.selected {
+  background: #FDE047 !important;
+  color: #121316 !important;
+  font-weight: 800 !important;
+  border-color: #FDE047 !important;
+  box-shadow: 0 2px 10px rgba(253, 224, 71, 0.35);
+  transform: scale(1.05);
+}
+
+.mini-cal-day-cell.selected::after {
+  display: none;
+}
+
+.mini-cal-day-cell.empty {
+  cursor: default;
+}
+
+.mini-cal-selected-preview {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(253, 224, 71, 0.08);
+  border: 1px dashed rgba(253, 224, 71, 0.25);
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #FDE047;
+}
+
+/* ========================================================== */
+/* BENTO TOGGLE SWITCH & NOTIFICATION REMINDER DRAWER         */
+/* ========================================================== */
+.bento-card-title-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.bento-card-subtitle-small {
+  font-size: 10px;
+  font-weight: 500;
+  color: #6B7280;
+  margin-top: 1px;
+}
+
+.bento-toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.bento-toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #262930;
+  border-radius: 24px;
+  transition: all 0.25s ease;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.toggle-slider::before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 2px;
+  bottom: 2px;
+  background-color: #9CA3AF;
+  border-radius: 50%;
+  transition: all 0.25s var(--ease-spring);
+}
+
+.bento-toggle-switch input:checked + .toggle-slider {
+  background-color: #FDE047;
+  border-color: #FDE047;
+  box-shadow: 0 2px 10px rgba(253, 224, 71, 0.3);
+}
+
+.bento-toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(20px);
+  background-color: #121316;
+}
+
+.reminder-time-drawer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 6px;
+  animation: fadeInDown 0.2s ease-out;
+}
+
+.reminder-preset-chips {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.btn-time-chip {
+  padding: 8px 4px;
+  border-radius: 10px;
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #D1D5DB;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.btn-time-chip.active,
+.btn-time-chip:active {
+  background: #FDE047;
+  color: #121316;
+  border-color: #FDE047;
+  box-shadow: 0 2px 8px rgba(253, 224, 71, 0.25);
+}
+
+.custom-time-capsule {
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.custom-time-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #9CA3AF;
+}
+
+.time-spinner-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.time-spinner-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.btn-spin-arrow {
+  width: 32px;
+  height: 20px;
+  border-radius: 6px;
+  background: #1B1D22;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #D1D5DB;
+  font-size: 9px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-spin-arrow:active {
+  background: #FDE047;
+  color: #121316;
+}
+
+.time-digit-input {
+  width: 44px;
+  height: 36px;
+  background: #18191E;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  color: #FDE047;
+  font-size: 19px;
+  font-weight: 800;
+  font-family: monospace;
+  text-align: center;
+  outline: none;
+}
+
+.time-colon-separator {
+  font-size: 20px;
+  font-weight: 800;
+  color: #FDE047;
+  margin-top: -14px;
+}
+
+.time-unit-caption {
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #6B7280;
+  letter-spacing: 0.5px;
+}
+
+.reminder-test-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.reminder-summary-pill {
+  font-size: 11px;
+  font-weight: 700;
+  color: #E5E7EB;
+}
+
+.btn-test-notif {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #FDE047;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-test-notif:active {
+  background: rgba(253, 224, 71, 0.2);
+  transform: scale(0.96);
+}
+
+.card-reminder-tag {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 2px 7px;
+  border-radius: 8px;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+.theme-yellow .card-reminder-tag {
+  background: rgba(18, 19, 22, 0.15);
+  color: #121316;
+}
+
+/* Progressive Stepper Number & Satuan */
+.preset-label-row {
+  margin-bottom: 6px;
+}
+
+.preset-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.progressive-preset-chips {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.preset-chip {
+  padding: 8px 6px;
+  border-radius: 10px;
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #D1D5DB;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.preset-chip:hover,
+.preset-chip:active {
+  background: rgba(253, 224, 71, 0.14);
+  border-color: #FDE047;
+  color: #FDE047;
+  transform: translateY(-1px);
+}
+
+.stepper-inputs-row {
+  display: flex;
+  gap: 10px;
+}
+
+.stepper-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.stepper-col label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.stepper-counter-capsule {
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+  height: 42px;
+}
+
+.btn-stepper-tap {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #1F2128;
+  border: none;
+  color: #FFFFFF;
+  font-size: 16px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.btn-stepper-tap:active {
+  background: #FDE047;
+  color: #121316;
+}
+
+.stepper-counter-capsule input {
+  width: 50px;
+  text-align: center;
+  background: transparent;
+  border: none;
+  color: #FDE047;
+  font-size: 16px;
+  font-weight: 800;
+  outline: none;
+}
+
+.unit-input-capsule {
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+}
+
+.unit-input-capsule input {
+  background: transparent;
+  border: none;
+  color: #FFFFFF;
+  font-size: 13.5px;
+  font-weight: 600;
+  outline: none;
+  width: 100%;
+}
+
+/* Focus Timer Options & Custom Stepper */
+.timer-duration-options {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.btn-duration-choice {
+  flex: 1;
+  padding: 9px 4px;
+  border-radius: 10px;
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #9CA3AF;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-duration-choice.active {
+  border-color: #FDE047;
+  color: #121316;
+  background: #FDE047;
+  box-shadow: 0 2px 8px rgba(253, 224, 71, 0.25);
+}
+
+.custom-timer-adjuster {
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.custom-timer-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #9CA3AF;
+}
+
+.custom-stepper-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-custom-step {
+  padding: 6px 9px;
+  border-radius: 8px;
+  background: #1F2128;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #E5E7EB;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-custom-step:active {
+  background: #FDE047;
+  color: #121316;
+}
+
+.custom-minute-input-wrap {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+}
+
+.custom-minute-input-wrap input {
+  width: 44px;
+  text-align: center;
+  font-size: 17px;
+  font-weight: 800;
+  background: transparent;
+  border: none;
+  color: #FDE047;
+  outline: none;
+}
+
+.minute-unit {
+  font-size: 11px;
+  font-weight: 700;
+  color: #9CA3AF;
+}
+
+/* Color Radio Palette */
+.color-palette-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+}
+
+.color-radio { cursor: pointer; }
+.color-radio input { display: none; }
+
+.color-radio span {
+  display: block;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  transition: transform 0.2s var(--ease-spring), box-shadow 0.2s ease;
+}
+
+.color-radio.yellow span { background: #FDE047; }
+.color-radio.terracotta span { background: #7C2D12; }
+.color-radio.softblue span { background: #93C5FD; }
+.color-radio.emerald span { background: #059669; }
+.color-radio.purple span { background: #8B5CF6; }
+
+.color-radio input:checked + span {
+  transform: scale(1.15);
+  box-shadow: 0 0 0 3px #17191E, 0 0 0 5px #FDE047;
+}
+
+/* Icon Category Tabs & Scrollable Grid */
+.icon-category-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+  scrollbar-width: none;
+}
+
+.icon-category-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.icon-cat-btn {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #9CA3AF;
+  font-size: 10.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.icon-cat-btn.active {
+  background: #FDE047;
+  color: #121316;
+  border-color: #FDE047;
+}
+
+.icon-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  max-height: 180px;
+  overflow-y: auto;
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 8px;
+}
+
+.icon-selector-grid::-webkit-scrollbar {
+  width: 4px;
+}
+
+.icon-selector-grid::-webkit-scrollbar-thumb {
+  background: #2B2D33;
+  border-radius: 4px;
+}
+
+.btn-svg-choice {
+  background: #17191E;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9CA3AF;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-svg-choice svg {
+  width: 20px;
+  height: 20px;
+}
+
+.btn-svg-choice:hover {
+  border-color: #4B5563;
+  color: #FFFFFF;
+}
+
+.btn-svg-choice.active {
+  border-color: #FDE047;
+  color: #FDE047;
+  background: rgba(253, 224, 71, 0.16);
+  box-shadow: 0 0 10px rgba(253, 224, 71, 0.2);
+}
+
+/* Primary Action Button */
+.btn-primary-action {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #FDE047 0%, #EAB308 100%);
+  color: #121316;
+  border: none;
+  border-radius: 16px;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  cursor: pointer;
+  margin-top: 14px;
+  box-shadow: 0 8px 24px rgba(250, 204, 21, 0.3);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-primary-action:active {
+  transform: scale(0.98);
+  box-shadow: 0 4px 12px rgba(250, 204, 21, 0.2);
+}
+
+.btn-secondary-action {
+  padding: 12px;
+  background: #26272B;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ==========================================================
+   8. DEDICATED FULL CALENDAR VIEW & BESPOKE MATRIX
+   ========================================================== */
+.calendar-view-panel {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: calc(env(safe-area-inset-top, 0px) + 54px) 20px 125px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  scrollbar-width: none;
+}
+
+.calendar-view-panel::-webkit-scrollbar {
+  display: none;
+}
+
+.calendar-header-card {
+  background: linear-gradient(135deg, #181A22 0%, #12131A 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+}
+
+.calendar-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.calendar-header-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: rgba(253, 224, 71, 0.14);
+  border: 1px solid rgba(253, 224, 71, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FDE047;
+  flex-shrink: 0;
+}
+
+.calendar-header-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.calendar-header-badge {
+  font-size: 10px;
+  font-weight: 800;
+  color: #FDE047;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.calendar-header-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.calendar-matrix-wrap {
+  background: #15171F;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  padding: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.calendar-hero-stats {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 0;
+}
+
+.stat-box {
+  flex: 1;
+  background: #121316;
+  border: 1px solid #2B2D33;
+  border-radius: 16px;
+  padding: 12px;
+  text-align: center;
+}
+
+.stat-number {
+  display: block;
+  font-size: 20px;
+  font-weight: 800;
+  color: #FDE047;
+}
+
+.stat-label {
+  font-size: 10px;
+  color: #9CA3AF;
+  font-weight: 600;
+}
+
+.calendar-month-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding: 4px 6px;
+}
+
+.calendar-month-label {
+  font-size: 14px;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+.btn-month-nav {
+  background: #26272B;
+  border: none;
+  color: #FFFFFF;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.calendar-matrix-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.calendar-day-header {
+  font-size: 10px;
+  font-weight: 700;
+  color: #6B7280;
+  text-align: center;
+  padding-bottom: 6px;
+}
+
+.calendar-day-cell {
+  height: 38px;
+  border-radius: 10px;
+  background: #121316;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #9CA3AF;
+  border: 1px solid transparent;
+  cursor: pointer;
+  position: relative;
+}
+
+.calendar-day-cell.completed-full {
+  background: var(--green-check);
+  color: #000000;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+}
+
+.calendar-day-cell.completed-partial {
+  background: rgba(250, 204, 21, 0.2);
+  color: #FDE047;
+  border-color: #FDE047;
+}
+
+.calendar-day-cell.is-today {
+  border: 1.5px solid #3B82F6;
+}
+
+.calendar-day-cell.empty {
+  opacity: 0.2;
+}
+
+/* Journal Archive in Calendar */
+.calendar-journal-archive {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid #2B2D33;
+}
+
+.archive-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 12px;
+}
+
+.journal-history-item {
+  background: #121316;
+  border: 1px solid #2B2D33;
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+.journal-item-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.journal-item-date {
+  font-size: 10px;
+  font-weight: 700;
+  color: #FDE047;
+}
+
+.journal-item-mood {
+  font-size: 10px;
+  color: #9CA3AF;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.journal-item-text {
+  font-size: 12px;
+  color: #E5E7EB;
+  line-height: 1.4;
+}
+
+/* ==========================================================
+   9. BESPOKE CONFIRM & QUICK ACTIONS SHEET
+   ========================================================== */
+.quick-action-sheet,
+.confirm-sheet {
+  text-align: center;
+}
+
+.quick-card-preview {
+  margin-bottom: 16px;
+  padding: 12px;
+  border-radius: 16px;
+  background: #121316;
+  font-weight: 700;
+  font-size: 14px;
+  color: #FFFFFF;
+}
+
+.quick-actions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quick-act-btn {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #121316;
+  border: 1px solid #2B2D33;
+  color: #FFFFFF;
+  font-size: 13.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.quick-act-btn:active {
+  background: #26272B;
+}
+
+.quick-act-btn.text-danger {
+  color: #EF4444;
+}
+
+.confirm-icon-box {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+}
+
+.confirm-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin-bottom: 6px;
+}
+
+.confirm-desc {
+  font-size: 12.5px;
+  color: #9CA3AF;
+  margin-bottom: 20px;
+}
+
+.confirm-buttons-row {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-cancel {
+  flex: 1;
+  padding: 14px;
+  border-radius: 14px;
+  background: #26272B;
+  color: #FFFFFF;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-confirm-danger {
+  flex: 1;
+  padding: 14px;
+  border-radius: 14px;
+  background: #EF4444;
+  color: #FFFFFF;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Journal Mood Selector */
+.mood-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.btn-mood-choice {
+  background: #121316;
+  border: 1px solid #2B2D33;
+  border-radius: 12px;
+  padding: 10px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: #9CA3AF;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-mood-choice.active {
+  border-color: #FDE047;
+  color: #FDE047;
+  background: rgba(253, 224, 71, 0.12);
+}
+
+.char-count {
+  font-size: 10px;
+  color: #6B7280;
+  text-align: right;
+  margin-top: 2px;
+}
+
+/* Settings Box */
+.settings-fcm-box {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #2B2D33;
+}
+
+.fcm-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.fcm-note {
+  font-size: 11px;
+  color: #9CA3AF;
+  margin-top: 4px;
+}
+
+/* Switch Toggle */
+.switch-toggle {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.switch-toggle input { display: none; }
+
+.switch-toggle .slider {
+  position: absolute; cursor: pointer; inset: 0;
+  background-color: #374151; border-radius: 9999px;
+  transition: .3s;
+}
+
+.switch-toggle .slider:before {
+  position: absolute; content: ""; height: 18px; width: 18px;
+  left: 3px; bottom: 3px; background-color: white; border-radius: 50%;
+  transition: .3s;
+}
+
+.switch-toggle input:checked + .slider { background-color: #FDE047; }
+.switch-toggle input:checked + .slider:before {
+  transform: translateX(20px);
+  background-color: #121316;
+}
+
+/* ==========================================================
+   ACTIVE SPECIFIC DATE VIEW BANNER
+   ========================================================== */
+.active-date-view-banner {
+  background: #181A1F;
+  border: 1.5px solid rgba(253, 224, 71, 0.35);
+  border-radius: 20px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 16px rgba(253, 224, 71, 0.08);
+  margin: 0;
+}
+
+.banner-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.banner-icon-svg {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: rgba(253, 224, 71, 0.15);
+  color: #FDE047;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.banner-icon-svg svg {
+  width: 20px;
+  height: 20px;
+}
+
+.banner-text-wrap {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.banner-sublabel {
+  font-size: 9px;
+  font-weight: 800;
+  color: #FDE047;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.banner-datename {
+  font-size: 14px;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-return-today {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #FFFFFF;
+  border-radius: 9999px;
+  padding: 7px 14px;
+  font-size: 11.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-return-today:active {
+  transform: scale(0.95);
+  background: rgba(253, 224, 71, 0.25);
+  color: #FDE047;
+}
+
+/* Day Column Enhancements */
+.day-num {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #D1D5DB;
+  line-height: 1;
+}
+
+.day-status-pill.selected-view-day {
+  border: 2px solid #FDE047 !important;
+  box-shadow: 0 0 14px rgba(253, 224, 71, 0.55);
+  transform: scale(1.1);
+}
+
+/* ==========================================================
+   CALENDAR MATRIX SCHEDULE DOTS & AGENDAR
+   ========================================================== */
+.calendar-day-cell {
+  position: relative;
+}
+
+.calendar-day-cell.selected-cal-day {
+  border: 2px solid #FDE047 !important;
+  background: rgba(253, 224, 71, 0.16) !important;
+  color: #FDE047 !important;
+  font-weight: 800;
+}
+
+.cal-dot-indicator {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #9CA3AF;
+}
+
+.cal-dot-indicator.is-specific {
+  background: #FDE047;
+  box-shadow: 0 0 6px rgba(253, 224, 71, 0.9);
+}
+
+.cal-dot-indicator.is-completed {
+  background: #22C55E;
+}
+
+/* Calendar Selected Day Agenda Section */
+.calendar-day-agenda-section {
+  margin-top: 18px;
+  background: #181A1F;
+  border: 1px solid var(--border-subtle);
+  border-radius: 22px;
+  padding: 16px;
+}
+
+.agenda-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 10px;
+}
+
+.agenda-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agenda-title-icon {
+  color: #FDE047;
+  display: flex;
+  align-items: center;
+}
+
+.agenda-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.2px;
+}
+
+.btn-open-day-board {
+  background: #FDE047;
+  color: #121316;
+  border: none;
+  border-radius: 9999px;
+  padding: 6px 14px;
+  font-size: 11.5px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  box-shadow: 0 4px 12px rgba(253, 224, 71, 0.3);
+}
+
+.btn-open-day-board:active {
+  transform: scale(0.95);
+}
+
+.calendar-agenda-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.agenda-item-card {
+  background: #1F2228;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.agenda-item-card.is-done {
+  opacity: 0.82;
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+.agenda-item-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.agenda-item-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  background: rgba(253, 224, 71, 0.12);
+  color: #FDE047;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.agenda-item-icon svg {
+  width: 19px;
+  height: 19px;
+}
+
+.agenda-item-details {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.agenda-item-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #FFFFFF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agenda-item-card.is-done .agenda-item-title {
+  text-decoration: line-through;
+  opacity: 0.75;
+}
+
+.agenda-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: #9CA3AF;
+  margin-top: 3px;
+}
+
+.agenda-item-check {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #2A2D33;
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
+  color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.agenda-item-check.checked {
+  background: #22C55E;
+  border-color: #22C55E;
+  color: #000000;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.35);
+}
+
+.agenda-empty-state {
+  text-align: center;
+  padding: 16px 12px;
+  color: #9CA3AF;
+  font-size: 12.5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-agenda-add-target {
+  background: rgba(253, 224, 71, 0.15);
+  border: 1px dashed rgba(253, 224, 71, 0.5);
+  color: #FDE047;
+  border-radius: 9999px;
+  padding: 8px 18px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-agenda-add-target:active {
+  transform: scale(0.96);
+  background: rgba(253, 224, 71, 0.25);
+}
+
+/* Settings Modal Sync Buttons */
+.btn-sync-sub-action {
+  background: #23262D;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-sync-sub-action:active {
+  transform: scale(0.97);
+  background: #2E323A;
+  border-color: rgba(253, 224, 71, 0.4);
+}
+
+/* ==========================================================
+   14. BENTO MULTI-USER AUTHENTICATION & PROFILE SYSTEM
+   ========================================================== */
+
+/* Top Quick User Bar */
+.user-account-bar {
+  background: #17191E;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-spring);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  margin: 0;
+}
+
+.user-account-bar:hover {
+  background: #1B1E24;
+  border-color: rgba(253, 224, 71, 0.3);
+}
+
+.user-account-bar:active {
+  transform: scale(0.98);
+}
+
+.user-account-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-avatar-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: rgba(253, 224, 71, 0.14);
+  color: #FDE047;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  border: 1px solid rgba(253, 224, 71, 0.25);
+  flex-shrink: 0;
+}
+
+.user-account-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.user-account-tag {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: #9CA3AF;
+  text-transform: uppercase;
+}
+
+.user-account-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.user-account-action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #9CA3AF;
+}
+
+.user-account-status-pill {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: rgba(156, 163, 175, 0.15);
+  color: #9CA3AF;
+  letter-spacing: 0.3px;
+}
+
+.user-account-status-pill.logged-in {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22C55E;
+}
+
+.btn-quick-logout {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #EF4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-quick-logout:hover {
+  background: rgba(239, 68, 68, 0.25);
+  transform: scale(1.06);
+}
+
+.btn-quick-logout:active {
+  transform: scale(0.92);
+}
+
+.btn-toggle-eye {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9CA3AF;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.btn-toggle-eye:hover {
+  color: #FDE047;
+}
+
+/* Auth Modal Specifics */
+.auth-sheet {
+  max-width: 414px;
+}
+
+.input-with-icon-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.input-prefix-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #9CA3AF;
+}
+
+.auth-info-bento {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(253, 224, 71, 0.06);
+  border: 1px solid rgba(253, 224, 71, 0.16);
+  border-radius: 14px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.auth-info-icon {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.auth-info-desc {
+  font-size: 11.5px;
+  color: #D1D5DB;
+  line-height: 1.45;
+}
+
+.auth-preservation-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.22);
+  border-radius: 12px;
+  padding: 9px 12px;
+  margin-bottom: 12px;
+  font-size: 11px;
+  color: #86EFAC;
+  line-height: 1.35;
+}
+
+.auth-preservation-notice svg {
+  flex-shrink: 0;
+}
+
+.btn-danger-subtle {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #EF4444;
+  font-weight: 700;
+  font-size: 12.5px;
+  border-radius: 14px;
+  padding: 12px 16px;
+  width: 100%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-danger-subtle:active {
+  background: rgba(239, 68, 68, 0.2);
+  transform: scale(0.98);
+}
+
+.user-card-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.user-profile-avatar-large {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #FDE047 0%, #EAB308 100%);
+  color: #121316;
+  font-size: 22px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(253, 224, 71, 0.35);
+  flex-shrink: 0;
+}
+
+.user-profile-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-profile-fullname {
+  font-size: 16px;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.3px;
+}
+
+.user-profile-handle {
+  font-size: 12px;
+  font-weight: 700;
+  color: #FDE047;
+  margin-top: 1px;
+}
+
+.user-cloud-status-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #9CA3AF;
+  margin-top: 4px;
+}
+
+.user-stat-card {
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-stat-val {
+  font-size: 16px;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+.user-stat-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #9CA3AF;
+  margin-top: 2px;
+}
+
+/* ==========================================================
+   15. CUTE FULL-PAGE ONBOARDING & LOGIN SCREEN (DESAIN LUCU)
+   ========================================================== */
+.fullpage-auth-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 999999999;
+  background: #0D0E12;
+  background-image: 
+    radial-gradient(circle at 50% 15%, rgba(253, 224, 71, 0.14) 0%, transparent 60%),
+    radial-gradient(circle at 85% 85%, rgba(244, 114, 182, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 15% 75%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 24px 20px;
+  transition: opacity 0.4s var(--ease-spring), transform 0.4s var(--ease-spring), visibility 0.4s ease;
+}
+
+.fullpage-auth-screen.fade-out {
+  opacity: 0;
+  transform: scale(0.96);
+  pointer-events: none;
+}
+
+.cute-auth-container {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+  margin: auto;
+}
+
+/* Floating Cute Doodles */
+.cute-doodle {
+  position: absolute;
+  font-size: 20px;
+  pointer-events: none;
+  animation: cuteFloat 3.5s ease-in-out infinite alternate;
+  opacity: 0.75;
+  user-select: none;
+}
+
+.cute-doodle-1 { top: -10px; left: 16px; animation-delay: 0s; }
+.cute-doodle-2 { top: 12px; right: 20px; font-size: 18px; animation-delay: 1.2s; }
+.cute-doodle-3 { bottom: 65px; left: 10px; font-size: 16px; animation-delay: 2.1s; }
+.cute-doodle-4 { bottom: 85px; right: 14px; font-size: 22px; animation-delay: 0.8s; }
+
+@keyframes cuteFloat {
+  0% { transform: translateY(0px) rotate(0deg) scale(1); }
+  50% { transform: translateY(-8px) rotate(8deg) scale(1.1); }
+  100% { transform: translateY(-14px) rotate(-6deg) scale(1.05); }
+}
+
+/* Mascot Header */
+.cute-mascot-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.cute-mascot-avatar-wrap {
+  position: relative;
+  width: 112px;
+  height: 112px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  animation: cuteBounce 2.8s ease-in-out infinite;
+}
+
+@keyframes cuteBounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-10px) scale(1.04); }
+}
+
+.cute-mascot-svg {
+  filter: drop-shadow(0 10px 24px rgba(253, 224, 71, 0.35));
+}
+
+.cute-speech-badge {
+  display: inline-block;
+  background: rgba(253, 224, 71, 0.16);
+  border: 1px solid rgba(253, 224, 71, 0.35);
+  color: #FDE047;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 12px;
+  border-radius: 9999px;
+  letter-spacing: 0.3px;
+  margin-bottom: 6px;
+}
+
+.cute-auth-title {
+  font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+
+.cute-auth-desc {
+  font-size: 12.5px;
+  color: #9CA3AF;
+  line-height: 1.45;
+  max-width: 310px;
+}
+
+/* Cute Form Card */
+.cute-auth-form-card {
+  width: 100%;
+  background: #15171C;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 28px;
+  padding: 20px 18px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+/* Playful Tabs */
+.cute-tabs-row {
+  display: flex;
+  gap: 8px;
+  background: #0E0F13;
+  padding: 5px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  margin-bottom: 18px;
+}
+
+.cute-tab-pill {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: transparent;
+  border: none;
+  color: #9CA3AF;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s var(--ease-spring);
+}
+
+.cute-tab-pill.active {
+  background: #FDE047;
+  color: #121316;
+  font-weight: 800;
+  box-shadow: 0 4px 16px rgba(253, 224, 71, 0.35);
+  transform: scale(1.02);
+}
+
+/* Cute Input Fields */
+.cute-input-group {
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cute-input-group label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #D1D5DB;
+  letter-spacing: 0.2px;
+  padding-left: 2px;
+}
+
+.cute-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #0E0F13;
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 12px 14px;
+  transition: all 0.2s ease;
+}
+
+.cute-input-wrap:focus-within {
+  border-color: #FDE047;
+  background: #111317;
+  box-shadow: 0 0 0 3px rgba(253, 224, 71, 0.2);
+}
+
+.cute-input-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cute-input-wrap input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #FFFFFF;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
+}
+
+.cute-input-wrap input::placeholder {
+  color: #6B7280;
+  font-size: 12.5px;
+}
+
+/* Cute Avatar Picker */
+.cute-avatar-picker-section {
+  margin: 12px 0 16px;
+  background: #0E0F13;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 10px 12px;
+}
+
+.cute-avatar-picker-title {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #9CA3AF;
+  margin-bottom: 8px;
+}
+
+.cute-avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+
+.cute-avatar-btn {
+  height: 38px;
+  border-radius: 12px;
+  background: #17191E;
+  border: 1.5px solid transparent;
+  color: #9CA3AF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-spring);
+}
+
+.cute-avatar-btn:hover {
+  transform: scale(1.1);
+  color: #FFFFFF;
+  background: rgba(253, 224, 71, 0.12);
+}
+
+.cute-avatar-btn.active {
+  background: rgba(253, 224, 71, 0.22);
+  border-color: #FDE047;
+  color: #FDE047;
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(253, 224, 71, 0.35);
+}
+
+/* Data Safe Banner */
+.cute-data-safe-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.22);
+  border-radius: 14px;
+  padding: 8px 12px;
+  margin-bottom: 16px;
+  font-size: 11px;
+  color: #86EFAC;
+  line-height: 1.35;
+}
+
+.cute-data-safe-note svg {
+  flex-shrink: 0;
+}
+
+/* Cute Bouncy Submit Button */
+.cute-btn-submit {
+  width: 100%;
+  padding: 15px 18px;
+  background: linear-gradient(135deg, #FDE047 0%, #EAB308 100%);
+  color: #121316;
+  border: none;
+  border-radius: 18px;
+  font-size: 14px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(253, 224, 71, 0.35);
+  transition: all 0.2s var(--ease-spring);
+  font-family: inherit;
+}
+
+.cute-btn-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(253, 224, 71, 0.45);
+}
+
+.cute-btn-submit:active {
+  transform: scale(0.96);
+  box-shadow: 0 4px 14px rgba(253, 224, 71, 0.25);
+}
+
+.cute-footer-cloud-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6B7280;
+  margin-top: 18px;
+}
+
+/* ==========================================================
+   16. PULL TO REFRESH INTERACTIVE INDICATOR (SWIPE KE BAWAH)
+   ========================================================== */
+.pull-refresh-indicator {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 8px 0;
+  margin-top: -38px;
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.25s var(--ease-spring), opacity 0.25s ease;
+  z-index: 50;
+}
+
+.pull-refresh-icon-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #17191E;
+  border: 1px solid rgba(253, 224, 71, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  transition: transform 0.25s ease;
+}
+
+.pull-refresh-svg {
+  transition: transform 0.25s ease;
+}
+
+.pull-refresh-indicator.ready .pull-refresh-svg {
+  transform: rotate(180deg);
+}
+
+.pull-refresh-indicator.refreshing .pull-refresh-svg {
+  animation: spinPull 0.8s linear infinite;
+}
+
+@keyframes spinPull {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.pull-refresh-text {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #FDE047;
+  letter-spacing: 0.2px;
+}
+
+/* ==========================================================
+   17. 12-MOOD SELECTOR GRID (SUASANA HATI LENGKAP & LUCU)
+   ========================================================== */
+.mood-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.btn-mood-choice {
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  padding: 10px 4px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-spring);
+  color: #9CA3AF;
+}
+
+.btn-mood-choice:hover {
+  background: rgba(253, 224, 71, 0.08);
+  border-color: rgba(253, 224, 71, 0.3);
+  color: #FDE047;
+  transform: translateY(-2px);
+}
+
+.btn-mood-choice.active {
+  background: #FDE047 !important;
+  border-color: #FDE047 !important;
+  color: #121316 !important;
+  font-weight: 800;
+  box-shadow: 0 4px 14px rgba(253, 224, 71, 0.35);
+  transform: scale(1.05);
+}
+
+.mood-svg-box {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mood-svg-box svg {
+  width: 20px;
+  height: 20px;
+}
+
+.mood-choice-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* ==========================================================
+   18. GROUPED GRATITUDE JOURNAL TIMELINE ARCHIVE
+   ========================================================== */
+.journal-timeline-group {
+  margin-bottom: 18px;
+}
+
+.journal-timeline-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding-left: 2px;
+}
+
+.timeline-date-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timeline-date-label {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #FDE047;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.timeline-count-badge {
+  font-size: 9.5px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.08);
+  color: #9CA3AF;
+  padding: 1px 7px;
+  border-radius: 9999px;
+  margin-left: auto;
+}
+
+.journal-timeline-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.journal-history-item {
+  background: #101114;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  padding: 12px 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  transition: all 0.2s ease;
+}
+
+.journal-history-item:hover {
+  border-color: rgba(253, 224, 71, 0.25);
+}
+
+.journal-item-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.journal-item-mood-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(253, 224, 71, 0.12);
+  border: 1px solid rgba(253, 224, 71, 0.25);
+  color: #FDE047;
+  padding: 2px 9px;
+  border-radius: 9999px;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.mood-badge-icon {
+  width: 13px;
+  height: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mood-badge-icon svg {
+  width: 12px;
+  height: 12px;
+}
+
+.journal-item-time {
+  font-size: 10.5px;
+  color: #9CA3AF;
+  font-weight: 600;
+}
+
+.journal-item-text {
+  font-size: 13px;
+  color: #F3F4F6;
+  line-height: 1.45;
+  font-style: italic;
+}
+
+/* ==========================================================
+   20. COMBINED DOCK ACTION BUTTON & COMPACT POPUP MENU
+   ========================================================== */
+.dock-action-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dock-btn-main-action {
+  background: rgba(253, 224, 71, 0.12) !important;
+  color: #FDE047 !important;
+  border: 1px solid rgba(253, 224, 71, 0.3) !important;
+  box-shadow: 0 0 16px rgba(253, 224, 71, 0.15);
+  transition: transform 0.25s var(--ease-spring), background 0.2s ease, color 0.2s ease !important;
+}
+
+.dock-btn-main-action.is-open {
+  background: #FDE047 !important;
+  color: #121316 !important;
+  transform: rotate(45deg);
+}
+
+.dock-action-popup {
+  position: absolute;
+  bottom: calc(100% + 14px);
+  left: 50%;
+  transform: translateX(-50%) translateY(8px) scale(0.9);
+  background: rgba(28, 30, 36, 0.96);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 28px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.24s var(--ease-spring);
+  z-index: 120;
+}
+
+.dock-action-popup.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+.dock-popup-item {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s var(--ease-spring);
+}
+
+.dock-popup-item:active {
+  transform: scale(0.88);
+}
+
+.dock-popup-item.popup-add {
+  color: #FDE047;
+  background: rgba(253, 224, 71, 0.16);
+  border: 1px solid rgba(253, 224, 71, 0.28);
+}
+
+.dock-popup-item.popup-journal {
+  color: #38BDF8;
+  background: rgba(56, 189, 248, 0.16);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+}
+
+.dock-popup-tooltip {
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: #181A1F;
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  padding: 5px 10px;
+  border-radius: 10px;
+  pointer-events: none;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* ==========================================================
+   21. SCHEDULE SELECTOR: REPEAT DAYS & SPECIFIC DAY OF WEEK
+   ========================================================== */
+.custom-days-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 12px 14px;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.custom-days-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.custom-days-hint {
+  font-size: 11px;
+  color: #9CA3AF;
+  font-weight: 600;
+}
+
+.custom-days-quick-presets {
+  display: flex;
+  gap: 4px;
+}
+
+.btn-day-preset {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #D1D5DB;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-day-preset:hover, .btn-day-preset:active {
+  background: rgba(253, 224, 71, 0.15);
+  color: #FDE047;
+  border-color: rgba(253, 224, 71, 0.3);
+}
+
+.custom-days-pills-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.btn-repeat-day {
+  flex: 1;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #9CA3AF;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-spring);
+}
+
+.btn-repeat-day:active {
+  transform: scale(0.92);
+}
+
+.btn-repeat-day.active {
+  background: #FDE047;
+  color: #121316;
+  border-color: #FDE047;
+  box-shadow: 0 4px 14px rgba(253, 224, 71, 0.3);
+  font-weight: 800;
+}
+
+.custom-days-summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #FDE047;
+  font-weight: 600;
+  background: rgba(253, 224, 71, 0.08);
+  padding: 6px 10px;
+  border-radius: 10px;
+}
+
+.card-badge.badge-days {
+  background: rgba(147, 197, 253, 0.14);
+  color: #93C5FD;
+  border: 1px solid rgba(147, 197, 253, 0.28);
+}
+
+/* ==========================================================
+   22. JOURNAL PHOTO UPLOAD & PREVIEW
+   ========================================================== */
+.journal-photo-dropzone {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1.5px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.journal-photo-dropzone:hover {
+  border-color: #FDE047;
+  background: rgba(253, 224, 71, 0.03);
+}
+
+.photo-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.photo-dropzone-text {
+  font-size: 12px;
+  font-weight: 700;
+  color: #E5E7EB;
+}
+
+.photo-dropzone-sub {
+  font-size: 10px;
+  color: #9CA3AF;
+}
+
+.photo-preview-wrap {
+  position: relative;
+  width: 100%;
+  max-height: 180px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.photo-preview-wrap img {
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: 12px;
+  display: block;
+}
+
+.btn-remove-photo {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.btn-remove-photo:hover {
+  transform: scale(1.1);
+  background: #EF4444;
+}
+
+/* ==========================================================
+   23. VIEW PANEL: MEMORI & STATISTIK (DEDICATED MENU)
+   ========================================================== */
+.memories-view-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: calc(env(safe-area-inset-top, 0px) + 54px) 20px calc(env(safe-area-inset-bottom, 0px) + 125px);
+  width: 100%;
+  min-height: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.memories-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.memories-header-title-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.memories-header-badge {
+  font-size: 10px;
+  font-weight: 800;
+  color: #FDE047;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.memories-header-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #FFFFFF;
+  line-height: 1.2;
+}
+
+.memories-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-memories-quick {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-size: 11.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-spring);
+}
+
+.btn-memories-quick:active {
+  transform: scale(0.92);
+}
+
+.btn-memories-quick.gold-accent {
+  background: rgba(253, 224, 71, 0.15);
+  color: #FDE047;
+  border-color: rgba(253, 224, 71, 0.3);
+}
+
+/* ==========================================================
+   23. STRAVA ATHLETIC APP LAYOUT — MEMORI & STATISTIK
+   ========================================================== */
+.strava-theme-panel {
+  padding-bottom: 125px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* 1. Strava Athlete Hero Card */
+.strava-athlete-hero-card {
+  background: linear-gradient(135deg, #171922 0%, #12131A 100%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 24px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55);
+}
+
+.strava-athlete-hero-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #FC5200 0%, #FDE047 60%, transparent 100%);
+}
+
+.strava-athlete-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.strava-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.strava-avatar-ring {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FC5200, #FDE047);
+  padding: 2.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(252, 82, 0, 0.4);
+}
+
+.strava-avatar-text {
+  width: 100%;
+  height: 100%;
+  background: #121316;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Outfit', sans-serif;
+  font-size: 19px;
+  font-weight: 900;
+  color: #FDE047;
+  letter-spacing: -0.5px;
+}
+
+.strava-avatar-online-dot {
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #22C55E;
+  border: 2px solid #171922;
+}
+
+.strava-athlete-details {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.strava-name-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.strava-athlete-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 19px;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin: 0;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.strava-athlete-meta-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.strava-tag-pill {
+  font-size: 11px;
+  font-weight: 700;
+  color: #9CA3AF;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  padding: 4px 9px;
+  border-radius: 8px;
+}
+
+.strava-tag-pill.orange-accent {
+  color: #FC5200;
+  background: rgba(252, 82, 0, 0.14);
+  border-color: rgba(252, 82, 0, 0.3);
+}
+
+.strava-header-actions-row {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-strava-top-action {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 12.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-strava-top-action:active {
+  transform: scale(0.96);
+}
+
+/* Redesigned Finished Athletic Notification Control Pill */
+.strava-notif-control-pill {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.25s var(--ease-spring);
+  color: #FFFFFF;
+}
+
+.strava-notif-control-pill:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.strava-notif-control-pill:active {
+  transform: scale(0.98);
+}
+
+.strava-notif-control-pill.is-active {
+  border-color: rgba(34, 197, 94, 0.35);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(34, 197, 94, 0.04) 100%);
+}
+
+.strava-notif-bell-wrap {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+  color: #E5E7EB;
+  transition: all 0.25s ease;
+}
+
+.strava-notif-control-pill.is-active .strava-notif-bell-wrap {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22C55E;
+}
+
+.strava-bell-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22C55E;
+  box-shadow: 0 0 8px #22C55E;
+}
+
+.strava-bell-dot.denied {
+  background: #F59E0B;
+  box-shadow: 0 0 6px #F59E0B;
+}
+
+.strava-notif-text-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  text-align: left;
+}
+
+.strava-notif-label-sub {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  color: #9CA3AF;
+  text-transform: uppercase;
+}
+
+.strava-notif-status-val {
+  font-size: 13px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.strava-notif-state-chip {
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.08);
+  color: #9CA3AF;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
+}
+
+.strava-notif-control-pill.is-active .strava-notif-state-chip {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22C55E;
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+/* ==========================================================
+   STRAVA SEGMENTED TAB BAR & PANELS
+   ========================================================== */
+.strava-tab-bar {
+  display: flex;
+  align-items: center;
+  background: #14161E;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 5px;
+  gap: 5px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  margin: 14px 0 16px;
+}
+
+.strava-tab-btn {
+  flex: 1;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #9CA3AF;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 10px 6px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-spring);
+  white-space: nowrap;
+}
+
+.strava-tab-btn:active {
+  transform: scale(0.96);
+}
+
+.strava-tab-btn.active {
+  background: linear-gradient(135deg, rgba(252, 82, 0, 0.25), rgba(252, 82, 0, 0.12));
+  color: #FC5200;
+  border-color: rgba(252, 82, 0, 0.4);
+  box-shadow: 0 4px 14px rgba(252, 82, 0, 0.25);
+}
+
+.strava-tab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  animation: stravaTabIn 0.25s ease-out;
+}
+
+@keyframes stravaTabIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 2. Strava Quad Stats Grid (Spacious & Clean) */
+.strava-quad-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.strava-stat-card {
+  background: #14161D;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.strava-stat-card:active {
+  transform: scale(0.98);
+}
+
+.strava-stat-icon-wrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.strava-stat-icon-wrap.orange-glow {
+  background: rgba(252, 82, 0, 0.16);
+}
+
+.strava-stat-icon-wrap.yellow-glow {
+  background: rgba(253, 224, 71, 0.16);
+}
+
+.strava-stat-icon-wrap.green-glow {
+  background: rgba(34, 197, 94, 0.15);
+}
+
+.strava-stat-micro-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: #9CA3AF;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.strava-stat-metric-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.strava-stat-metric-num {
+  font-family: 'Outfit', sans-serif;
+  font-size: 26px;
+  font-weight: 900;
+  color: #FFFFFF;
+  line-height: 1.05;
+  letter-spacing: -0.5px;
+}
+
+.strava-stat-metric-unit {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6B7280;
+}
+
+.strava-stat-micro-desc {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #6B7280;
+  margin-top: 2px;
+}
+
+.text-strava-orange { color: #FC5200 !important; }
+.text-strava-yellow { color: #FDE047 !important; }
+.text-strava-green { color: #22C55E !important; }
+
+/* 3. Strava Section Cards (Relaxed & Spacious) */
+.strava-section-card {
+  background: #14161D;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 22px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+}
+
+.strava-card-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.strava-card-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.strava-section-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: -0.2px;
+}
+
+.strava-section-sub {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #9CA3AF;
+}
+
+.strava-goal-pill {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #FC5200;
+  background: rgba(252, 82, 0, 0.14);
+  border: 1px solid rgba(252, 82, 0, 0.35);
+  padding: 5px 12px;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+/* 4. Strava Weekly Training Volume Bar Chart */
+.strava-weekly-bar-chart {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+  padding-top: 14px;
+}
+
+.strava-day-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+}
+
+.strava-bar-track {
+  width: 100%;
+  max-width: 32px;
+  height: 108px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+  padding: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.strava-day-column.is-today .strava-bar-track {
+  border-color: rgba(252, 82, 0, 0.6);
+  box-shadow: 0 0 16px rgba(252, 82, 0, 0.25);
+}
+
+.strava-bar-fill {
+  width: 100%;
+  border-radius: 7px;
+  background: linear-gradient(180deg, #FC5200 0%, #FDE047 100%);
+  transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  min-height: 4px;
+}
+
+.strava-day-column.is-completed .strava-bar-fill {
+  background: linear-gradient(180deg, #22C55E 0%, #10B981 100%);
+}
+
+.strava-day-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #9CA3AF;
+  text-transform: uppercase;
+}
+
+.strava-day-column.is-today .strava-day-label {
+  color: #FC5200;
+}
+
+.strava-day-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.strava-day-column.is-completed .strava-day-dot {
+  background: #22C55E;
+  box-shadow: 0 0 8px #22C55E;
+}
+
+/* 5. Strava Trophy Case & Milestones Showcase */
+.strava-trophy-tier-banner {
+  background: linear-gradient(135deg, #1C1E28 0%, #13151D 100%);
+  border: 1px solid rgba(253, 224, 71, 0.22);
+  border-radius: 22px;
+  padding: 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(253, 224, 71, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.strava-trophy-tier-banner::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, #FDE047 0%, #FC5200 60%, transparent 100%);
+}
+
+.trophy-tier-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.trophy-tier-icon-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(253, 224, 71, 0.2), rgba(252, 82, 0, 0.15));
+  border: 1.5px solid rgba(253, 224, 71, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FDE047;
+  flex-shrink: 0;
+  box-shadow: 0 6px 18px rgba(253, 224, 71, 0.2);
+}
+
+.trophy-tier-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.trophy-tier-badge {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: #FDE047;
+  text-transform: uppercase;
+}
+
+.trophy-tier-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 16.5px;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.trophy-tier-desc {
+  font-size: 11px;
+  color: #9CA3AF;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.trophy-tier-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.trophy-tier-progress-bar {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.trophy-tier-progress-fill {
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #FDE047, #FC5200);
+  transition: width 0.6s var(--ease-spring);
+}
+
+.trophy-tier-progress-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #FDE047;
+  white-space: nowrap;
+}
+
+/* Enhanced Gamified Trophy Grid */
+.strava-trophies-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.strava-trophy-card {
+  background: #161821;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  transition: all 0.25s var(--ease-spring);
+  position: relative;
+  overflow: hidden;
+}
+
+.strava-trophy-card.unlocked {
+  background: linear-gradient(145deg, rgba(253, 224, 71, 0.1) 0%, rgba(252, 82, 0, 0.06) 100%);
+  border-color: rgba(253, 224, 71, 0.35);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35), 0 0 16px rgba(253, 224, 71, 0.1);
+}
+
+.strava-trophy-card.unlocked:hover {
+  transform: translateY(-2px);
+  border-color: rgba(253, 224, 71, 0.55);
+}
+
+.strava-trophy-card.locked {
+  background: rgba(20, 22, 28, 0.7);
+  border-color: rgba(255, 255, 255, 0.05);
+  opacity: 0.75;
+}
+
+.trophy-badge-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.25s ease;
+}
+
+.strava-trophy-card.unlocked .trophy-badge-icon-box {
+  background: linear-gradient(135deg, rgba(253, 224, 71, 0.22), rgba(252, 82, 0, 0.2));
+  border: 1px solid rgba(253, 224, 71, 0.4);
+  color: #FDE047;
+  box-shadow: 0 4px 14px rgba(253, 224, 71, 0.25);
+}
+
+.strava-trophy-card.locked .trophy-badge-icon-box {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #6B7280;
+}
+
+.trophy-card-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.trophy-card-desc {
+  font-size: 10.5px;
+  color: #9CA3AF;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.trophy-status-pill {
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  letter-spacing: 0.4px;
+}
+
+.strava-trophy-card.unlocked .trophy-status-pill {
+  background: rgba(34, 197, 94, 0.16);
+  color: #4ADE80;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+}
+
+.strava-trophy-card.locked .trophy-status-pill {
+  background: rgba(255, 255, 255, 0.05);
+  color: #9CA3AF;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.trophy-card-progress {
+  width: 100%;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.trophy-card-progress-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.trophy-card-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FC5200, #FDE047);
+  border-radius: 9999px;
+}
+
+.trophy-card-progress-text {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #9CA3AF;
+}
+
+/* Instagram Studio Layout Mode & Component Options */
+.btn-ig-pick-photo {
+  background: rgba(253, 224, 71, 0.14);
+  border: 1px solid rgba(253, 224, 71, 0.3);
+  color: #FDE047;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-ig-pick-photo:active {
+  transform: scale(0.95);
+}
+
+.ig-toggles-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.ig-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #E5E7EB;
+}
+  line-height: 1.2;
+}
+
+/* 6. Strava Filter Pills */
+.strava-filter-pills-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: none;
+}
+
+.strava-filter-pills-row::-webkit-scrollbar {
+  display: none;
+}
+
+.strava-filter-pill {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: #9CA3AF;
+  padding: 7px 14px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.strava-filter-pill.active {
+  background: #FC5200;
+  border-color: #FC5200;
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(252, 82, 0, 0.35);
+}
+
+/* 7. Strava Activity Stream & Feed Cards */
+.strava-activity-stream {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.strava-activity-card {
+  background: #181A22;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.strava-activity-card:hover {
+  border-color: rgba(252, 82, 0, 0.3);
+}
+
+.strava-act-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.strava-act-athlete-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.strava-act-avatar-mini {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #232733;
+  color: #FDE047;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 12px;
+  flex-shrink: 0;
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+}
+
+.strava-act-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.strava-act-author {
+  font-size: 12px;
+  font-weight: 800;
+  color: #FFFFFF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.strava-act-time {
+  font-size: 10px;
+  color: #9CA3AF;
+  white-space: nowrap;
+}
+
+.strava-act-type-tag {
+  font-size: 10px;
+  font-weight: 800;
+  color: #FC5200;
+  background: rgba(252, 82, 0, 0.12);
+  border: 1px solid rgba(252, 82, 0, 0.25);
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+.strava-act-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.strava-act-icon {
+  width: 24px;
+  height: 24px;
+  color: #FDE047;
+  flex-shrink: 0;
+}
+
+.strava-act-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.strava-act-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin: 0;
+  letter-spacing: -0.2px;
+}
+
+/* Strava 3-Column Stats Grid */
+.strava-metrics-tri-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  background: #111319;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.strava-metric-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.strava-metric-col:not(:last-child) {
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  padding-right: 6px;
+}
+
+.strava-metric-title {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #9CA3AF;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.strava-metric-val {
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: #FFFFFF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.strava-metric-val.status-done {
+  color: #22C55E;
+}
+
+.strava-metric-val.status-active {
+  color: #FDE047;
+}
+
+/* Strava Photo within Activity Card */
+.strava-act-photo-wrap {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  max-height: 220px;
+}
+
+.strava-act-photo-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.strava-photo-overlay-quote {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 14px 12px 10px;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.85) 100%);
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 600;
+  font-style: italic;
+}
+
+/* Strava Card Footer & Kudos Button */
+.strava-act-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.strava-kudos-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #9CA3AF;
+  border-radius: 9999px;
+  padding: 5px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.strava-kudos-btn:hover, .strava-kudos-btn.gave-kudos {
+  color: #FC5200;
+  border-color: rgba(252, 82, 0, 0.4);
+  background: rgba(252, 82, 0, 0.1);
+}
+
+.strava-kudos-btn:active {
+  transform: scale(0.92);
+}
+
+.strava-share-story-btn {
+  background: transparent;
+  border: none;
+  color: #FDE047;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  padding: 5px 8px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.strava-share-story-btn:hover {
+  background: rgba(253, 224, 71, 0.1);
+}
+
+/* Category Progress Bento Breakdown (Strava Styled) */
+.category-breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cat-progress-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+}
+
+.cat-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cat-name-tag {
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cat-count-pct {
+  font-size: 11px;
+  font-weight: 800;
+  color: #D1D5DB;
+}
+
+.cat-bar-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.cat-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.5s var(--ease-spring);
+}
+
+.fill-fitness { background: linear-gradient(90deg, #FC5200, #FDE047); }
+.fill-health { background: linear-gradient(90deg, #34D399, #059669); }
+.fill-work { background: linear-gradient(90deg, #93C5FD, #3B82F6); }
+.fill-life { background: linear-gradient(90deg, #C084FC, #8B5CF6); }
+
+/* Gratitude & Photo Memories Gallery (Strava Photo Feed) */
+.memories-gallery-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.memory-card-item {
+  background: #181A22;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+}
+
+.memory-photo-thumb {
+  width: 100%;
+  max-height: 200px;
+  border-radius: 12px;
+  object-fit: cover;
+  display: block;
+}
+
+.memory-meta-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.memory-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.btn-make-ig-frame {
+  background: linear-gradient(135deg, rgba(252, 82, 0, 0.18), rgba(253, 224, 71, 0.18));
+  border: 1px solid rgba(252, 82, 0, 0.35);
+  color: #FDE047;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-make-ig-frame:active {
+  transform: scale(0.92);
+}
+
+/* ==========================================================
+   24. MODAL: INSTAGRAM FRAME GENERATOR (STUDIO CERITA IG)
+   ========================================================== */
+.ig-studio-modal .modal-sheet-panel {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.ig-canvas-preview-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 0;
+  background: #0A0B0D;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+
+#ig-render-canvas {
+  max-width: 100%;
+  height: auto;
+  border-radius: 14px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7);
+  display: block;
+}
+
+.ig-options-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.ig-segmented-group {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-ig-option {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #9CA3AF;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+}
+
+.btn-ig-option.active {
+  background: #FDE047;
+  color: #121316;
+  border-color: #FDE047;
+  font-weight: 800;
+}
+
+.ig-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #E5E7EB;
+}
+
+.ig-download-btn-row {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-ig-download {
+  flex: 2;
+  background: linear-gradient(135deg, #FDE047, #F59E0B);
+  color: #121316;
+  border: none;
+  border-radius: 14px;
+  font-size: 13.5px;
+  font-weight: 800;
+  padding: 13px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(245, 158, 11, 0.3);
+  transition: transform 0.15s ease;
+}
+
+.btn-ig-download:active {
+  transform: scale(0.96);
+}
+
+.btn-ig-share {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #FFFFFF;
+  border-radius: 14px;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+/* ==========================================================
+   25. MODAL: NOTIFICATION CENTER & TEST HUB
+   ========================================================== */
+.notif-hub-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.notif-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  width: fit-content;
+}
+
+.notif-status-badge.granted {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22C55E;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.notif-status-badge.denied {
+  background: rgba(239, 68, 68, 0.15);
+  color: #EF4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.btn-test-notif-now {
+  background: linear-gradient(135deg, rgba(253, 224, 71, 0.2), rgba(245, 158, 11, 0.2));
+  border: 1px solid rgba(253, 224, 71, 0.4);
+  color: #FDE047;
+  padding: 12px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-test-notif-now:active {
+  transform: scale(0.96);
+  background: #FDE047;
+  color: #121316;
+}

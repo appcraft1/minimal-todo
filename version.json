@@ -1,0 +1,14 @@
+{
+  "versionCode": 7,
+  "versionName": "1.0.6",
+  "releaseDate": "2026-10-16",
+  "minSupportedVersionCode": 1,
+  "changelog": [
+    "Perbaikan streak dan kenaikan level disiplin dinamis",
+    "Jadwal habit khusus hari tertentu",
+    "Filter tanggal catatan syukur",
+    "Penyatuan menu aksi popup",
+    "Pusat diagnosa & tes notifikasi",
+    "Menu Memori & Galeri dengan Studio Bingkai Instagram"
+  ]
+}
