@@ -1,9 +1,11 @@
 {
-  "versionCode": 10,
-  "versionName": "1.0.9",
+  "versionCode": 11,
+  "versionName": "1.1.0",
   "releaseDate": "2026-10-21",
   "minSupportedVersionCode": 1,
   "changelog": [
+    "Perbaikan widget Home Android (mengatasi error 'Tidak dapat memuat widget' dengan layout 100% RemoteViews compliant)",
+    "Redesain premium 'Daftar Pengingat yang Terpasang' di Pusat Notifikasi dengan kartu bento, status pill, badge kategori, dan tombol aksi interaktif",
     "Perbaikan layout kartu profil menu keempat agar tidak terpotong dan konsisten di semua sub-tab",
     "Filter aktivitas modern bergaya segmented switcher (non-chip)",
     "Perbaikan tombol kudos (like/dislike) bebas visual bug di layar HP",

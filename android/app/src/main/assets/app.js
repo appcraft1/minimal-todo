@@ -1171,6 +1171,9 @@ const App = {
     if (memRate) memRate.textContent = `${stats.disciplineRate}%`;
     if (memLvl) memLvl.textContent = stats.level;
     if (memLvlTitle) memLvlTitle.textContent = stats.levelTitle;
+
+    // Sinkronisasi otomatis ke Widget Android & Status Bar Pinned Notif
+    this.syncNativeWidgetAndNotification();
   },
 
   checkAllCompletedCelebration() {
@@ -1943,14 +1946,37 @@ const App = {
 
   renderActiveRemindersList() {
     const container = document.getElementById("active-reminders-list-container");
+    const countBadge = document.getElementById("notif-reminders-count-badge");
+    const countSub = document.getElementById("notif-reminders-count-sub");
     if (!container) return;
 
     const reminderHabits = this.habits.filter(h => h.reminderEnabled);
-    if (reminderHabits.length === 0) {
+    const count = reminderHabits.length;
+
+    if (countBadge) {
+      countBadge.textContent = `${count} Alarm`;
+    }
+    if (countSub) {
+      countSub.textContent = count > 0 
+        ? `${count} kartu habit dengan jadwal alarm aktif`
+        : "Belum ada jadwal alarm yang diaktifkan";
+    }
+
+    if (count === 0) {
       container.innerHTML = `
-        <div style="text-align:center; padding:16px 8px; color:#6B7280; font-size:12px;">
-          Belum ada kartu dengan alarm pengingat aktif.<br>
-          Nyalakan toggle "Pengingat & Alarm" saat membuat atau mengedit kartu.
+        <div class="reminder-empty-state">
+          <div class="reminder-empty-icon-wrap">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FDE047" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+          </div>
+          <h4 class="reminder-empty-title">Belum Ada Alarm Terpasang</h4>
+          <p class="reminder-empty-desc">Nyalakan sakelar <strong>Pengingat & Alarm</strong> saat membuat atau mengedit kartu habit agar HP kamu berdering tepat waktu.</p>
+          <button type="button" class="btn-reminder-add-target" onclick="App.closeModal('modal-notif-center'); App.openAddModal();">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Tambah Target Berpengingat</span>
+          </button>
         </div>
       `;
       return;
@@ -1960,22 +1986,70 @@ const App = {
       const iconSvg = SVG_ICONS[h.iconSvgKey] || SVG_ICONS.bell;
       const cleanTime = this.cleanTimeStr(h.reminderTime);
       let schedLabel = "Harian";
-      if (h.scheduleType === 'days') schedLabel = h.date || "Hari Tertentu";
+      if (h.scheduleType === 'days') schedLabel = h.date || this.getRepeatDaysLabel(h.repeatDays);
       else if (h.scheduleType === 'specific') schedLabel = this.formatShortDate(h.targetDate);
 
+      const itemInfo = ICON_CATALOG.find(i => i.key === h.iconSvgKey);
+      const catKey = itemInfo ? itemInfo.cat : 'fitness';
+
+      let catLabel = "Olahraga";
+      let catColor = "#FC5200";
+      let catBg = "rgba(252, 82, 0, 0.14)";
+      let catBorder = "rgba(252, 82, 0, 0.3)";
+
+      if (catKey === 'work') {
+        catLabel = "Fokus";
+        catColor = "#60A5FA";
+        catBg = "rgba(96, 165, 250, 0.14)";
+        catBorder = "rgba(96, 165, 250, 0.3)";
+      } else if (catKey === 'health') {
+        catLabel = "Nutrisi";
+        catColor = "#22C55E";
+        catBg = "rgba(34, 197, 94, 0.14)";
+        catBorder = "rgba(34, 197, 94, 0.3)";
+      } else if (catKey === 'life') {
+        catLabel = "Gaya Hidup";
+        catColor = "#C084FC";
+        catBg = "rgba(192, 132, 252, 0.14)";
+        catBorder = "rgba(192, 132, 252, 0.3)";
+      }
+
       return `
-        <div class="active-reminder-row">
-          <div class="reminder-row-left">
-            <span class="reminder-row-icon">${iconSvg}</span>
-            <div class="reminder-row-text">
-              <span class="reminder-row-title">${h.title}</span>
-              <span class="reminder-row-sub">${schedLabel} • Jam ${cleanTime}</span>
+        <div class="reminder-bento-item ${h.completed ? 'is-completed' : ''}">
+          <div class="reminder-bento-top">
+            <div class="reminder-icon-box" style="background:${catBg}; color:${catColor}; border-color:${catBorder};">
+              ${iconSvg}
+            </div>
+            <div class="reminder-main-col">
+              <div class="reminder-title-line">
+                <h4 class="reminder-habit-name">${h.title}</h4>
+                <span class="reminder-time-pill" title="Jam Alarm">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  <span>Jam ${cleanTime}</span>
+                </span>
+              </div>
+              <div class="reminder-tags-row">
+                <span class="reminder-tag-item" style="color:${catColor}; font-weight:800;">${catLabel}</span>
+                <span class="reminder-tag-item">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+                  <span>${schedLabel}</span>
+                </span>
+                <span class="reminder-tag-item tag-status ${h.completed ? 'done' : 'active'}">
+                  ${h.completed ? '✓ Selesai Hari Ini' : '○ Menunggu Jam Alarm'}
+                </span>
+              </div>
             </div>
           </div>
-          <button type="button" class="btn-test-single-reminder" onclick="App.triggerNotificationAlert(App.habits.find(item => item.id === '${h.id}'))" title="Tes Kartu Ini">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            <span>Tes</span>
-          </button>
+          <div class="reminder-bento-actions">
+            <button type="button" class="btn-reminder-test-alarm" onclick="App.triggerNotificationAlert(App.habits.find(item => item.id === '${h.id}'))" title="Uji Suara & Getar Alarm Kartu Ini">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              <span>Tes Alarm</span>
+            </button>
+            <button type="button" class="btn-reminder-edit-time" onclick="App.openEditModal('${h.id}'); App.closeModal('modal-notif-center');" title="Ubah Jam Alarm Kartu Ini">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              <span>Ubah Jam</span>
+            </button>
+          </div>
         </div>
       `;
     }).join("");

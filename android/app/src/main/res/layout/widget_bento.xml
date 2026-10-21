@@ -2,71 +2,75 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:background="@drawable/bg_widget_bento"
+    android:gravity="center_vertical"
     android:orientation="vertical"
-    android:padding="14dp">
+    android:padding="12dp">
 
-    <!-- Header: App Title & Streak -->
-    <LinearLayout
+    <!-- Header: App Title & Streak Badge (Using RelativeLayout: 100% RemoteViews Compatible, Zero <View> tags) -->
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:layout_height="wrap_content">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
             android:text="Minimal Todo"
             android:textColor="#FFFFFF"
             android:textSize="13sp"
             android:textStyle="bold" />
 
-        <View
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_weight="1" />
-
         <TextView
             android:id="@+id/widget_streak"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
             android:background="@drawable/bg_widget_streak"
-            android:paddingStart="8dp"
+            android:paddingLeft="8dp"
             android:paddingTop="3dp"
-            android:paddingEnd="8dp"
+            android:paddingRight="8dp"
             android:paddingBottom="3dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
             android:text="0 Hari Streak"
             android:textColor="#FC5200"
-            android:textSize="10.5sp"
+            android:textSize="11sp"
             android:textStyle="bold" />
-    </LinearLayout>
+    </RelativeLayout>
 
     <!-- Progress Rate Row -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="8dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
         <ProgressBar
             android:id="@+id/widget_progress_bar"
-            style="?android:attr/progressBarStyleHorizontal"
+            style="@android:style/Widget.ProgressBar.Horizontal"
             android:layout_width="0dp"
             android:layout_height="8dp"
             android:layout_weight="1"
             android:max="100"
-            android:progress="0" />
+            android:progress="0"
+            android:progressDrawable="@drawable/progress_widget_bar" />
 
         <TextView
             android:id="@+id/widget_progress_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginLeft="8dp"
             android:text="0% Disiplin"
             android:textColor="#FDE047"
-            android:textSize="11.5sp"
+            android:textSize="12sp"
             android:textStyle="bold" />
     </LinearLayout>
 
@@ -74,12 +78,12 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="8dp"
         android:baselineAligned="false"
         android:orientation="horizontal"
         android:weightSum="3">
 
-        <!-- Stat 1: Total -->
+        <!-- Stat 1: Total Target -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -87,7 +91,7 @@
             android:background="@drawable/bg_widget_stat_box"
             android:gravity="center"
             android:orientation="vertical"
-            android:padding="8dp">
+            android:padding="6dp">
 
             <TextView
                 android:id="@+id/widget_stat_total"
@@ -104,7 +108,7 @@
                 android:layout_marginTop="1dp"
                 android:text="Target"
                 android:textColor="#9CA3AF"
-                android:textSize="9.5sp" />
+                android:textSize="10sp" />
         </LinearLayout>
 
         <!-- Stat 2: Selesai -->
@@ -112,11 +116,12 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="6dp"
+            android:layout_marginLeft="6dp"
             android:layout_weight="1"
             android:background="@drawable/bg_widget_stat_box"
             android:gravity="center"
             android:orientation="vertical"
-            android:padding="8dp">
+            android:padding="6dp">
 
             <TextView
                 android:id="@+id/widget_stat_completed"
@@ -133,7 +138,7 @@
                 android:layout_marginTop="1dp"
                 android:text="Selesai"
                 android:textColor="#9CA3AF"
-                android:textSize="9.5sp" />
+                android:textSize="10sp" />
         </LinearLayout>
 
         <!-- Stat 3: Sisa -->
@@ -141,11 +146,12 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="6dp"
+            android:layout_marginLeft="6dp"
             android:layout_weight="1"
             android:background="@drawable/bg_widget_stat_box"
             android:gravity="center"
             android:orientation="vertical"
-            android:padding="8dp">
+            android:padding="6dp">
 
             <TextView
                 android:id="@+id/widget_stat_remaining"
@@ -162,7 +168,7 @@
                 android:layout_marginTop="1dp"
                 android:text="Sisa"
                 android:textColor="#9CA3AF"
-                android:textSize="9.5sp" />
+                android:textSize="10sp" />
         </LinearLayout>
 
     </LinearLayout>

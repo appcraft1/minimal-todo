@@ -6,7 +6,7 @@ set "ROOT_DIR=%~dp0"
 cd /d "%ROOT_DIR%"
 
 echo ==============================================================================
-echo       MINIMAL TODO - SINKRONISASI KE GITHUB (v1.0.9)
+echo       MINIMAL TODO - SINKRONISASI KE GITHUB (v1.1.0)
 echo       Target Repo : https://github.com/appcraft1/minimal-todo.git
 echo ==============================================================================
 echo.
@@ -16,7 +16,7 @@ git add -A
 
 echo.
 echo [2/3] Membuat commit pembaruan v1.0.9...
-git commit -m "Update v1.0.9: Menu 4 profil hero fixed, segmented filter switcher, kudos visual fix, skor konsistensi bento & ikon SVG premium, bypass alarm notif + tombol tutup, bento widget native & pinned notification"
+git commit -m "Update v1.1.0: Redesain Daftar Pengingat Kartu (Active Reminders Cabinet) di Pusat Notifikasi dengan Bento Cards, tag status, pill jam alarm, dan aksi tes instan"
 
 echo.
 echo [3/3] Mengunggah (push) ke GitHub branch main...

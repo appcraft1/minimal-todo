@@ -5450,6 +5450,11 @@ body {
 /* ==========================================================
    25. MODAL: NOTIFICATION CENTER & TEST HUB
    ========================================================== */
+#modal-notif-center .modal-sheet-panel {
+  max-height: 88vh;
+  overflow-y: auto;
+}
+
 .notif-hub-card {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -5504,4 +5509,299 @@ body {
   transform: scale(0.96);
   background: #FDE047;
   color: #121316;
+}
+
+/* ==========================================================
+   26. REDESIGNED ACTIVE REMINDERS CABINET (DAFTAR PENGINGAT)
+   ========================================================== */
+.notif-reminders-cabinet {
+  background: #14161E;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.notif-reminders-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  gap: 10px;
+}
+
+.notif-reminders-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.notif-reminders-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: -0.2px;
+}
+
+.notif-reminders-sub {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9CA3AF;
+}
+
+.notif-count-badge {
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  color: #FDE047;
+  background: rgba(253, 224, 71, 0.14);
+  border: 1px solid rgba(253, 224, 71, 0.3);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+.active-reminders-list-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reminder-bento-item {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.reminder-bento-item:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  transform: translateY(-1px);
+}
+
+.reminder-bento-item.is-completed {
+  border-color: rgba(34, 197, 94, 0.25);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%);
+}
+
+.reminder-bento-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.reminder-icon-box {
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid;
+  transition: transform 0.2s ease;
+}
+
+.reminder-icon-box svg {
+  width: 22px;
+  height: 22px;
+}
+
+.reminder-main-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.reminder-title-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.reminder-habit-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.2px;
+}
+
+.reminder-time-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  color: #FC5200;
+  background: rgba(252, 82, 0, 0.14);
+  border: 1px solid rgba(252, 82, 0, 0.35);
+  flex-shrink: 0;
+  letter-spacing: -0.2px;
+}
+
+.reminder-tags-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.reminder-tag-item {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #9CA3AF;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.reminder-tag-item.tag-status.done {
+  color: #34D399;
+  background: rgba(52, 211, 153, 0.12);
+  border-color: rgba(52, 211, 153, 0.25);
+}
+
+.reminder-tag-item.tag-status.active {
+  color: #FDE047;
+  background: rgba(253, 224, 71, 0.1);
+  border-color: rgba(253, 224, 71, 0.2);
+}
+
+.reminder-bento-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.btn-reminder-test-alarm {
+  background: linear-gradient(135deg, rgba(252, 82, 0, 0.18), rgba(252, 82, 0, 0.08));
+  border: 1px solid rgba(252, 82, 0, 0.35);
+  color: #FC5200;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-reminder-test-alarm:hover {
+  background: #FC5200;
+  color: #FFFFFF;
+}
+
+.btn-reminder-test-alarm:active {
+  transform: scale(0.94);
+}
+
+.btn-reminder-edit-time {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #D1D5DB;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-reminder-edit-time:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-reminder-edit-time:active {
+  transform: scale(0.94);
+}
+
+/* Empty State */
+.reminder-empty-state {
+  text-align: center;
+  padding: 26px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.reminder-empty-icon-wrap {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  background: rgba(253, 224, 71, 0.1);
+  border: 1px solid rgba(253, 224, 71, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.reminder-empty-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin: 0;
+}
+
+.reminder-empty-desc {
+  font-size: 11.5px;
+  color: #9CA3AF;
+  line-height: 1.5;
+  margin: 0;
+  max-width: 290px;
+}
+
+.btn-reminder-add-target {
+  margin-top: 6px;
+  background: #FDE047;
+  color: #121316;
+  font-size: 11.5px;
+  font-weight: 800;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.btn-reminder-add-target:active {
+  transform: scale(0.95);
 }
