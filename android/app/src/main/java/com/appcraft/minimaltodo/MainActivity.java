@@ -17,6 +17,8 @@ import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import androidx.annotation.Nullable;
@@ -64,6 +66,16 @@ public class MainActivity extends AppCompatActivity {
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
                 if (CLOUD_WEB_URL != null && !CLOUD_WEB_URL.trim().isEmpty() && failingUrl != null && !failingUrl.startsWith("file:///")) {
                     view.loadUrl("file:///android_asset/index.html");
+                }
+            }
+
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                if (request != null && request.isForMainFrame()) {
+                    String url = request.getUrl() != null ? request.getUrl().toString() : "";
+                    if (CLOUD_WEB_URL != null && !CLOUD_WEB_URL.trim().isEmpty() && !url.startsWith("file:///")) {
+                        view.loadUrl("file:///android_asset/index.html");
+                    }
                 }
             }
         });
