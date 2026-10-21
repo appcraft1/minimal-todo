@@ -47,6 +47,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Hentikan suara alarm jika aplikasi dibuka
+        AlarmSoundController.stopAlarm(this);
         createNotificationChannels();
 
         webView = new WebView(this);
@@ -214,6 +216,9 @@ public class MainActivity extends AppCompatActivity {
                     alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
                 }
 
+                // Mulai pemutaran suara & getaran alarm berulang (loop terus sampai tombol Tutup ditekan)
+                AlarmSoundController.startAlarm(context);
+
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(context, ALARM_CHANNEL_ID)
                     .setSmallIcon(android.R.drawable.ic_dialog_info)
                     .setContentTitle(title)
@@ -221,18 +226,21 @@ public class MainActivity extends AppCompatActivity {
                     .setStyle(new NotificationCompat.BigTextStyle().bigText(message))
                     .setCategory(NotificationCompat.CATEGORY_ALARM)
                     .setPriority(NotificationCompat.PRIORITY_MAX)
-                    .setSound(alarmSound, AudioManager.STREAM_ALARM)
-                    .setVibrate(new long[]{0, 350, 180, 350})
                     .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                    .setAutoCancel(true)
+                    .setOngoing(true) // Menetap di layar sampai pengguna menekan Tutup
+                    .setAutoCancel(false)
                     .setContentIntent(pendingOpenIntent)
-                    // Tombol 1-Tap "Tutup" agar praktis dimatikan tanpa ribet
-                    .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Tutup", pendingDismissIntent)
-                    .addAction(android.R.drawable.ic_menu_view, "Buka", pendingOpenIntent);
+                    .setDeleteIntent(pendingDismissIntent)
+                    // Tombol 1-Tap "TUTUP ALARM" untuk menghentikan suara & getaran seketika
+                    .addAction(android.R.drawable.ic_menu_close_clear_cancel, "TUTUP ALARM", pendingDismissIntent)
+                    .addAction(android.R.drawable.ic_menu_view, "Buka Target", pendingOpenIntent);
+
+                android.app.Notification notif = builder.build();
+                notif.flags |= android.app.Notification.FLAG_INSISTENT; // Standar Android alarm loop
 
                 NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
-                    notificationManager.notify(notifId, builder.build());
+                    notificationManager.notify(notifId, notif);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -240,12 +248,26 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @JavascriptInterface
-        public void updateBentoWidget(String streakText, int completedCount, int totalCount) {
+        public void stopAlarm() {
             try {
-                BentoWidgetProvider.updateWidgetData(context, streakText, completedCount, totalCount);
+                AlarmSoundController.stopAlarm(context);
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+
+        @JavascriptInterface
+        public void updateBentoWidget(String streakText, int completedCount, int totalCount, String habitsJson) {
+            try {
+                BentoWidgetProvider.updateWidgetData(context, streakText, completedCount, totalCount, habitsJson);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        @JavascriptInterface
+        public void updateBentoWidget(String streakText, int completedCount, int totalCount) {
+            updateBentoWidget(streakText, completedCount, totalCount, "[]");
         }
 
         @JavascriptInterface
@@ -311,6 +333,13 @@ public class MainActivity extends AppCompatActivity {
                 filePathCallback = null;
             }
         }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        AlarmSoundController.stopAlarm(this);
     }
 
     @Override

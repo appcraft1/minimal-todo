@@ -8,7 +8,7 @@
     android:orientation="vertical"
     android:padding="12dp">
 
-    <!-- Header: App Title & Streak Badge (Using RelativeLayout: 100% RemoteViews Compatible, Zero <View> tags) -->
+    <!-- Header: App Title & Streak Badge (RelativeLayout: 100% RemoteViews Compatible) -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -48,7 +48,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="6dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
@@ -56,7 +56,7 @@
             android:id="@+id/widget_progress_bar"
             style="@android:style/Widget.ProgressBar.Horizontal"
             android:layout_width="0dp"
-            android:layout_height="8dp"
+            android:layout_height="6dp"
             android:layout_weight="1"
             android:max="100"
             android:progress="0"
@@ -68,109 +68,45 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginLeft="8dp"
-            android:text="0% Disiplin"
+            android:text="0/0 Selesai (0%)"
             android:textColor="#FDE047"
-            android:textSize="12sp"
+            android:textSize="11sp"
             android:textStyle="bold" />
     </LinearLayout>
 
-    <!-- Bento 3-Tile Stats -->
+    <!-- Dynamic Bento Habit Cards Container (Populated with actual cards from Home) -->
     <LinearLayout
+        android:id="@+id/widget_habits_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:orientation="vertical" />
+
+    <!-- Empty State Message -->
+    <TextView
+        android:id="@+id/widget_empty_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:baselineAligned="false"
-        android:orientation="horizontal"
-        android:weightSum="3">
+        android:background="@drawable/bg_widget_item"
+        android:gravity="center"
+        android:padding="10dp"
+        android:text="Belum ada target hari ini. Ketuk untuk buat kartu baru!"
+        android:textColor="#9CA3AF"
+        android:textSize="11sp"
+        android:visibility="gone" />
 
-        <!-- Stat 1: Total Target -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@drawable/bg_widget_stat_box"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:padding="6dp">
-
-            <TextView
-                android:id="@+id/widget_stat_total"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="0"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="1dp"
-                android:text="Target"
-                android:textColor="#9CA3AF"
-                android:textSize="10sp" />
-        </LinearLayout>
-
-        <!-- Stat 2: Selesai -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
-            android:layout_marginLeft="6dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_widget_stat_box"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:padding="6dp">
-
-            <TextView
-                android:id="@+id/widget_stat_completed"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="0"
-                android:textColor="#22C55E"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="1dp"
-                android:text="Selesai"
-                android:textColor="#9CA3AF"
-                android:textSize="10sp" />
-        </LinearLayout>
-
-        <!-- Stat 3: Sisa -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
-            android:layout_marginLeft="6dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_widget_stat_box"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:padding="6dp">
-
-            <TextView
-                android:id="@+id/widget_stat_remaining"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="0"
-                android:textColor="#FDE047"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="1dp"
-                android:text="Sisa"
-                android:textColor="#9CA3AF"
-                android:textSize="10sp" />
-        </LinearLayout>
-
-    </LinearLayout>
+    <!-- More habits footer indicator -->
+    <TextView
+        android:id="@+id/widget_footer_more"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:gravity="center"
+        android:text="+ 0 target lainnya • Buka Beranda"
+        android:textColor="#FDE047"
+        android:textSize="10.5sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
 
 </LinearLayout>

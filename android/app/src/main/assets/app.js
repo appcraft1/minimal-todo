@@ -1878,9 +1878,34 @@ const App = {
       const stats = typeof this.calculateRealStats === "function" ? this.calculateRealStats() : { streakCount: 0 };
       const streakText = `${stats.streakCount || 0} Hari Streak`;
 
-      // 1. Update Android Home Screen Bento Widget
+      // 1. Update Android Home Screen Bento Widget with actual list of Bento cards
       if (typeof window.AndroidNativeNotification.updateBentoWidget === "function") {
-        window.AndroidNativeNotification.updateBentoWidget(streakText, completed, total);
+        const habitsForWidget = todayHabits.map(h => {
+          let subText = "Checklist";
+          if (h.cardType === "progressive") {
+            subText = `Progres: ${h.currentProgress || 0}/${h.targetGoal} ${h.unit || ''}`.trim();
+          } else if (h.cardType === "focus") {
+            subText = `Fokus: ${h.targetGoal || 25} Menit`;
+          } else if (h.reminderTime) {
+            subText = `Alarm: Jam ${this.cleanTimeStr(h.reminderTime)}`;
+          } else {
+            subText = "Target Harian";
+          }
+          return {
+            id: h.id,
+            title: h.title,
+            sub: subText,
+            completed: Boolean(h.completed),
+            color: h.color || "#FDE047"
+          };
+        });
+
+        window.AndroidNativeNotification.updateBentoWidget(
+          streakText,
+          completed,
+          total,
+          JSON.stringify(habitsForWidget)
+        );
       }
 
       // 2. Update Ongoing Pinned Bento Notification
@@ -4115,25 +4140,129 @@ const App = {
     ctx.save();
     ctx.strokeStyle = color;
     ctx.fillStyle = color;
-    ctx.lineWidth = Math.max(1.5, size * 0.08);
+    ctx.lineWidth = Math.max(1.8, size * 0.08);
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
 
     // Cup
     ctx.beginPath();
-    ctx.moveTo(x - size * 0.3, y - size * 0.4);
-    ctx.lineTo(x + size * 0.3, y - size * 0.4);
-    ctx.lineTo(x + size * 0.25, y);
-    ctx.bezierCurveTo(x + size * 0.2, y + size * 0.2, x - size * 0.2, y + size * 0.2, x - size * 0.25, y);
+    ctx.moveTo(x - size * 0.32, y - size * 0.4);
+    ctx.lineTo(x + size * 0.32, y - size * 0.4);
+    ctx.lineTo(x + size * 0.26, y);
+    ctx.bezierCurveTo(x + size * 0.22, y + size * 0.22, x - size * 0.22, y + size * 0.22, x - size * 0.26, y);
     ctx.closePath();
+    ctx.stroke();
+
+    // Handles
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.28, y - size * 0.3);
+    ctx.bezierCurveTo(x - size * 0.46, y - size * 0.3, x - size * 0.46, y - size * 0.05, x - size * 0.24, y);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(x + size * 0.28, y - size * 0.3);
+    ctx.bezierCurveTo(x + size * 0.46, y - size * 0.3, x + size * 0.46, y - size * 0.05, x + size * 0.24, y);
     ctx.stroke();
 
     // Stem and Base
     ctx.beginPath();
-    ctx.moveTo(x, y + size * 0.2);
-    ctx.lineTo(x, y + size * 0.35);
-    ctx.moveTo(x - size * 0.25, y + size * 0.35);
-    ctx.lineTo(x + size * 0.25, y + size * 0.35);
+    ctx.moveTo(x, y + size * 0.22);
+    ctx.lineTo(x, y + size * 0.36);
+    ctx.moveTo(x - size * 0.26, y + size * 0.36);
+    ctx.lineTo(x + size * 0.26, y + size * 0.36);
+    ctx.stroke();
+    ctx.restore();
+  },
+
+  // Helper menggambar petir atletik murni tanpa emoji pada Canvas
+  drawCanvasLightning(ctx, x, y, size, color) {
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x + size * 0.08, y - size * 0.48);
+    ctx.lineTo(x - size * 0.38, y + size * 0.04);
+    ctx.lineTo(x - size * 0.02, y + size * 0.04);
+    ctx.lineTo(x - size * 0.16, y + size * 0.48);
+    ctx.lineTo(x + size * 0.38, y - size * 0.04);
+    ctx.lineTo(x + size * 0.02, y - size * 0.04);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  },
+
+  // Helper menggambar checkmark / centang presisi pada Canvas
+  drawCanvasCheck(ctx, x, y, size, color, withCircle = false) {
+    ctx.save();
+    if (withCircle) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, size * 0.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#080B10";
+      ctx.lineWidth = Math.max(2, size * 0.12);
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.beginPath();
+      ctx.moveTo(x - size * 0.22, y);
+      ctx.lineTo(x - size * 0.06, y + size * 0.18);
+      ctx.lineTo(x + size * 0.24, y - size * 0.16);
+      ctx.stroke();
+    } else {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = Math.max(2, size * 0.14);
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.beginPath();
+      ctx.moveTo(x - size * 0.32, y);
+      ctx.lineTo(x - size * 0.08, y + size * 0.26);
+      ctx.lineTo(x + size * 0.34, y - size * 0.26);
+      ctx.stroke();
+    }
+    ctx.restore();
+  },
+
+  // Helper menggambar bintang 4-sudut (sparkle) pada Canvas
+  drawCanvasSparkle(ctx, x, y, size, color) {
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x, y - size * 0.5);
+    ctx.quadraticCurveTo(x, y, x + size * 0.5, y);
+    ctx.quadraticCurveTo(x, y, x, y + size * 0.5);
+    ctx.quadraticCurveTo(x, y, x - size * 0.5, y);
+    ctx.quadraticCurveTo(x, y, x, y - size * 0.5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  },
+
+  // Helper menggambar tanda kutip estetis pada Canvas
+  drawCanvasQuoteMark(ctx, x, y, size, color) {
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.font = `bold ${Math.round(size)}px 'Georgia', serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("“", x, y);
+    ctx.restore();
+  },
+
+  // Helper lencana verifikasi atlet pada Canvas
+  drawCanvasVerifiedBadge(ctx, x, y, size, color = "#38BDF8") {
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, size * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = "#080B10";
+    ctx.lineWidth = Math.max(1.8, size * 0.14);
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.2, y);
+    ctx.lineTo(x - size * 0.05, y + size * 0.16);
+    ctx.lineTo(x + size * 0.2, y - size * 0.14);
     ctx.stroke();
     ctx.restore();
   },
@@ -4172,40 +4301,59 @@ const App = {
       ? (athleteName.trim().split(" ")[0][0] + athleteName.trim().split(" ")[1][0]).toUpperCase()
       : athleteName.substring(0, 2).toUpperCase();
 
-    // Theme Tokens
+    // Theme Tokens & Palettes
     let accentColor = "#FC5200";
     let secondaryAccent = "#FDE047";
+    let glassFill = "rgba(10, 13, 20, 0.78)";
+    let glassBorder = "rgba(255, 255, 255, 0.16)";
+    let ambientGlow = "rgba(252, 82, 0, 0.12)";
     let bgGrad = ctx.createLinearGradient(0, 0, width, height);
 
     if (this.currentIgTheme === 'strava') {
-      bgGrad.addColorStop(0, "#090B0E");
-      bgGrad.addColorStop(0.5, "#101319");
-      bgGrad.addColorStop(1, "#171A22");
+      bgGrad.addColorStop(0, "#080A0E");
+      bgGrad.addColorStop(0.5, "#0F1218");
+      bgGrad.addColorStop(1, "#161922");
       accentColor = "#FC5200";
       secondaryAccent = "#FDE047";
+      glassFill = "rgba(10, 13, 20, 0.82)";
+      glassBorder = "rgba(255, 255, 255, 0.16)";
+      ambientGlow = "rgba(252, 82, 0, 0.14)";
     } else if (this.currentIgTheme === 'lemon') {
-      bgGrad.addColorStop(0, "#08090C");
-      bgGrad.addColorStop(0.5, "#0F1116");
-      bgGrad.addColorStop(1, "#161920");
+      bgGrad.addColorStop(0, "#06080B");
+      bgGrad.addColorStop(0.5, "#0D0F15");
+      bgGrad.addColorStop(1, "#14171E");
       accentColor = "#FDE047";
       secondaryAccent = "#FC5200";
+      glassFill = "rgba(8, 10, 15, 0.82)";
+      glassBorder = "rgba(253, 224, 71, 0.24)";
+      ambientGlow = "rgba(253, 224, 71, 0.12)";
     } else if (this.currentIgTheme === 'dark') {
-      bgGrad.addColorStop(0, "#020304");
-      bgGrad.addColorStop(1, "#0A0B0E");
+      bgGrad.addColorStop(0, "#030406");
+      bgGrad.addColorStop(0.5, "#08090C");
+      bgGrad.addColorStop(1, "#0E1015");
       accentColor = "#FFFFFF";
       secondaryAccent = "#9CA3AF";
+      glassFill = "rgba(12, 14, 18, 0.85)";
+      glassBorder = "rgba(255, 255, 255, 0.15)";
+      ambientGlow = "rgba(255, 255, 255, 0.06)";
     } else if (this.currentIgTheme === 'emerald') {
-      bgGrad.addColorStop(0, "#021A11");
-      bgGrad.addColorStop(1, "#052E1E");
-      accentColor = "#34D399";
+      bgGrad.addColorStop(0, "#03120C");
+      bgGrad.addColorStop(0.5, "#072016");
+      bgGrad.addColorStop(1, "#0B2B1E");
+      accentColor = "#10B981";
       secondaryAccent = "#FDE047";
+      glassFill = "rgba(6, 18, 14, 0.84)";
+      glassBorder = "rgba(16, 185, 129, 0.28)";
+      ambientGlow = "rgba(16, 185, 129, 0.14)";
     }
 
     const drawContent = (imgObj) => {
-      // MODE 1: OVERLAY (FULL PHOTO IS DOMINANT, COMPONENTS DECORATE MARGINS WITHOUT BLOCKING)
+      // =========================================================================
+      // OPSI 1: FULL FOTO OVERLAY ELEGAN (STRAVA & WHOOP PRO HUD TELEMETRY)
+      // =========================================================================
       if (this.currentIgMode === 'overlay') {
         if (imgObj) {
-          // Photo fills the canvas with object-fit: cover
+          // Photo fills the canvas seamlessly
           const imgRatio = imgObj.width / imgObj.height;
           const boxRatio = width / height;
           let sx, sy, sw, sh;
@@ -4222,193 +4370,325 @@ const App = {
           }
           ctx.drawImage(imgObj, sx, sy, sw, sh, 0, 0, width, height);
 
-          // Top Subtle Vignette (protects header badges, leaves 70% center clear)
-          const topVignette = ctx.createLinearGradient(0, 0, 0, 260);
-          topVignette.addColorStop(0, "rgba(5, 7, 10, 0.75)");
-          topVignette.addColorStop(0.65, "rgba(5, 7, 10, 0.35)");
+          // Top Atmospheric Vignette (smooth falloff, keeps center 70% pristine)
+          const topVignette = ctx.createLinearGradient(0, 0, 0, isStory ? 340 : 260);
+          topVignette.addColorStop(0, "rgba(5, 7, 10, 0.82)");
+          topVignette.addColorStop(0.45, "rgba(5, 7, 10, 0.48)");
+          topVignette.addColorStop(0.8, "rgba(5, 7, 10, 0.16)");
           topVignette.addColorStop(1, "rgba(5, 7, 10, 0.0)");
           ctx.fillStyle = topVignette;
-          ctx.fillRect(0, 0, width, 260);
+          ctx.fillRect(0, 0, width, isStory ? 340 : 260);
 
-          // Bottom Subtle Vignette (protects quotes & telemetry badges)
-          const botVignette = ctx.createLinearGradient(0, height - 420, 0, height);
+          // Bottom Atmospheric Vignette (protects HUD dock & quote cards)
+          const botVignetteH = isStory ? 540 : 440;
+          const botVignette = ctx.createLinearGradient(0, height - botVignetteH, 0, height);
           botVignette.addColorStop(0, "rgba(5, 7, 10, 0.0)");
-          botVignette.addColorStop(0.4, "rgba(5, 7, 10, 0.45)");
-          botVignette.addColorStop(1, "rgba(5, 7, 10, 0.88)");
+          botVignette.addColorStop(0.28, "rgba(5, 7, 10, 0.35)");
+          botVignette.addColorStop(0.65, "rgba(5, 7, 10, 0.76)");
+          botVignette.addColorStop(1, "rgba(5, 7, 10, 0.94)");
           ctx.fillStyle = botVignette;
-          ctx.fillRect(0, height - 420, width, 420);
+          ctx.fillRect(0, height - botVignetteH, width, botVignetteH);
         } else {
-          // No photo provided: draw aesthetic dark carbon canvas
+          // No photo provided: Aesthetic dark studio mesh canvas
           ctx.fillStyle = bgGrad;
           ctx.fillRect(0, 0, width, height);
 
-          // Mesh grid lines
-          ctx.strokeStyle = "rgba(255, 255, 255, 0.04)";
+          // Ambient Radial Glow in Center
+          const glowGrad = ctx.createRadialGradient(width / 2, height / 2, 80, width / 2, height / 2, 540);
+          glowGrad.addColorStop(0, ambientGlow);
+          glowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+          ctx.fillStyle = glowGrad;
+          ctx.fillRect(0, 0, width, height);
+
+          // Modern Precision Grid lines
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.035)";
           ctx.lineWidth = 1;
-          for (let y = 100; y < height; y += 120) {
+          for (let y = 80; y < height; y += 120) {
             ctx.beginPath();
             ctx.moveTo(0, y);
             ctx.lineTo(width, y);
             ctx.stroke();
           }
 
-          // Center prompt
+          // Center prompt capsule
           ctx.save();
-          ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
-          this.roundRect(ctx, width / 2 - 220, height / 2 - 50, 440, 100, 26);
+          const promptW = 540;
+          const promptH = 120;
+          this.roundRect(ctx, (width - promptW) / 2, (height - promptH) / 2, promptW, promptH, 28);
+          ctx.fillStyle = "rgba(15, 18, 26, 0.85)";
           ctx.fill();
-          ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.16)";
+          ctx.lineWidth = 1.4;
           ctx.stroke();
 
-          ctx.font = "bold 20px 'Outfit', sans-serif";
-          ctx.fillStyle = "#FDE047";
+          ctx.font = "bold 21px 'Outfit', sans-serif";
+          ctx.fillStyle = secondaryAccent;
           ctx.textAlign = "center";
-          ctx.fillText("PILIH FOTO ANDA DENGAN TOMBOL DI BAWAH", width / 2, height / 2 - 6);
-          ctx.font = "14px 'Plus Jakarta Sans', sans-serif";
+          ctx.fillText("PILIH FOTO ANDA MELALUI TOMBOL DI BAWAH", width / 2, height / 2 - 8);
+          ctx.font = "500 15px 'Plus Jakarta Sans', sans-serif";
           ctx.fillStyle = "#9CA3AF";
-          ctx.fillText("Foto akan ditampilkan penuh & dihias komponen elegan", width / 2, height / 2 + 22);
+          ctx.fillText("Foto akan tampil penuh dengan sentuhan HUD Strava & Nike", width / 2, height / 2 + 22);
           ctx.restore();
         }
 
-        // DECORATING COMPONENTS (Corners & Edges Only — Never Obstructing the Center)
         const padX = 48;
-        const topY = 64;
+        const topY = isStory ? 104 : 48;
 
-        // 1. Top-Left: Brand & Date Capsule
+        // 1. TOP ISLAND LEFT: Brand & Live Date Capsule
         ctx.save();
-        this.roundRect(ctx, padX, topY, 340, 56, 28);
-        ctx.fillStyle = "rgba(12, 15, 22, 0.68)";
+        const brandW = 390;
+        const brandH = 58;
+        this.roundRect(ctx, padX, topY, brandW, brandH, 29);
+        ctx.fillStyle = glassFill;
         ctx.fill();
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+        ctx.strokeStyle = glassBorder;
         ctx.lineWidth = 1.2;
         ctx.stroke();
 
-        // Runner dot
+        // Runner accent dot
         ctx.fillStyle = accentColor;
         ctx.beginPath();
-        ctx.arc(padX + 28, topY + 28, 9, 0, Math.PI * 2);
+        ctx.arc(padX + 28, topY + 29, 8, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.font = "bold 15px 'Outfit', sans-serif";
         ctx.fillStyle = "#FFFFFF";
         ctx.textAlign = "left";
-        ctx.fillText("MINIMAL TODO", padX + 48, topY + 34);
+        ctx.fillText("MINIMAL TODO", padX + 46, topY + 35);
 
-        ctx.font = "600 13px 'Outfit', sans-serif";
+        ctx.font = "700 13px 'Outfit', sans-serif";
         ctx.fillStyle = "#9CA3AF";
-        const shortDate = (entry.date || "HARI INI").toUpperCase();
-        ctx.fillText("• " + shortDate, padX + 172, topY + 34);
+        const shortDate = (entry.fullDateLabel || entry.date || "HARI INI").toUpperCase();
+        ctx.fillText("• " + shortDate, padX + 174, topY + 35);
         ctx.restore();
 
-        // 2. Top-Right: Trophy Pill (if enabled)
+        // 2. TOP ISLAND RIGHT: Trophy & Achievement Capsule (if enabled)
         if (showTrophy) {
           ctx.save();
-          const trophyText = `${stats.levelTitle} • ${stats.level}`;
-          ctx.font = "bold 15px 'Outfit', sans-serif";
+          const trophyText = `${stats.levelTitle.toUpperCase()} • ${stats.level}`;
+          ctx.font = "bold 14px 'Outfit', sans-serif";
           const tw = ctx.measureText(trophyText).width;
-          const pillW = tw + 60;
-          const pillX = width - padX - pillW;
+          const trophyW = tw + 70;
+          const trophyX = width - padX - trophyW;
 
-          this.roundRect(ctx, pillX, topY, pillW, 56, 28);
-          ctx.fillStyle = "rgba(12, 15, 22, 0.68)";
+          this.roundRect(ctx, trophyX, topY, trophyW, 58, 29);
+          ctx.fillStyle = glassFill;
           ctx.fill();
-          ctx.strokeStyle = "rgba(253, 224, 71, 0.35)";
+          ctx.strokeStyle = "rgba(253, 224, 71, 0.4)";
           ctx.lineWidth = 1.2;
           ctx.stroke();
 
-          this.drawCanvasTrophy(ctx, pillX + 24, topY + 28, 20, "#FDE047");
+          this.drawCanvasTrophy(ctx, trophyX + 26, topY + 29, 22, "#FDE047");
 
           ctx.fillStyle = "#FDE047";
           ctx.textAlign = "left";
-          ctx.fillText(trophyText, pillX + 44, topY + 34);
+          ctx.fillText(trophyText, trophyX + 48, topY + 35);
           ctx.restore();
         }
 
-        // 3. Bottom Quote Capsule (if enabled)
-        let bottomBaseY = height - 120;
+        // 3. MIDDLE-BOTTOM: Reflection Quote Card (if enabled)
+        let curBottomY = height - (isStory ? 280 : 210);
         if (showQuote && entry.reflectionText) {
-          const quoteBoxY = isStory ? height - 250 : height - 210;
-          bottomBaseY = quoteBoxY + 110;
-
-          ctx.save();
           const qW = width - padX * 2;
-          this.roundRect(ctx, padX, quoteBoxY, qW, 88, 24);
-          ctx.fillStyle = "rgba(12, 15, 22, 0.72)";
-          ctx.fill();
-          ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
-          ctx.lineWidth = 1.2;
-          ctx.stroke();
+          const qH = isStory ? 104 : 88;
+          const qY = curBottomY - qH - (isStory ? 20 : 16);
 
-          ctx.font = "italic bold 17px 'Outfit', sans-serif";
-          ctx.fillStyle = "#FFFFFF";
-          ctx.textAlign = "center";
-          this.wrapCanvasText(ctx, `"${entry.reflectionText}"`, width / 2, quoteBoxY + 34, qW - 48, 26, 2);
-          ctx.restore();
-        }
-
-        // 4. Bottom-Left: Activity & Streak Pill (if enabled)
-        if (showStats) {
           ctx.save();
-          const statsPillW = 380;
-          this.roundRect(ctx, padX, bottomBaseY, statsPillW, 56, 28);
-          ctx.fillStyle = "rgba(12, 15, 22, 0.75)";
-          ctx.fill();
-          ctx.strokeStyle = "rgba(252, 82, 0, 0.4)";
-          ctx.lineWidth = 1.2;
-          ctx.stroke();
-
-          this.drawCanvasFlame(ctx, padX + 26, bottomBaseY + 28, 20, "#FC5200");
-
-          ctx.font = "bold 15px 'Outfit', sans-serif";
-          ctx.fillStyle = "#FC5200";
-          ctx.textAlign = "left";
-          ctx.fillText(`${stats.streakCount} HARI STREAK`, padX + 46, bottomBaseY + 34);
-
-          ctx.fillStyle = secondaryAccent;
-          ctx.fillText(`• ${stats.disciplineRate}% DISIPLIN`, padX + 206, bottomBaseY + 34);
-          ctx.restore();
-        }
-
-        // 5. Bottom-Right: Brand Watermark (if enabled)
-        if (showBrand) {
-          ctx.save();
-          const brandText = `@${athleteName.toUpperCase()}`;
-          ctx.font = "bold 14px 'Outfit', sans-serif";
-          const bw = ctx.measureText(brandText).width;
-          const pillW = bw + 54;
-          const pillX = width - padX - pillW;
-
-          this.roundRect(ctx, pillX, bottomBaseY, pillW, 56, 28);
-          ctx.fillStyle = "rgba(12, 15, 22, 0.75)";
+          this.roundRect(ctx, padX, qY, qW, qH, 24);
+          ctx.fillStyle = "rgba(10, 13, 20, 0.76)";
           ctx.fill();
           ctx.strokeStyle = "rgba(255, 255, 255, 0.14)";
           ctx.lineWidth = 1.2;
           ctx.stroke();
 
-          ctx.fillStyle = accentColor;
+          // Quote Mark Icon
+          this.drawCanvasQuoteMark(ctx, padX + 38, qY + 44, 34, accentColor);
+
+          // Mood capsule on right
+          if (entry.moodLabel) {
+            ctx.save();
+            const moodText = entry.moodLabel.toUpperCase();
+            ctx.font = "bold 11px 'Outfit', sans-serif";
+            const mw = ctx.measureText(moodText).width;
+            const mpW = mw + 32;
+            const mpX = padX + qW - mpW - 20;
+            const mpY = qY + 14;
+            this.roundRect(ctx, mpX, mpY, mpW, 26, 13);
+            ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
+            ctx.fill();
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+            ctx.stroke();
+
+            ctx.fillStyle = secondaryAccent;
+            ctx.beginPath();
+            ctx.arc(mpX + 11, mpY + 13, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = "#E5E7EB";
+            ctx.textAlign = "left";
+            ctx.fillText(moodText, mpX + 20, mpY + 17);
+            ctx.restore();
+          }
+
+          // Quote text
+          ctx.font = "italic 600 16px 'Outfit', sans-serif";
+          ctx.fillStyle = "#FFFFFF";
+          ctx.textAlign = "left";
+          this.wrapCanvasText(ctx, `"${entry.reflectionText}"`, padX + 64, qY + (isStory ? 44 : 38), qW - 190, 26, 2);
+          ctx.restore();
+
+          curBottomY = qY;
+        }
+
+        // 4. BOTTOM: Unified Strava / Whoop HUD Telemetry Dock (if enabled)
+        const dockW = width - padX * 2;
+        const dockH = isStory ? 122 : 100;
+        const dockY = height - (isStory ? 200 : 160);
+
+        if (showStats) {
+          ctx.save();
+          this.roundRect(ctx, padX, dockY, dockW, dockH, 26);
+          ctx.fillStyle = glassFill;
+          ctx.fill();
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.18)";
+          ctx.lineWidth = 1.3;
+          ctx.stroke();
+
+          const colW = dockW / 3;
+
+          // Column 1: STREAK
+          const c1X = padX + colW * 0.5;
+          this.drawCanvasFlame(ctx, c1X - 60, dockY + dockH * 0.42, 26, "#FC5200");
+          ctx.font = "900 28px 'Outfit', sans-serif";
+          ctx.fillStyle = "#FFFFFF";
+          ctx.textAlign = "left";
+          ctx.fillText(`${stats.streakCount}`, c1X - 42, dockY + dockH * 0.48);
+          ctx.font = "bold 13px 'Outfit', sans-serif";
+          ctx.fillStyle = "#FC5200";
+          ctx.fillText("HARI", c1X + ctx.measureText(`${stats.streakCount}`).width - 38, dockY + dockH * 0.48);
+
+          ctx.font = "bold 11px 'Outfit', sans-serif";
+          ctx.fillStyle = "#9CA3AF";
+          ctx.textAlign = "center";
+          ctx.fillText("STREAK AKTIF", c1X, dockY + dockH * 0.78);
+
+          // Divider 1
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
+          ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.arc(pillX + 22, bottomBaseY + 28, 6, 0, Math.PI * 2);
+          ctx.moveTo(padX + colW, dockY + 18);
+          ctx.lineTo(padX + colW, dockY + dockH - 18);
+          ctx.stroke();
+
+          // Column 2: DISIPLIN RATE
+          const c2X = padX + colW * 1.5;
+          this.drawCanvasLightning(ctx, c2X - 56, dockY + dockH * 0.42, 24, secondaryAccent);
+          ctx.font = "900 28px 'Outfit', sans-serif";
+          ctx.fillStyle = "#FFFFFF";
+          ctx.textAlign = "left";
+          ctx.fillText(`${stats.disciplineRate}%`, c2X - 40, dockY + dockH * 0.48);
+
+          ctx.font = "bold 11px 'Outfit', sans-serif";
+          ctx.fillStyle = "#9CA3AF";
+          ctx.textAlign = "center";
+          ctx.fillText("KONSISTENSI", c2X, dockY + dockH * 0.78);
+
+          // Divider 2
+          ctx.beginPath();
+          ctx.moveTo(padX + colW * 2, dockY + 18);
+          ctx.lineTo(padX + colW * 2, dockY + dockH - 18);
+          ctx.stroke();
+
+          // Column 3: TARGET TUNTAS
+          const c3X = padX + colW * 2.5;
+          this.drawCanvasCheck(ctx, c3X - 58, dockY + dockH * 0.42, 24, "#22C55E", true);
+          ctx.font = "900 28px 'Outfit', sans-serif";
+          ctx.fillStyle = "#FFFFFF";
+          ctx.textAlign = "left";
+          ctx.fillText(`${stats.totalCompletedAllTime || stats.completedCount || 0}`, c3X - 40, dockY + dockH * 0.48);
+
+          ctx.font = "bold 11px 'Outfit', sans-serif";
+          ctx.fillStyle = "#9CA3AF";
+          ctx.textAlign = "center";
+          ctx.fillText("TARGET SELESAI", c3X, dockY + dockH * 0.78);
+
+          ctx.restore();
+        }
+
+        // 5. BOTTOM WATERMARK FOOTER (if enabled)
+        if (showBrand) {
+          const footerY = height - (isStory ? 48 : 28);
+          ctx.save();
+
+          // Avatar badge
+          ctx.fillStyle = "rgba(255, 255, 255, 0.12)";
+          ctx.beginPath();
+          ctx.arc(padX + 16, footerY - 5, 14, 0, Math.PI * 2);
           ctx.fill();
 
+          ctx.font = "bold 11px 'Outfit', sans-serif";
+          ctx.fillStyle = "#FFFFFF";
+          ctx.textAlign = "center";
+          ctx.fillText(athleteInitials, padX + 16, footerY - 1);
+
+          this.drawCanvasVerifiedBadge(ctx, padX + 38, footerY - 5, 14, "#38BDF8");
+
+          ctx.font = "bold 13px 'Outfit', sans-serif";
           ctx.fillStyle = "#E5E7EB";
           ctx.textAlign = "left";
-          ctx.fillText(brandText, pillX + 38, bottomBaseY + 34);
+          ctx.fillText(`@${athleteName.toUpperCase()}`, padX + 52, footerY);
+
+          ctx.font = "bold 12px 'Outfit', sans-serif";
+          ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+          ctx.textAlign = "right";
+          ctx.fillText("MINIMAL TODO • HABIT ENGINE", width - padX, footerY);
           ctx.restore();
         }
 
       } else {
-        // MODE 2: OUTSIDE (PHOTO AS DOMINANT HERO ~62%, COMPONENTS PLACED CLEANLY BELOW PHOTO)
+        // =========================================================================
+        // OPSI 2: FOTO + KOMPONEN LUAR (EDITORIAL BENTO MAGAZINE GALLERY)
+        // =========================================================================
         ctx.fillStyle = bgGrad;
         ctx.fillRect(0, 0, width, height);
 
-        const padX = 48;
-        const photoY = 48;
-        const photoW = width - padX * 2;
-        const photoH = isStory ? 1040 : 540;
+        // Ambient radial studio glow behind hero card
+        const ambientRad = ctx.createRadialGradient(width / 2, isStory ? 540 : 280, 60, width / 2, isStory ? 540 : 280, 560);
+        ambientRad.addColorStop(0, ambientGlow);
+        ambientRad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = ambientRad;
+        ctx.fillRect(0, 0, width, height);
 
-        // Draw Hero Photo Box
+        // Precision Architectural Outer Inset Border
         ctx.save();
-        this.roundRect(ctx, padX, photoY, photoW, photoH, 32);
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
+        ctx.lineWidth = 1;
+        this.roundRect(ctx, 24, 24, width - 48, height - 48, 20);
+        ctx.stroke();
+
+        // Corner tick marks
+        ctx.strokeStyle = accentColor;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        // Top-left
+        ctx.moveTo(24, 44); ctx.lineTo(24, 24); ctx.lineTo(44, 24);
+        // Top-right
+        ctx.moveTo(width - 44, 24); ctx.lineTo(width - 24, 24); ctx.lineTo(width - 24, 44);
+        // Bottom-left
+        ctx.moveTo(24, height - 44); ctx.lineTo(24, height - 24); ctx.lineTo(44, height - 24);
+        // Bottom-right
+        ctx.moveTo(width - 44, height - 24); ctx.lineTo(width - 24, height - 24); ctx.lineTo(width - 24, height - 44);
+        ctx.stroke();
+        ctx.restore();
+
+        const padX = 48;
+        const photoY = isStory ? 96 : 44;
+        const photoW = width - padX * 2;
+        const photoH = isStory ? 940 : 500;
+
+        // 1. HERO PHOTO FRAME
+        ctx.save();
+        this.roundRect(ctx, padX, photoY, photoW, photoH, 28);
         ctx.clip();
 
         if (imgObj) {
@@ -4428,141 +4708,267 @@ const App = {
           }
           ctx.drawImage(imgObj, sx, sy, sw, sh, padX, photoY, photoW, photoH);
         } else {
-          // Placeholder gradient
+          // Elegant dark photo placeholder
           const phGrad = ctx.createLinearGradient(padX, photoY, padX + photoW, photoY + photoH);
-          phGrad.addColorStop(0, "#12141D");
-          phGrad.addColorStop(1, "#1A1D29");
+          phGrad.addColorStop(0, "#0F1219");
+          phGrad.addColorStop(1, "#171B26");
           ctx.fillStyle = phGrad;
           ctx.fillRect(padX, photoY, photoW, photoH);
 
-          ctx.font = "bold 20px 'Outfit', sans-serif";
-          ctx.fillStyle = "#FDE047";
+          // Center badge prompt
+          ctx.save();
+          this.roundRect(ctx, width / 2 - 200, photoY + photoH / 2 - 34, 400, 68, 20);
+          ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
+          ctx.fill();
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
+          ctx.stroke();
+
+          ctx.font = "bold 18px 'Outfit', sans-serif";
+          ctx.fillStyle = secondaryAccent;
           ctx.textAlign = "center";
-          ctx.fillText("PILIH FOTO SOROTAN ANDA", width / 2, photoY + photoH / 2);
+          ctx.fillText("PILIH FOTO SOROTAN ANDA", width / 2, photoY + photoH / 2 + 6);
+          ctx.restore();
         }
         ctx.restore();
 
-        // Photo Border
+        // Photo Frame Border
         ctx.save();
-        this.roundRect(ctx, padX, photoY, photoW, photoH, 32);
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.18)";
-        ctx.lineWidth = 2.5;
+        this.roundRect(ctx, padX, photoY, photoW, photoH, 28);
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+        ctx.lineWidth = 2;
         ctx.stroke();
         ctx.restore();
 
-        // Date pill floating inside hero photo
+        // Floating Badges INSIDE Hero Photo:
+        // Top-Left: Date capsule
         ctx.save();
-        this.roundRect(ctx, padX + 24, photoY + 24, 260, 44, 22);
-        ctx.fillStyle = "rgba(10, 12, 18, 0.72)";
+        const dateText = (entry.fullDateLabel || entry.date || "MOMEN DISIPLIN").toUpperCase();
+        ctx.font = "bold 13px 'Outfit', sans-serif";
+        const dtw = ctx.measureText(dateText).width;
+        const dpW = dtw + 48;
+        this.roundRect(ctx, padX + 22, photoY + 22, dpW, 44, 22);
+        ctx.fillStyle = "rgba(8, 11, 16, 0.74)";
         ctx.fill();
         ctx.strokeStyle = "rgba(255, 255, 255, 0.16)";
         ctx.lineWidth = 1;
         ctx.stroke();
 
-        ctx.font = "bold 13px 'Outfit', sans-serif";
-        ctx.fillStyle = "#FDE047";
-        ctx.textAlign = "center";
-        ctx.fillText((entry.fullDateLabel || entry.date || "MOMEN DISIPLIN").toUpperCase(), padX + 154, photoY + 52);
+        ctx.fillStyle = accentColor;
+        ctx.beginPath();
+        ctx.arc(padX + 38, photoY + 44, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#FFFFFF";
+        ctx.textAlign = "left";
+        ctx.fillText(dateText, padX + 48, photoY + 49);
         ctx.restore();
 
-        // COMPONENTS PLACED OUTSIDE (BELOW PHOTO)
-        let curY = photoY + photoH + 28;
+        // Top-Right: Focus Status capsule
+        ctx.save();
+        const focusText = (entry.moodLabel || "FOKUS").toUpperCase();
+        ctx.font = "bold 12px 'Outfit', sans-serif";
+        const ftw = ctx.measureText(focusText).width;
+        const fpW = ftw + 40;
+        const fpX = padX + photoW - fpW - 22;
+        this.roundRect(ctx, fpX, photoY + 22, fpW, 44, 22);
+        ctx.fillStyle = "rgba(8, 11, 16, 0.74)";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.16)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
 
-        // 1. Trophy Banner (if enabled)
+        ctx.fillStyle = secondaryAccent;
+        ctx.beginPath();
+        ctx.arc(fpX + 18, photoY + 44, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#E5E7EB";
+        ctx.textAlign = "left";
+        ctx.fillText(focusText, fpX + 28, photoY + 48);
+        ctx.restore();
+
+        // Bottom-Right: Micro Watermark
+        ctx.save();
+        this.roundRect(ctx, padX + photoW - 146, photoY + photoH - 46, 126, 30, 15);
+        ctx.fillStyle = "rgba(8, 11, 16, 0.65)";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+        ctx.stroke();
+
+        ctx.font = "bold 11px 'Outfit', sans-serif";
+        ctx.fillStyle = "#9CA3AF";
+        ctx.textAlign = "center";
+        ctx.fillText("MINIMAL TODO", padX + photoW - 83, photoY + photoH - 26);
+        ctx.restore();
+
+        // =========================================================================
+        // OUTSIDE COMPONENTS SECTION (BELOW HERO PHOTO)
+        // =========================================================================
+        let curY = photoY + photoH + (isStory ? 28 : 16);
+
+        // 1. ACHIEVEMENT RIBBON BANNER (if enabled)
         if (showTrophy) {
+          const bannerH = isStory ? 64 : 52;
           ctx.save();
-          this.roundRect(ctx, padX, curY, photoW, 58, 20);
-          ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
+          this.roundRect(ctx, padX, curY, photoW, bannerH, 20);
+
+          const trophyGrad = ctx.createLinearGradient(padX, curY, padX + photoW, curY);
+          trophyGrad.addColorStop(0, "rgba(253, 224, 71, 0.09)");
+          trophyGrad.addColorStop(1, "rgba(255, 255, 255, 0.03)");
+          ctx.fillStyle = trophyGrad;
           ctx.fill();
-          ctx.strokeStyle = "rgba(253, 224, 71, 0.3)";
+          ctx.strokeStyle = "rgba(253, 224, 71, 0.35)";
           ctx.lineWidth = 1.2;
           ctx.stroke();
 
-          this.drawCanvasTrophy(ctx, padX + 28, curY + 29, 22, "#FDE047");
+          this.drawCanvasTrophy(ctx, padX + 28, curY + bannerH * 0.5, 22, "#FDE047");
 
-          ctx.font = "bold 16px 'Outfit', sans-serif";
+          ctx.font = "bold 15px 'Outfit', sans-serif";
           ctx.fillStyle = "#FFFFFF";
           ctx.textAlign = "left";
-          ctx.fillText(`PENCAPAIAN: ${stats.levelTitle}`, padX + 54, curY + 35);
+          ctx.fillText(`PENCAPAIAN: ${stats.levelTitle.toUpperCase()}`, padX + 54, curY + bannerH * 0.5 + 5);
 
-          ctx.font = "800 14px 'Outfit', sans-serif";
+          // Right rank badge
+          ctx.font = "900 13px 'Outfit', sans-serif";
           ctx.fillStyle = "#FDE047";
           ctx.textAlign = "right";
-          ctx.fillText(`PERINGKAT ${stats.level}`, padX + photoW - 24, curY + 35);
+          ctx.fillText(`PERINGKAT ${stats.level}`, padX + photoW - 24, curY + bannerH * 0.5 + 5);
           ctx.restore();
 
-          curY += 72;
+          curY += bannerH + (isStory ? 18 : 12);
         }
 
-        // 2. Telemetry Quad Cards (if enabled)
+        // 2. QUAD BENTO TELEMETRY CARDS (if enabled)
         if (showStats) {
           const colW = (photoW - 36) / 4;
-          const colH = isStory ? 104 : 84;
+          const colH = isStory ? 118 : 88;
           const statData = [
-            { label: "STREAK", val: `${stats.streakCount} HARI`, color: "#FC5200" },
-            { label: "DISIPLIN", val: `${stats.disciplineRate}%`, color: secondaryAccent },
-            { label: "TUNTAS", val: `${stats.totalCompletedAllTime}`, color: "#22C55E" },
-            { label: "STATUS", val: stats.level || "ATLET", color: "#A78BFA" }
+            {
+              label: "STREAK",
+              val: `${stats.streakCount}`,
+              unit: "HARI",
+              color: "#FC5200",
+              sub: "KONSISTENSI",
+              icon: (x, y) => this.drawCanvasFlame(ctx, x, y, 20, "#FC5200")
+            },
+            {
+              label: "DISIPLIN",
+              val: `${stats.disciplineRate}%`,
+              unit: "",
+              color: secondaryAccent,
+              sub: "TINGKAT SUKSES",
+              icon: (x, y) => this.drawCanvasLightning(ctx, x, y, 18, secondaryAccent)
+            },
+            {
+              label: "TUNTAS",
+              val: `${stats.totalCompletedAllTime || stats.completedCount || 0}`,
+              unit: "",
+              color: "#22C55E",
+              sub: "TARGET SELESAI",
+              icon: (x, y) => this.drawCanvasCheck(ctx, x, y, 18, "#22C55E", true)
+            },
+            {
+              label: "STATUS",
+              val: `${stats.level}`,
+              unit: "",
+              color: "#A78BFA",
+              sub: stats.levelTitle.split(" ")[0] || "ATLET",
+              icon: (x, y) => this.drawCanvasSparkle(ctx, x, y, 18, "#A78BFA")
+            }
           ];
 
           statData.forEach((st, idx) => {
             const bx = padX + idx * (colW + 12);
             ctx.save();
-            this.roundRect(ctx, bx, curY, colW, colH, 18);
+            this.roundRect(ctx, bx, curY, colW, colH, 20);
             ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
             ctx.fill();
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.09)";
             ctx.lineWidth = 1.2;
             ctx.stroke();
 
-            ctx.font = "800 12px 'Outfit', sans-serif";
+            // Icon + Label
+            st.icon(bx + 20, curY + 22);
+            ctx.font = "800 11px 'Outfit', sans-serif";
             ctx.fillStyle = "#9CA3AF";
             ctx.textAlign = "left";
-            ctx.fillText(st.label, bx + 16, curY + 30);
+            ctx.fillText(st.label, bx + 36, curY + 26);
 
-            ctx.font = "900 20px 'Outfit', sans-serif";
+            // Big Stat
+            ctx.font = "900 24px 'Outfit', sans-serif";
             ctx.fillStyle = st.color;
-            ctx.fillText(st.val, bx + 16, curY + (isStory ? 72 : 62));
+            ctx.fillText(st.val, bx + 18, curY + (isStory ? 68 : 58));
+
+            if (st.unit) {
+              ctx.font = "bold 11px 'Outfit', sans-serif";
+              const vw = ctx.measureText(st.val).width;
+              ctx.fillStyle = "#9CA3AF";
+              ctx.fillText(st.unit, bx + 22 + vw, curY + (isStory ? 68 : 58));
+            }
+
+            // Subtitle
+            ctx.font = "600 10px 'Outfit', sans-serif";
+            ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
+            ctx.fillText(st.sub, bx + 18, curY + (isStory ? 94 : 76));
             ctx.restore();
           });
 
-          curY += colH + 16;
+          curY += colH + (isStory ? 18 : 12);
         }
 
-        // 3. Catatan Syukur Quote (if enabled)
+        // 3. EDITORIAL REFLECTION CARD (if enabled)
         if (showQuote && entry.reflectionText) {
+          const quoteH = isStory ? 112 : 84;
           ctx.save();
-          this.roundRect(ctx, padX, curY, photoW, 82, 18);
-          ctx.fillStyle = "rgba(255, 255, 255, 0.03)";
+          this.roundRect(ctx, padX, curY, photoW, quoteH, 20);
+          ctx.fillStyle = "rgba(255, 255, 255, 0.035)";
           ctx.fill();
-          ctx.strokeStyle = "rgba(255, 255, 255, 0.07)";
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
           ctx.lineWidth = 1;
           ctx.stroke();
 
-          ctx.font = "italic 16px 'Outfit', sans-serif";
-          ctx.fillStyle = "#D1D5DB";
-          ctx.textAlign = "center";
-          this.wrapCanvasText(ctx, `"${entry.reflectionText}"`, width / 2, curY + 34, photoW - 36, 24, 2);
-          ctx.restore();
+          this.drawCanvasQuoteMark(ctx, padX + 32, curY + 36, 30, accentColor);
 
-          curY += 94;
-        }
-
-        // 4. Brand Watermark Footer (if enabled)
-        if (showBrand) {
-          const footerY = height - 42;
-          ctx.save();
-          ctx.fillStyle = accentColor;
-          ctx.beginPath();
-          ctx.arc(padX + 10, footerY - 4, 6, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.font = "bold 14px 'Outfit', sans-serif";
+          ctx.font = "italic 600 16px 'Outfit', sans-serif";
           ctx.fillStyle = "#E5E7EB";
           ctx.textAlign = "left";
-          ctx.fillText(`ATLET: ${athleteName.toUpperCase()}`, padX + 26, footerY);
+          this.wrapCanvasText(ctx, `"${entry.reflectionText}"`, padX + 54, curY + 36, photoW - 74, 25, 2);
 
-          ctx.font = "700 13px 'Outfit', sans-serif";
+          if (isStory) {
+            ctx.font = "500 11px 'Outfit', sans-serif";
+            ctx.fillStyle = "#6B7280";
+            ctx.fillText("— Catatan Refleksi & Evaluasi Disiplin Diri", padX + 54, curY + 92);
+          }
+          ctx.restore();
+
+          curY += quoteH + (isStory ? 18 : 12);
+        }
+
+        // 4. VERIFIED ATHLETE & APP WATERMARK FOOTER (if enabled)
+        if (showBrand) {
+          const footerY = height - (isStory ? 64 : 32);
+          ctx.save();
+
+          // Left athlete badge
+          ctx.fillStyle = "rgba(255, 255, 255, 0.12)";
+          ctx.beginPath();
+          ctx.arc(padX + 16, footerY - 5, 14, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.font = "bold 11px 'Outfit', sans-serif";
+          ctx.fillStyle = "#FFFFFF";
+          ctx.textAlign = "center";
+          ctx.fillText(athleteInitials, padX + 16, footerY - 1);
+
+          this.drawCanvasVerifiedBadge(ctx, padX + 38, footerY - 5, 14, "#38BDF8");
+
+          ctx.font = "bold 13px 'Outfit', sans-serif";
+          ctx.fillStyle = "#E5E7EB";
+          ctx.textAlign = "left";
+          ctx.fillText(`ATLET: ${athleteName.toUpperCase()}`, padX + 52, footerY);
+
+          // Right app badge
+          ctx.font = "700 12px 'Outfit', sans-serif";
           ctx.fillStyle = "#6B7280";
           ctx.textAlign = "right";
           ctx.fillText("MINIMAL TODO • HABIT & FOCUS ENGINE", width - padX, footerY);

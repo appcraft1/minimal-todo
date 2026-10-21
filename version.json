@@ -1,16 +1,13 @@
 {
-  "versionCode": 11,
-  "versionName": "1.1.0",
+  "versionCode": 12,
+  "versionName": "1.1.1",
   "releaseDate": "2026-10-21",
   "minSupportedVersionCode": 1,
   "changelog": [
-    "Perbaikan widget Home Android (mengatasi error 'Tidak dapat memuat widget' dengan layout 100% RemoteViews compliant)",
-    "Redesain premium 'Daftar Pengingat yang Terpasang' di Pusat Notifikasi dengan kartu bento, status pill, badge kategori, dan tombol aksi interaktif",
-    "Perbaikan layout kartu profil menu keempat agar tidak terpotong dan konsisten di semua sub-tab",
-    "Filter aktivitas modern bergaya segmented switcher (non-chip)",
-    "Perbaikan tombol kudos (like/dislike) bebas visual bug di layar HP",
-    "Desain baru kartu Skor Konsistensi & ikon distribusi disiplin SVG premium",
-    "Notifikasi aktivitas volume alarm kuat dengan tombol 1-tap Tutup yang praktis",
-    "Widget Bento untuk layar utama (Home) HP Android & bilah notifikasi atas tersemat"
+    "Widget Home Android kini menampilkan daftar kartu bento aktivitas dari menu Home secara langsung dan dinamis",
+    "Alarm pengingat aktivitas kini berdering & bergetar berulang terus-menerus (continuous loop) hingga pengguna menekan tombol 'TUTUP ALARM' pada notifikasi",
+    "Studio Bingkai Instagram ditingkatkan drastis untuk kedua opsi (Full Foto Overlay HUD Strava/Whoop Pro & Foto + Komponen Luar Bento Editorial Magazine) dengan tipografi presisi dan ikon vektor atletik",
+    "Perbaikan widget Home Android 100% RemoteViews compliant tanpa error pemuatan",
+    "Redesain premium 'Daftar Pengingat yang Terpasang' di Pusat Notifikasi dengan kartu bento, status pill, badge kategori, dan tombol aksi interaktif"
   ]
 }

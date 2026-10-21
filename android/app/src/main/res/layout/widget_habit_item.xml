@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_habit_item_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="5dp"
+    android:background="@drawable/bg_widget_item"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingLeft="10dp"
+    android:paddingTop="7dp"
+    android:paddingRight="10dp"
+    android:paddingBottom="7dp">
+
+    <!-- Status Bullet Indicator -->
+    <TextView
+        android:id="@+id/item_bullet"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:gravity="center"
+        android:text="•"
+        android:textColor="#FDE047"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <!-- Habit Title & Progress/Time Details -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:layout_marginLeft="6dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/item_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="Target Bento"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/item_sub"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="Checklist • Jam 20:30"
+            android:textColor="#9CA3AF"
+            android:textSize="10sp" />
+    </LinearLayout>
+
+    <!-- Checkbox State (✓ Selesai or ○ Belum) -->
+    <TextView
+        android:id="@+id/item_status_check"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:gravity="center"
+        android:text="○"
+        android:textColor="#6B7280"
+        android:textSize="13sp"
+        android:textStyle="bold" />
+</LinearLayout>

@@ -16,6 +16,9 @@ public class NotificationDismissReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if (intent != null && ACTION_DISMISS.equals(intent.getAction())) {
+            // Hentikan suara dan getaran alarm yang sedang berputar (loop)
+            AlarmSoundController.stopAlarm(context);
+
             int notifId = intent.getIntExtra(EXTRA_NOTIFICATION_ID, -1);
             if (notifId != -1) {
                 NotificationManagerCompat.from(context).cancel(notifId);

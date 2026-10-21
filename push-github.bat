@@ -6,7 +6,7 @@ set "ROOT_DIR=%~dp0"
 cd /d "%ROOT_DIR%"
 
 echo ==============================================================================
-echo       MINIMAL TODO - SINKRONISASI KE GITHUB (v1.1.0)
+echo       MINIMAL TODO - SINKRONISASI KE GITHUB (v1.1.1)
 echo       Target Repo : https://github.com/appcraft1/minimal-todo.git
 echo ==============================================================================
 echo.
@@ -15,8 +15,8 @@ echo [1/3] Menambahkan seluruh file perubahan...
 git add -A
 
 echo.
-echo [2/3] Membuat commit pembaruan v1.1.0...
-git commit -m "Update v1.1.0: Fix Android Home Bento Widget (RemoteViews compliant, RelativeLayout header) & Redesain Daftar Pengingat Kartu di Pusat Notifikasi"
+echo [2/3] Membuat commit pembaruan v1.1.1...
+git commit -m "Update v1.1.1: Dynamic Habit Bento Cards on Android Widget, Continuous Looping Alarm until Dismissed, and Ultra-Premium Instagram Studio Redesign (Overlay & Outside)"
 
 echo.
 echo [3/3] Mengunggah (push) ke GitHub branch main...

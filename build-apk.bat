@@ -4,7 +4,7 @@ color 0A
 
 set "ROOT_DIR=%~dp0"
 echo ==============================================================================
-echo       MINIMAL TODO - PEMBUAT FILE APK ANDROID RESMI (v1.0.0)
+echo       MINIMAL TODO - PEMBUAT FILE APK ANDROID RESMI (v1.1.1)
 echo       Target Output : Minimal Todo.apk
 echo ==============================================================================
 echo.
