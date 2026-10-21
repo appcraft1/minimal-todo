@@ -1,14 +1,14 @@
 {
-  "versionCode": 7,
-  "versionName": "1.0.6",
-  "releaseDate": "2026-10-16",
+  "versionCode": 10,
+  "versionName": "1.0.9",
+  "releaseDate": "2026-10-21",
   "minSupportedVersionCode": 1,
   "changelog": [
-    "Perbaikan streak dan kenaikan level disiplin dinamis",
-    "Jadwal habit khusus hari tertentu",
-    "Filter tanggal catatan syukur",
-    "Penyatuan menu aksi popup",
-    "Pusat diagnosa & tes notifikasi",
-    "Menu Memori & Galeri dengan Studio Bingkai Instagram"
+    "Perbaikan layout kartu profil menu keempat agar tidak terpotong dan konsisten di semua sub-tab",
+    "Filter aktivitas modern bergaya segmented switcher (non-chip)",
+    "Perbaikan tombol kudos (like/dislike) bebas visual bug di layar HP",
+    "Desain baru kartu Skor Konsistensi & ikon distribusi disiplin SVG premium",
+    "Notifikasi aktivitas volume alarm kuat dengan tombol 1-tap Tutup yang praktis",
+    "Widget Bento untuk layar utama (Home) HP Android & bilah notifikasi atas tersemat"
   ]
 }

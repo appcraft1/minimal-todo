@@ -1,0 +1,15 @@
+# JVM crash logs
+hs_err_pid*.log
+
+# Gradle cache & build folders
+.gradle/
+android/.gradle/
+android/app/build/
+android/local.properties
+android/.idea/
+android/*.iml
+android/app/*.iml
+
+# OS cache
+Thumbs.db
+.DS_Store

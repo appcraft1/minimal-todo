@@ -201,6 +201,7 @@ const App = {
     this.initConfetti();
     this.initReminderEngine();
     this.initPullToRefresh();
+    this.syncNativeWidgetAndNotification();
 
     // 2. Daftarkan Service Worker untuk notifikasi PWA/Webview
     if ("serviceWorker" in navigator) {
@@ -635,6 +636,7 @@ const App = {
     localStorage.setItem(key, JSON.stringify(this.habits));
     // Cadangan aman agar tidak pernah hilang
     localStorage.setItem("minimal_todo_habits_clean", JSON.stringify(this.habits));
+    this.syncNativeWidgetAndNotification();
   },
 
   saveJournalLocal() {
@@ -1840,6 +1842,60 @@ const App = {
     }
     if (headerBtn) {
       headerBtn.classList.toggle("is-active", isGranted);
+    }
+
+    const pinnedBtn = document.getElementById("btn-toggle-pinned-bento");
+    if (pinnedBtn) {
+      const isPinned = localStorage.getItem("minimal_todo_pinned_bento") !== "false";
+      pinnedBtn.classList.toggle("active", isPinned);
+    }
+  },
+
+  togglePinnedBentoSetting() {
+    const currentState = localStorage.getItem("minimal_todo_pinned_bento") !== "false";
+    const newState = !currentState;
+    localStorage.setItem("minimal_todo_pinned_bento", newState ? "true" : "false");
+    
+    const btn = document.getElementById("btn-toggle-pinned-bento");
+    if (btn) btn.classList.toggle("active", newState);
+
+    this.syncNativeWidgetAndNotification();
+    this.showToast(newState ? "Widget Bento disematkan di bar notifikasi HP!" : "Bento dilepas dari bar notifikasi HP.", "info");
+  },
+
+  syncNativeWidgetAndNotification() {
+    if (!window.AndroidNativeNotification) return;
+
+    try {
+      const todayKey = this.getTodayKey();
+      const todayHabits = this.getHabitsForDate(todayKey);
+      const total = todayHabits.length;
+      const completed = todayHabits.filter(h => h.completed).length;
+      const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+      const stats = typeof this.calculateRealStats === "function" ? this.calculateRealStats() : { streakCount: 0 };
+      const streakText = `${stats.streakCount || 0} Hari Streak`;
+
+      // 1. Update Android Home Screen Bento Widget
+      if (typeof window.AndroidNativeNotification.updateBentoWidget === "function") {
+        window.AndroidNativeNotification.updateBentoWidget(streakText, completed, total);
+      }
+
+      // 2. Update Ongoing Pinned Bento Notification
+      const isPinnedEnabled = localStorage.getItem("minimal_todo_pinned_bento") !== "false";
+      if (typeof window.AndroidNativeNotification.updatePinnedNotification === "function") {
+        const title = `Minimal Todo • ${completed}/${total} Selesai (${pct}%)`;
+        const summary = `Ritme Disiplin Hari Ini • ${streakText}`;
+
+        const listText = todayHabits.slice(0, 6).map(h => {
+          const checkMark = h.completed ? "✓" : "○";
+          const time = h.reminderTime ? ` [${h.reminderTime}]` : "";
+          return `${checkMark} ${h.title}${time}`;
+        }).join("\n");
+
+        window.AndroidNativeNotification.updatePinnedNotification(isPinnedEnabled, title, summary, listText);
+      }
+    } catch (e) {
+      console.warn("Sync native widget & pinned notif error:", e);
     }
   },
 
@@ -3141,10 +3197,13 @@ const App = {
     // 2. Update Notification Status on Header Button
     this.updateNotificationPermissionUI();
 
-    // 3. Update Hero Quad Stats
+    // 3. Update Hero Quad Stats & Consistency Score Card
     const memTotal = document.getElementById("mem-stat-completed-total");
     const memStreak = document.getElementById("mem-stat-streak");
     const memRate = document.getElementById("mem-stat-rate");
+    const memRateBadge = document.getElementById("mem-stat-rate-badge");
+    const memRateSub = document.getElementById("mem-stat-rate-sub");
+    const heroCircleFill = document.getElementById("strava-hero-circle-fill");
     const memLvl = document.getElementById("mem-stat-level");
     const memLvlTitle = document.getElementById("mem-stat-level-title");
 
@@ -3153,6 +3212,42 @@ const App = {
     if (memRate) memRate.textContent = `${stats.disciplineRate}%`;
     if (memLvl) memLvl.textContent = stats.level;
     if (memLvlTitle) memLvlTitle.textContent = stats.levelTitle;
+
+    if (memRateBadge) {
+      if (stats.disciplineRate >= 80) {
+        memRateBadge.textContent = "Atlet Elite";
+        memRateBadge.style.color = "#FDE047";
+        memRateBadge.style.borderColor = "rgba(253, 224, 71, 0.4)";
+        memRateBadge.style.background = "rgba(253, 224, 71, 0.15)";
+      } else if (stats.disciplineRate >= 50) {
+        memRateBadge.textContent = "Disiplin";
+        memRateBadge.style.color = "#FC5200";
+        memRateBadge.style.borderColor = "rgba(252, 82, 0, 0.4)";
+        memRateBadge.style.background = "rgba(252, 82, 0, 0.15)";
+      } else if (stats.disciplineRate >= 20) {
+        memRateBadge.textContent = "Ritme Baik";
+        memRateBadge.style.color = "#60A5FA";
+        memRateBadge.style.borderColor = "rgba(96, 165, 250, 0.4)";
+        memRateBadge.style.background = "rgba(96, 165, 250, 0.15)";
+      } else {
+        memRateBadge.textContent = "Langkah Awal";
+        memRateBadge.style.color = "#9CA3AF";
+        memRateBadge.style.borderColor = "rgba(255, 255, 255, 0.15)";
+        memRateBadge.style.background = "rgba(255, 255, 255, 0.06)";
+      }
+    }
+
+    if (memRateSub) {
+      memRateSub.textContent = `${stats.totalCompletedAllTime} target diselesaikan • ${stats.streakCount} hari konsisten`;
+    }
+
+    if (heroCircleFill) {
+      const radius = 34;
+      const circ = 2 * Math.PI * radius; // 213.63
+      const offset = circ - (stats.disciplineRate / 100) * circ;
+      heroCircleFill.style.strokeDasharray = `${circ}`;
+      heroCircleFill.style.strokeDashoffset = `${offset}`;
+    }
 
     // 4. Render Active Strava Tab Module
     this.switchStravaSubTab(this.currentStravaSubTab || 'feed');
@@ -3167,6 +3262,10 @@ const App = {
       if (btn) btn.classList.toggle("active", t === tabKey);
       if (panel) panel.style.display = (t === tabKey) ? "flex" : "none";
     });
+
+    // Reset scroll agar kartu profil di atas tidak kepotong atau bergeser saat pindah tab
+    const memArea = document.getElementById("view-memories-panel");
+    if (memArea) memArea.scrollTop = 0;
 
     if (tabKey === "feed") {
       this.renderStravaActivityFeed(this.currentStravaFilter || 'all');
@@ -3396,8 +3495,8 @@ const App = {
   // ==========================================================
   filterStravaActivities(catKey, btnEl) {
     this.currentStravaFilter = catKey;
-    const pills = document.querySelectorAll(".strava-filter-pill");
-    pills.forEach(p => p.classList.remove("active"));
+    const items = document.querySelectorAll(".strava-segmented-filter-item, .strava-filter-pill");
+    items.forEach(p => p.classList.remove("active"));
     if (btnEl) btnEl.classList.add("active");
     this.renderStravaActivityFeed(catKey);
   },
@@ -3452,7 +3551,16 @@ const App = {
       const countEl = document.getElementById(`kudos-count-${id}`);
       const btnEl = document.getElementById(`kudos-btn-${id}`);
       if (countEl) countEl.textContent = map[id] || 0;
-      if (btnEl) btnEl.classList.toggle("gave-kudos", userLikes.includes(id));
+      if (btnEl) {
+        const hasLiked = userLikes.includes(id);
+        btnEl.classList.toggle("gave-kudos", hasLiked);
+        const iconSvg = btnEl.querySelector("svg");
+        if (iconSvg) {
+          iconSvg.setAttribute("fill", hasLiked ? "#FC5200" : "none");
+          iconSvg.setAttribute("stroke", hasLiked ? "#FC5200" : "currentColor");
+        }
+        btnEl.blur(); // Melepas hover / focus touch seketika di layar HP
+      }
     } catch (e) {
       console.warn("Kudos error:", e);
     }
@@ -3587,7 +3695,7 @@ const App = {
 
             <div class="strava-act-footer">
               <button type="button" class="strava-kudos-btn ${isGaveKudos ? 'gave-kudos' : ''}" id="kudos-btn-${act.id}" onclick="App.giveKudos('${act.id}', event)">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="${isGaveKudos ? '#FC5200' : 'none'}" stroke="${isGaveKudos ? '#FC5200' : 'currentColor'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                 <span>Kudos</span>
                 <span id="kudos-count-${act.id}">${kudosCount}</span>
               </button>
@@ -3645,7 +3753,7 @@ const App = {
 
           <div class="strava-act-footer">
             <button type="button" class="strava-kudos-btn ${isGaveKudos ? 'gave-kudos' : ''}" id="kudos-btn-${act.id}" onclick="App.giveKudos('${act.id}', event)">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="${isGaveKudos ? '#FC5200' : 'none'}" stroke="${isGaveKudos ? '#FC5200' : 'currentColor'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
               <span>Kudos</span>
               <span id="kudos-count-${act.id}">${kudosCount}</span>
             </button>
@@ -3665,10 +3773,42 @@ const App = {
     if (!container) return;
 
     const categories = [
-      { key: "fitness", label: "Olahraga & Fisik", color: "#FC5200", icon: SVG_ICONS.dumbbell, fillClass: "fill-fitness" },
-      { key: "health", label: "Nutrisi & Istirahat", color: "#22C55E", icon: SVG_ICONS.apple, fillClass: "fill-health" },
-      { key: "work", label: "Fokus & Belajar", color: "#93C5FD", icon: SVG_ICONS.laptop, fillClass: "fill-work" },
-      { key: "life", label: "Gaya Hidup & Rumah", color: "#C084FC", icon: SVG_ICONS.sparkles, fillClass: "fill-life" }
+      {
+        key: "fitness",
+        label: "Olahraga & Fisik",
+        sub: "Kekuatan, Kardio & Stamina",
+        color: "#FC5200",
+        badgeClass: "cat-badge-fitness",
+        fillClass: "fill-fitness",
+        iconSvg: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M2 9v6M22 9v6M6 12h12M12 2l3 4h-6l3-4z"/></svg>`
+      },
+      {
+        key: "health",
+        label: "Nutrisi & Istirahat",
+        sub: "Hidrasi, Makanan & Tidur",
+        color: "#22C55E",
+        badgeClass: "cat-badge-health",
+        fillClass: "fill-health",
+        iconSvg: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>`
+      },
+      {
+        key: "work",
+        label: "Fokus & Belajar",
+        sub: "Deep Work, Belajar & Proyek",
+        color: "#60A5FA",
+        badgeClass: "cat-badge-work",
+        fillClass: "fill-work",
+        iconSvg: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`
+      },
+      {
+        key: "life",
+        label: "Gaya Hidup & Rumah",
+        sub: "Mindfulness, Syukur & Hobi",
+        color: "#C084FC",
+        badgeClass: "cat-badge-life",
+        fillClass: "fill-life",
+        iconSvg: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`
+      }
     ];
 
     let html = "";
@@ -3685,11 +3825,16 @@ const App = {
       html += `
         <div class="cat-progress-item">
           <div class="cat-meta-row">
-            <span class="cat-name-tag" style="color:${cat.color};">
-              ${cat.icon}
-              <span style="color:#FFFFFF;">${cat.label}</span>
-            </span>
-            <span class="cat-count-pct">${completed}/${total} Selesai • ${pct}%</span>
+            <div class="cat-info-group">
+              <div class="cat-icon-badge ${cat.badgeClass}">
+                ${cat.iconSvg}
+              </div>
+              <div class="cat-name-group">
+                <span class="cat-name-title">${cat.label}</span>
+                <span class="cat-name-sub">${total > 0 ? `${completed}/${total} selesai hari ini` : cat.sub}</span>
+              </div>
+            </div>
+            <span class="cat-count-pct">${pct}%</span>
           </div>
           <div class="cat-bar-track">
             <div class="cat-bar-fill ${cat.fillClass}" style="width:${pct}%;"></div>

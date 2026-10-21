@@ -3882,11 +3882,21 @@ body {
 /* ==========================================================
    23. STRAVA ATHLETIC APP LAYOUT — MEMORI & STATISTIK
    ========================================================== */
+.memories-view-panel,
 .strava-theme-panel {
-  padding-bottom: 125px;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: calc(env(safe-area-inset-top, 0px) + 54px) 20px 125px;
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 16px;
+  scrollbar-width: none;
+}
+
+.memories-view-panel::-webkit-scrollbar,
+.strava-theme-panel::-webkit-scrollbar {
+  display: none;
 }
 
 /* 1. Strava Athlete Hero Card */
@@ -3894,13 +3904,15 @@ body {
   background: linear-gradient(135deg, #171922 0%, #12131A 100%);
   border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 24px;
-  padding: 20px;
+  padding: 18px 20px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   position: relative;
   overflow: hidden;
   box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55);
+  flex-shrink: 0;
+  margin: 0;
 }
 
 .strava-athlete-hero-card::before {
@@ -4154,7 +4166,8 @@ body {
   padding: 5px;
   gap: 5px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-  margin: 14px 0 16px;
+  margin: 0;
+  flex-shrink: 0;
 }
 
 .strava-tab-btn {
@@ -4189,14 +4202,14 @@ body {
 .strava-tab-panel {
   display: flex;
   flex-direction: column;
-  gap: 22px;
-  animation: stravaTabIn 0.25s ease-out;
+  gap: 16px;
+  animation: stravaTabIn 0.2s ease-out;
 }
 
 @keyframes stravaTabIn {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -4302,6 +4315,141 @@ body {
   flex-direction: column;
   gap: 18px;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* High-Impact Consistency Score Hero Card */
+.strava-discipline-hero-card {
+  background: linear-gradient(135deg, #181A26 0%, #11131C 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.strava-discipline-hero-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #FC5200 0%, #FDE047 50%, transparent 100%);
+}
+
+.strava-hero-meter-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.strava-hero-meter-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.strava-hero-meter-tag-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.strava-hero-meter-tag {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: #9CA3AF;
+  text-transform: uppercase;
+}
+
+.strava-hero-meter-badge {
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  background: rgba(252, 82, 0, 0.15);
+  color: #FC5200;
+  border: 1px solid rgba(252, 82, 0, 0.35);
+  letter-spacing: 0.2px;
+}
+
+.strava-hero-rate-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 4px 0 2px;
+}
+
+.strava-hero-meter-rate {
+  font-family: 'Outfit', sans-serif;
+  font-size: 40px;
+  font-weight: 900;
+  letter-spacing: -1.5px;
+  line-height: 1;
+  color: #FFFFFF;
+  background: linear-gradient(135deg, #FFFFFF 20%, #FC5200 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.strava-hero-rate-unit {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6B7280;
+  letter-spacing: 0.2px;
+}
+
+.strava-hero-meter-status {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #9CA3AF;
+  line-height: 1.35;
+}
+
+/* Ring Gauge with Athletic Glow */
+.strava-hero-ring-box {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.strava-meter-svg {
+  transform: rotate(-90deg);
+  width: 84px;
+  height: 84px;
+}
+
+.strava-meter-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.08);
+}
+
+.strava-meter-fill {
+  fill: none;
+  stroke: #FC5200;
+  stroke-linecap: round;
+  stroke-dasharray: 213.6;
+  stroke-dashoffset: 213.6;
+  transition: stroke-dashoffset 0.8s var(--ease-spring);
+  filter: drop-shadow(0 0 6px rgba(252, 82, 0, 0.5));
+}
+
+.strava-meter-center-icon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .strava-card-header-row {
@@ -4679,40 +4827,62 @@ body {
   font-weight: 700;
   color: #E5E7EB;
 }
-  line-height: 1.2;
-}
-
-/* 6. Strava Filter Pills */
-.strava-filter-pills-row {
+/* 6. Strava Segmented Activity Filter Bar (Athletic Switcher) */
+.strava-segmented-filter-bar {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  background: #111319;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 4px;
+  gap: 4px;
   overflow-x: auto;
-  padding-bottom: 6px;
   scrollbar-width: none;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
-.strava-filter-pills-row::-webkit-scrollbar {
+.strava-segmented-filter-bar::-webkit-scrollbar {
   display: none;
 }
 
+.strava-segmented-filter-item,
 .strava-filter-pill {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  flex: 1;
+  background: transparent;
+  border: 1px solid transparent;
   color: #9CA3AF;
-  padding: 7px 14px;
-  border-radius: 9999px;
-  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  font-size: 11.5px;
   font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   white-space: nowrap;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s var(--ease-spring);
 }
 
+.strava-segmented-filter-item svg,
+.strava-filter-pill svg {
+  flex-shrink: 0;
+  opacity: 0.8;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.strava-segmented-filter-item.active,
 .strava-filter-pill.active {
   background: #FC5200;
-  border-color: #FC5200;
   color: #FFFFFF;
-  box-shadow: 0 4px 12px rgba(252, 82, 0, 0.35);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 14px rgba(252, 82, 0, 0.4);
+}
+
+.strava-segmented-filter-item.active svg,
+.strava-filter-pill.active svg {
+  opacity: 1;
+  transform: scale(1.08);
 }
 
 /* 7. Strava Activity Stream & Feed Cards */
@@ -4913,24 +5083,47 @@ body {
 }
 
 .strava-kudos-btn {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #9CA3AF;
   border-radius: 9999px;
-  padding: 5px 12px;
-  font-size: 11px;
+  padding: 6px 12px;
+  font-size: 11.5px;
   font-weight: 700;
   display: flex;
   align-items: center;
   gap: 6px;
   cursor: pointer;
+  outline: none;
   transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.strava-kudos-btn:hover, .strava-kudos-btn.gave-kudos {
-  color: #FC5200;
-  border-color: rgba(252, 82, 0, 0.4);
-  background: rgba(252, 82, 0, 0.1);
+.strava-kudos-btn svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  transition: all 0.2s ease;
+}
+
+@media (hover: hover) {
+  .strava-kudos-btn:hover:not(.gave-kudos) {
+    background: rgba(255, 255, 255, 0.08);
+    color: #FFFFFF;
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+}
+
+.strava-kudos-btn.gave-kudos {
+  color: #FC5200 !important;
+  border-color: rgba(252, 82, 0, 0.45) !important;
+  background: rgba(252, 82, 0, 0.14) !important;
+  box-shadow: 0 2px 10px rgba(252, 82, 0, 0.25);
+}
+
+.strava-kudos-btn.gave-kudos svg {
+  fill: #FC5200 !important;
+  stroke: #FC5200 !important;
+  transform: scale(1.12);
 }
 
 .strava-kudos-btn:active {
@@ -4960,17 +5153,22 @@ body {
 .category-breakdown-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .cat-progress-item {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 10px 12px;
+  gap: 8px;
+  padding: 12px 14px;
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.cat-progress-item:hover {
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 .cat-meta-row {
@@ -4979,24 +5177,80 @@ body {
   justify-content: space-between;
 }
 
-.cat-name-tag {
-  font-size: 12px;
-  font-weight: 700;
+.cat-info-group {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
+}
+
+.cat-icon-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cat-badge-fitness {
+  background: rgba(252, 82, 0, 0.15);
+  color: #FC5200;
+  border: 1px solid rgba(252, 82, 0, 0.3);
+}
+
+.cat-badge-health {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22C55E;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.cat-badge-work {
+  background: rgba(96, 165, 250, 0.15);
+  color: #60A5FA;
+  border: 1px solid rgba(96, 165, 250, 0.3);
+}
+
+.cat-badge-life {
+  background: rgba(192, 132, 252, 0.15);
+  color: #C084FC;
+  border: 1px solid rgba(192, 132, 252, 0.3);
+}
+
+.cat-name-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.cat-name-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.2px;
+}
+
+.cat-name-sub {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #9CA3AF;
 }
 
 .cat-count-pct {
-  font-size: 11px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
   font-weight: 800;
-  color: #D1D5DB;
+  color: #FFFFFF;
+  padding: 3px 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  letter-spacing: -0.3px;
 }
 
 .cat-bar-track {
   width: 100%;
   height: 6px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
   border-radius: 9999px;
   overflow: hidden;
 }
@@ -5004,10 +5258,13 @@ body {
 .cat-bar-fill {
   height: 100%;
   border-radius: 9999px;
-  transition: width 0.5s var(--ease-spring);
+  transition: width 0.6s var(--ease-spring);
 }
 
 .fill-fitness { background: linear-gradient(90deg, #FC5200, #FDE047); }
+.fill-health { background: linear-gradient(90deg, #34D399, #059669); }
+.fill-work { background: linear-gradient(90deg, #93C5FD, #3B82F6); }
+.fill-life { background: linear-gradient(90deg, #C084FC, #8B5CF6); }
 .fill-health { background: linear-gradient(90deg, #34D399, #059669); }
 .fill-work { background: linear-gradient(90deg, #93C5FD, #3B82F6); }
 .fill-life { background: linear-gradient(90deg, #C084FC, #8B5CF6); }
